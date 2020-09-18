@@ -1,0 +1,25 @@
+
+// Whoami
+/api/auth/me -> GET : User
+
+// Workorders PULL
+/api/workorders:
+    /all : GET -> Workorder[]
+    /valid : GET -> Workorder[] where !wo.completed
+    /filter : POST {
+        customer_name?: string,
+        phone_number?: string,
+        id?: number,
+        // TODO
+    } -> Workorder[] where wo matches any of req.body
+    /search?query=<QUERY> : GET -> Workorder[] where QUERY in wo (filter but non specific)
+
+// Workorders PUSH
+/api/workorders/new: POST {
+    customer: Customer,
+    device: Device,
+    initial_note: Note,
+    initial_status: Status,
+}
+
+    
