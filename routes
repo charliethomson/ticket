@@ -13,6 +13,7 @@
         // TODO
     } -> Workorder[] where wo matches any of req.body
     /search?query=<QUERY>&count=COUNT : GET -> Workorder[] where QUERY in wo (filter but non specific)
+    /<ID> : GET -> Workorder where wo.id == ID
 
 // Workorders PUSH
 /api/workorders/new: POST {
