@@ -4,22 +4,32 @@
 
 // Workorders PULL
 /api/workorders:
-    /all : GET -> Workorder[]
-    /valid : GET -> Workorder[] where !wo.completed
-    /filter : POST {
+    /all?count=COUNT : GET -> Workorder[]
+    /valid?count=COUNT : GET -> Workorder[] where !wo.completed
+    /filter?count=COUNT : POST {
         customer_name?: string,
         phone_number?: string,
         id?: number,
         // TODO
     } -> Workorder[] where wo matches any of req.body
-    /search?query=<QUERY> : GET -> Workorder[] where QUERY in wo (filter but non specific)
+    /search?query=<QUERY>&count=COUNT : GET -> Workorder[] where QUERY in wo (filter but non specific)
 
 // Workorders PUSH
 /api/workorders/new: POST {
     customer: Customer,
     device: Device,
     initial_note: Note,
-    initial_status: Status,
+    initial_status: number,
 }
 
-    
+// Items PULL
+/api/items:
+    /is_valid : POST {
+        item: { 
+            sku: number,
+            id: number
+        } | string
+    } -> {
+        ok: boolean,
+        error?: string,
+    }
