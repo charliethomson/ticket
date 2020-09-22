@@ -17,9 +17,30 @@ async fn index() -> impl Responder {
     ""
 }
 
+#[get("/api/users/{id}")]
+async fn get_user(web::Path(id): web::Path<u32>) -> impl Responder {
+    let collection = db::get_collection("users").await.unwrap();
+    let mut filter = mongodb::bson::document::Document::new();
+    filter.insert("id", id);
+    let stream = collection
+        .find(Some(filter), None)
+        .await
+        .unwrap()
+        .next()
+        .await
+        .unwrap()
+        .unwrap();
+    HttpResponse::Ok().json(
+        models::User::deserialize(mongodb::bson::Deserializer::new(
+            mongodb::bson::Bson::Document(stream),
+        ))
+        .unwrap(),
+    )
+}
+
 #[get("/api/workorders/all")]
 async fn workorders_all() -> impl Responder {
-    let collection = db::get_collection("offsite", "workorders").await.unwrap();
+    let collection = db::get_collection("workorders").await.unwrap();
     let items_stream = collection.find(None, None).await.unwrap();
     let items_sync: Vec<mongodb::error::Result<mongodb::bson::document::Document>> =
         items_stream.collect().await;
