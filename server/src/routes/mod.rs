@@ -13,11 +13,6 @@ pub use workorders::*;
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct ErrorResponse<Message: Serialize> {
-    pub error: Message,
-}
-
-#[derive(Serialize)]
 pub struct OkMessage<Message: Serialize> {
     pub ok: bool,
     pub message: Option<Message>,

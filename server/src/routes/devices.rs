@@ -6,11 +6,7 @@ use {
     },
     actix_web::{get, post, web, HttpResponse, Responder},
     futures::stream::StreamExt,
-    mongodb::{
-        bson::{Bson, Document},
-        error::Result as MongoResult,
-        Cursor,
-    },
+    mongodb::{bson::Document, error::Result as MongoResult},
     serde::{Deserialize, Serialize},
     std::convert::TryFrom,
 };
@@ -44,7 +40,7 @@ async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
     let collection = db::get_collection("devices").await.unwrap();
     let device_count = collection.count_documents(None, None).await.unwrap();
     let device = Device {
-        _id: device_count,
+        id: device_count,
         serial: device_body.serial,
         name: device_body.name,
         customer: Customer::try_from_id(device_body.customer)
@@ -122,5 +118,21 @@ async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
             ok: false,
             message: Some(e.to_string()),
         }),
+    }
+}
+
+#[get("/api/devices/{id}")]
+async fn device_id(web::Path(id): web::Path<i64>) -> impl Responder {
+    let collection = db::get_collection("devices").await.unwrap();
+    let mut filter = Document::new();
+    filter.insert("_id", id);
+
+    let result = collection.find_one(Some(filter), None).await;
+    match result {
+        Ok(device) => "",
+        Err(e) => {
+            eprintln!("{}", e.to_string());
+            ""
+        }
     }
 }

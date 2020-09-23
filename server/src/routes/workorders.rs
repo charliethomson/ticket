@@ -1,9 +1,5 @@
 use {
-    crate::{
-        db,
-        models::*,
-        routes::{ErrorResponse, OkMessage},
-    },
+    crate::{db, models::*, routes::OkMessage},
     actix_web::{get, post, web, HttpResponse, Responder},
     chrono::{serde::ts_seconds, DateTime, Utc},
     futures::stream::StreamExt,
@@ -42,14 +38,12 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
     let workorder = body.into_inner();
     // TODO: unwrap_or_default
     let to_commit = Workorder {
-        _id: count,
+        id: count,
         origin: Store::try_from_id(workorder.origin)
             .await
             .unwrap_or_default(),
         travel_status: workorder.travel_status,
-        delivered_by: workorder.delivered_by.unwrap_or_default(),
         created: Utc::now(),
-        last_update: Utc::now(),
         quoted_time: workorder.quoted_time,
         status: workorder.status,
         customer: Customer::try_from_id(workorder.customer)
@@ -60,7 +54,7 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
             .unwrap_or_default(),
         brief: workorder.brief,
         notes: vec![Note {
-            _id: db::get_collection("notes")
+            id: db::get_collection("notes")
                 .await
                 .unwrap()
                 .count_documents(None, None)
@@ -83,8 +77,9 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
             ok: true,
             message: None,
         }),
-        Err(e) => HttpResponse::NotModified().json(ErrorResponse {
-            error: e.to_string(),
+        Err(e) => HttpResponse::NotModified().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
         }),
     }
 }

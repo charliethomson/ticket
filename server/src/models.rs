@@ -7,14 +7,12 @@ use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Workorder {
-    pub _id: i64,
+    pub id: i64,
     pub origin: Store,
     pub travel_status: String,
-    pub delivered_by: String,
+    // TODO: pub delivered_by: String,
     #[serde(with = "ts_seconds")]
     pub created: DateTime<Utc>,
-    #[serde(with = "ts_seconds")]
-    pub last_update: DateTime<Utc>,
     #[serde(with = "ts_seconds")]
     pub quoted_time: DateTime<Utc>,
     pub status: String,
@@ -45,7 +43,7 @@ impl Workorder {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         Workorder::try_from(
             crate::db::get_collection("workorders")
                 .await
@@ -60,7 +58,7 @@ impl Workorder {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Device {
-    pub _id: i64,
+    pub id: i64,
     pub serial: String,
     pub name: String,
     pub customer: Customer,
@@ -89,7 +87,7 @@ impl Device {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         Device::try_from(
             crate::db::get_collection("devices")
                 .await
@@ -104,10 +102,15 @@ impl Device {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Store {
-    pub _id: i64,
+    pub id: i64,
     pub name: String,
     pub contact_name: String,
     pub phone_number: i32,
+    pub email: String,
+    pub address: String,
+    pub city: String,
+    pub state: String,
+    pub zip: i32,
     // pub workorders: Vec<Workorder>,
 }
 impl TryFrom<Document> for Store {
@@ -132,7 +135,7 @@ impl Store {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         Store::try_from(
             crate::db::get_collection("stores")
                 .await
@@ -147,7 +150,7 @@ impl Store {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Note {
-    pub _id: i64,
+    pub id: i64,
     pub user: User,
     #[serde(with = "ts_seconds")]
     pub created: DateTime<Utc>,
@@ -180,7 +183,7 @@ impl Note {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         Note::try_from(
             crate::db::get_collection("Notes")
                 .await
@@ -195,11 +198,11 @@ impl Note {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Customer {
-    pub _id: i64,
+    pub id: i64,
     pub name: String,
     pub phone_number: i32,
     pub email: String,
-    pub store_id: i64,
+    pub storeid: i64,
     pub devices: Vec<i64>,    // Device IDs
     pub workorders: Vec<i64>, // Workorder IDs
 }
@@ -225,7 +228,7 @@ impl Customer {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         Customer::try_from(
             crate::db::get_collection("Customers")
                 .await
@@ -240,7 +243,7 @@ impl Customer {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct User {
-    pub _id: i64,
+    pub id: i64,
     pub name: String,
     pub phone_number: String,
     pub queue: Vec<Workorder>,
@@ -268,7 +271,7 @@ impl User {
     }
     pub async fn try_from_id(id: i64) -> Option<Self> {
         let mut filter = Document::new();
-        filter.insert("_id", id);
+        filter.insert("id", id);
         User::try_from(
             crate::db::get_collection("users")
                 .await
