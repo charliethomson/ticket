@@ -1,0 +1,12 @@
+{
+    "id": 0,
+    "device": "device.json",
+    "origin": "store.json",
+    "created": 1600883149,
+    "timeQuote": "5-7 Days",
+    "description": "No power/Doa",
+    "deliveryStatus": "in-transit",
+    "status": "awaiting repair",
+    "storageLocation": "C7",
+    "notes": []
+}
