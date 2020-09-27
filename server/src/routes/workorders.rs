@@ -31,12 +31,16 @@ pub struct InitialNote {
     location: Option<String>,
 }
 
+
+// API call to create and handle making a new workorder
 #[post("/api/workorders/new")]
 async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
+    //Get the workorders table
     let collection = db::get_collection("workorders").await.unwrap();
     let count = collection.count_documents(None, None).await.unwrap();
     let workorder = body.into_inner();
     // TODO: unwrap_or_default
+    // Build the workorder
     let to_commit = Workorder {
         id: count,
         origin: Store::try_from_id(workorder.origin)
@@ -70,9 +74,11 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
         }],
     };
     println!("{:#?}", to_commit);
+    // Take created workorder and insert it into the workorders table
     let document: Document = to_commit.into_document();
     let insert_result = collection.insert_one(document, None).await;
     match insert_result {
+        //Return the result
         Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
             ok: true,
             message: None,
