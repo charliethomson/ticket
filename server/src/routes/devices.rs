@@ -139,6 +139,8 @@ async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
     }
 }
 
+
+//API call to get a device based on that device's ID
 #[get("/api/devices/{id}")]
 async fn device_id(web::Path(id): web::Path<i64>) -> impl Responder {
     let collection = db::get_collection("devices").await.unwrap();
