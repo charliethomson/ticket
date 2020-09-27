@@ -109,11 +109,18 @@ async fn workorders_all() -> impl Responder {
     )
 }
 
+
+// API call to get a workorder by its ID
 #[get("/api/workorders/{id}")]
 async fn workorder_by_id(web::Path(id): web::Path<i64>) -> impl Responder {
+    // Get all workorders from the workorders table
     let collection = db::get_collection("workorders").await.unwrap();
+
+    // Create the filter from the ID
     let mut filter = Document::new();
     filter.insert("_id", id);
+
+    // Get the workorder using the filter
     let result = collection.find_one(Some(filter), None).await;
     match result {
         // TODO: Unwrap
