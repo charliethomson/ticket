@@ -34,8 +34,11 @@ pub struct CustomerAttributes {
     pub email: Option<String>,
 }
 
+
+//API call to create a new device, server listening on "/api/devices/new"
 #[post("/api/devices/new")]
 async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
+    //Get JSON from POST and convert into device struct
     let device_body = body.into_inner();
     let collection = db::get_collection("devices").await.unwrap();
     let device_count = collection.count_documents(None, None).await.unwrap();
@@ -49,8 +52,11 @@ async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
         workorders: vec![],
         password: device_body.password,
     };
+
+    //From this struct we insert the device into the database
     let result = collection.insert_one(device.into_document(), None).await;
     match result {
+        //Return with a response of database insertion
         Ok(inserted) => HttpResponse::Ok().json(OkMessage {
             ok: true,
             message: Some(inserted.inserted_id),
@@ -65,6 +71,8 @@ async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
     }
 }
 
+
+//
 #[get("/api/devices/find")]
 async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
     let filter_in = body.into_inner();
