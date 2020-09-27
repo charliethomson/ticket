@@ -37,16 +37,24 @@ async fn user_new(body: web::Json<User>) -> impl Responder {
     }
 }
 
+
+// API and function to return a user by an ID
 #[get("/api/users/{id}")]
 async fn user_get(web::Path(id): web::Path<i64>) -> impl Responder {
+    // Get the users table
     let collection = db::get_collection("users").await.unwrap();
+
+    // Create a filter using the ID passed to the API
     let mut filter = Document::new();
     filter.insert("id", id);
+
+    // Attempt to find the user using the filter
     let user: Option<User> = match collection.find_one(Some(filter), None).await {
         Ok(Some(document)) => User::deserialize(Deserializer::new(Bson::Document(document))).ok(),
         _ => None,
     };
 
+    // Return the result
     match user {
         Some(user) => HttpResponse::Ok().json(user),
         None => HttpResponse::NoContent().finish(),
