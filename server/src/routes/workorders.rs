@@ -90,8 +90,10 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
     }
 }
 
+// API call to get all workorders in the table without any filtering
 #[get("/api/workorders/all")]
 async fn workorders_all() -> impl Responder {
+    // Get all workorders from the table
     let collection = db::get_collection("workorders").await.unwrap();
     let items_stream = collection.find(None, None).await.unwrap();
     let items_sync: Vec<MongoResult<Document>> = items_stream.collect().await;
@@ -101,6 +103,7 @@ async fn workorders_all() -> impl Responder {
             .iter()
             .filter(|res| res.is_ok())
             .cloned()
+            // Convert documents into workorder objects
             .map(|res| Workorder::try_from(res.unwrap()).unwrap())
             .collect::<Vec<Workorder>>(),
     )
