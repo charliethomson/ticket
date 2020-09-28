@@ -34,8 +34,11 @@ pub struct CustomerAttributes {
     pub email: Option<String>,
 }
 
+
+//API call to create a new device, server listening on "/api/devices/new"
 #[post("/api/devices/new")]
 async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
+    //Get JSON from POST and convert into device struct
     let device_body = body.into_inner();
     let collection = db::get_collection("devices").await.unwrap();
     let device_count = collection.count_documents(None, None).await.unwrap();
@@ -49,8 +52,11 @@ async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
         workorders: vec![],
         password: device_body.password,
     };
+
+    //From this struct we insert the device into the database
     let result = collection.insert_one(device.into_document(), None).await;
     match result {
+        //Return with a response of database insertion
         Ok(inserted) => HttpResponse::Ok().json(OkMessage {
             ok: true,
             message: Some(inserted.inserted_id),
@@ -65,17 +71,26 @@ async fn device_new(body: web::Json<DeviceNew>) -> impl Responder {
     }
 }
 
+
+//API call for finding a device in the database
 #[get("/api/devices/find")]
 async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
     let filter_in = body.into_inner();
     let mut filter_out = Document::new();
+
+    //Constructing a filter for the database:
+
+    //Check if name exists
     if let Some(name) = filter_in.name {
         filter_out.insert("name", name);
     }
+    
+    //Check if serial exists:
     if let Some(serial) = filter_in.serial {
         filter_out.insert("serial", serial);
     }
-    // Customer attrs
+
+    // Check if customer attributes exists:
     if let Some(customer_attrs) = filter_in.customer_attributes {
         let mut customer_filter = Document::new();
         if let Some(phone_number) = customer_attrs.phone_number {
@@ -93,12 +108,15 @@ async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
         filter_out.insert("customer", customer_filter);
     }
 
+    //Grab the devices table from the database the database and find the device using the filter
     let collection = db::get_collection("devices").await.unwrap();
     let result = collection.find(Some(filter_out), None).await;
     match result {
+        //Checking the stream of devices from the table
         Ok(stream) => {
             let documents: Vec<MongoResult<Document>> = stream.collect().await;
             let devices: Vec<Device> = documents
+                //iterate over the vec of all documents that passed the filter, converts each into a device, and then add them to a vec, and returns the result
                 .iter()
                 .filter(|res| res.is_ok())
                 .cloned()
@@ -121,6 +139,8 @@ async fn device_find(body: web::Json<DeviceFind>) -> impl Responder {
     }
 }
 
+
+//API call to get a device based on that device's ID
 #[get("/api/devices/{id}")]
 async fn device_id(web::Path(id): web::Path<i64>) -> impl Responder {
     let collection = db::get_collection("devices").await.unwrap();

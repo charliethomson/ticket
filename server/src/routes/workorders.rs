@@ -31,12 +31,16 @@ pub struct InitialNote {
     location: Option<String>,
 }
 
+
+// API call to create and handle making a new workorder
 #[post("/api/workorders/new")]
 async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
+    //Get the workorders table
     let collection = db::get_collection("workorders").await.unwrap();
     let count = collection.count_documents(None, None).await.unwrap();
     let workorder = body.into_inner();
     // TODO: unwrap_or_default
+    // Build the workorder
     let to_commit = Workorder {
         id: count,
         origin: Store::try_from_id(workorder.origin)
@@ -70,9 +74,11 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
         }],
     };
     println!("{:#?}", to_commit);
+    // Take created workorder and insert it into the workorders table
     let document: Document = to_commit.into_document();
     let insert_result = collection.insert_one(document, None).await;
     match insert_result {
+        //Return the result
         Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
             ok: true,
             message: None,
@@ -84,8 +90,10 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
     }
 }
 
+// API call to get all workorders in the table without any filtering
 #[get("/api/workorders/all")]
 async fn workorders_all() -> impl Responder {
+    // Get all workorders from the table
     let collection = db::get_collection("workorders").await.unwrap();
     let items_stream = collection.find(None, None).await.unwrap();
     let items_sync: Vec<MongoResult<Document>> = items_stream.collect().await;
@@ -95,16 +103,24 @@ async fn workorders_all() -> impl Responder {
             .iter()
             .filter(|res| res.is_ok())
             .cloned()
+            // Convert documents into workorder objects
             .map(|res| Workorder::try_from(res.unwrap()).unwrap())
             .collect::<Vec<Workorder>>(),
     )
 }
 
+
+// API call to get a workorder by its ID
 #[get("/api/workorders/{id}")]
 async fn workorder_by_id(web::Path(id): web::Path<i64>) -> impl Responder {
+    // Get all workorders from the workorders table
     let collection = db::get_collection("workorders").await.unwrap();
+
+    // Create the filter from the ID
     let mut filter = Document::new();
     filter.insert("_id", id);
+
+    // Get the workorder using the filter
     let result = collection.find_one(Some(filter), None).await;
     match result {
         // TODO: Unwrap
