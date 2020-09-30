@@ -51,8 +51,29 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
         created: Utc::now(),
         next_update: body.initial_note.next_update,
         contents: body.initial_note.contents.clone(),
-        location: None,
     };
+
+    // TODO;
+    let wo_id: i64 = crate::db::get_connection()
+        .unwrap()
+        .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
+        .unwrap()
+        .unwrap()
+        .unwrap_or(0)
+        + 1;
+
+    // TODO;
+    let res = match note.insert(wo_id) {
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            })
+        }
+        Ok(result) => result,
+    };
+
+    eprintln!("{:?}", res);
 
     let wo = Workorder {
         workorder_id: None,
@@ -67,6 +88,7 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
     };
 
     let result = wo.insert();
+    eprintln!("{:?}", result);
 
     match result {
         Ok(id) => HttpResponse::Ok().json(OkMessage {

@@ -319,7 +319,7 @@ impl Workorder {
             workorder_status, 
             customer, 
             device,
-            brief,
+            brief
         ) values (
             :origin, 
             :travel_status, 
@@ -328,26 +328,24 @@ impl Workorder {
             :workorder_status, 
             :customer, 
             :device,
-            :brief,
+            :brief
         );",
             params! {
-                ":origin" =>self.origin,
-                ":travel_status" =>self.travel_status.clone(),
-                ":created" =>self.created.to_string(),
-                ":quoted" =>self.quoted_time
-                .map(|a| a.to_string())
-                .unwrap_or("NULL".to_owned()),
-                ":workorder_status" =>self.status.clone(),
-                ":customer" =>self.customer,
-                ":device" =>self.device,
-                ":brief" =>self.brief.clone(),
+                "origin" =>self.origin,
+                "travel_status" =>self.travel_status.clone(),
+                "created" => self.created.timestamp(),
+                "quoted" => self.quoted_time.map(|dt| dt.timestamp()),
+                "workorder_status" =>self.status.clone(),
+                "customer" =>self.customer,
+                "device" =>self.device,
+                "brief" =>self.brief.clone(),
             },
         )?;
         Ok(conn
             .query_first::<i64, String>("SELECT LAST_INSERT_ID(id) FROM workorders".to_owned())?)
     }
 
-    pub fn find(filter: WorkorderFind) -> mysql::Result<Option<Vec<Self>>> {
+    pub fn find(filter: WorkorderFind) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         let query = format!(
@@ -366,7 +364,7 @@ impl Workorder {
             .map(|id| Workorder::by_id(*id))
             .filter(|wo| wo.is_ok() && wo.as_ref().unwrap().is_some())
             .map(|wo| wo.unwrap().unwrap())
-            .collect::<Vec<Workorder>>();
+            .collect::<Vec<WorkorderResponse>>();
         if wos.len() != 0 {
             Ok(Some(wos))
         } else {
@@ -374,7 +372,7 @@ impl Workorder {
         }
     }
 
-    pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
+    pub fn by_id(id: i64) -> mysql::Result<Option<WorkorderResponse>> {
         let mut conn = crate::db::get_connection()?;
         if let Some((
             id,
@@ -386,32 +384,39 @@ impl Workorder {
             device_id,
             customer_id,
             brief,
-            notes,
-        )) = conn.query_first::<(
-            i64,
-            i64,
-            String,
-            NaiveDateTime,
-            Option<NaiveDateTime>,
-            String,
-            i64,
-            i64,
-            String,
-            i64,
-        ), String>(format!(
-            "select * from workorders where workorders.id={}",
-            id
-        ))? {
-            Ok(Some(Workorder {
-                workorder_id: Some(id),
-                origin: store_id,
+        )) = conn
+            .query_first::<(i64, i64, String, i64, Option<i64>, String, i64, i64, String), String>(
+                format!("select * from workorders where workorders.id={}", id),
+            )?
+        {
+            let origin = match Store::by_id(store_id)? {
+                Some(store) => store,
+                _ => panic!(),
+            };
+            let device = match Device::by_id(device_id)? {
+                Some(device) => device,
+                _ => panic!(),
+            };
+            let customer = match Customer::by_id(customer_id)? {
+                Some(customer) => customer,
+                _ => panic!(),
+            };
+            let notes = match Note::all_for_wo(id)? {
+                Some(notes) => notes,
+                _ => panic!(),
+            };
+
+            Ok(Some(WorkorderResponse {
+                workorder_id: id,
+                origin,
                 travel_status,
-                created: DateTime::from_utc(created, Utc),
-                quoted_time: quoted.map(|ndt| DateTime::from_utc(ndt, Utc)),
+                created: created,
+                quoted_time: quoted,
                 status,
-                customer: customer_id,
-                device: device_id,
+                customer,
+                device,
                 brief,
+                notes,
             }))
         } else {
             Ok(None)
@@ -420,8 +425,8 @@ impl Workorder {
 }
 
 impl Device {
-    pub fn insert(&self) -> mysql::Result<()> {
-        Ok(())
+    pub fn insert(&self) -> mysql::Result<i64> {
+        Ok(0)
     }
 
     pub fn find(filter: DeviceFind) -> mysql::Result<Option<Self>> {
@@ -442,8 +447,8 @@ impl Device {
 }
 
 impl Store {
-    pub fn insert(&self) -> mysql::Result<()> {
-        Ok(())
+    pub fn insert(&self) -> mysql::Result<i64> {
+        Ok(0)
     }
 
     pub fn find(filter: StoreFind) -> mysql::Result<Option<Self>> {
@@ -464,8 +469,8 @@ impl Store {
 }
 
 impl Customer {
-    pub fn insert(&self) -> mysql::Result<()> {
-        Ok(())
+    pub fn insert(&self) -> mysql::Result<i64> {
+        Ok(0)
     }
 
     pub fn find(filter: CustomerFind) -> mysql::Result<Option<Self>> {
@@ -486,8 +491,8 @@ impl Customer {
 }
 
 impl User {
-    pub fn insert(&self) -> mysql::Result<()> {
-        Ok(())
+    pub fn insert(&self) -> mysql::Result<i64> {
+        Ok(0)
     }
 
     pub fn find(filter: UserFind) -> mysql::Result<Option<Self>> {
@@ -504,5 +509,69 @@ impl User {
         } else {
             Ok(None)
         }
+    }
+}
+
+impl Note {
+    pub fn insert(&self, workorder_id: i64) -> mysql::Result<i64> {
+        let mut conn = crate::db::get_connection()?;
+        conn.exec_drop(
+            "insert into notes
+        (   
+            wo_key,
+            contents,
+            user,
+            posted,
+            next_update
+        ) values (
+            :wo_key,
+            :contents,
+            :user,
+            :posted,
+            :next_update
+        );",
+            params! {
+                "wo_key" => workorder_id,
+                "contents" => self.contents.clone(),
+                "user" => self.user,
+                "posted" => self.created.timestamp(),
+                "next_update" => self.next_update.map(|op| op.timestamp())
+            },
+        )?;
+
+        // TODO: Unwrap
+        Ok(conn
+            .query_first::<i64, String>("SELECT LAST_INSERT_ID(note_id) FROM notes".to_owned())?
+            .unwrap())
+    }
+
+    pub fn find(filter: StoreFind) -> mysql::Result<Option<Self>> {
+        Ok(None)
+    }
+
+    pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
+        let mut conn = crate::db::get_connection()?;
+        if let Some(note_tuple) = conn.query_first::<NoteTuple, String>(format!(
+            "select contents, user, posted, next_update from notes where note_id={}",
+            id
+        ))? {
+            Ok(Some(Note::from(note_tuple)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn all_for_wo(wo_id: i64) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let ids: Vec<i64> =
+            conn.query::<i64, String>(format!("select note_id from notes where wo_key={}", wo_id))?;
+
+        Ok(Some(
+            ids.iter()
+                .map(|id| Note::by_id(*id))
+                .filter(|note| note.is_ok() && note.as_ref().unwrap().is_some())
+                .map(|note| note.unwrap().unwrap())
+                .collect(),
+        ))
     }
 }

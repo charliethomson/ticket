@@ -15,7 +15,21 @@ pub type WorkorderTuple = (
     String,
 );
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub struct WorkorderResponse {
+    pub workorder_id: i64,
+    pub origin: Store,
+    pub travel_status: String,
+    pub created: i64,
+    pub quoted_time: Option<i64>,
+    pub status: String,
+    pub customer: Customer,
+    pub device: Device,
+    pub brief: String,
+    pub notes: Vec<Note>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Workorder {
     pub workorder_id: Option<i64>,
     pub origin: i64,
@@ -57,7 +71,7 @@ impl From<WorkorderTuple> for Workorder {
 
 pub type DeviceTuple = (i64, String, String, i64, String);
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Device {
     pub id: i64,
     pub serial: String,
@@ -90,7 +104,7 @@ pub type StoreTuple = (
     String,
 );
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Store {
     pub id: i64,
     pub name: String,
@@ -119,38 +133,31 @@ impl From<StoreTuple> for Store {
     }
 }
 
-pub type NoteTuple = (
-    i64,
-    DateTime<Utc>,
-    Option<DateTime<Utc>>,
-    String,
-    Option<String>,
-);
+pub type NoteTuple = (String, i64, i64, Option<i64>);
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Note {
     pub user: i64,
     pub created: DateTime<Utc>,
     pub next_update: Option<DateTime<Utc>>, // TODO ?
     pub contents: String,
-    pub location: Option<String>,
 }
 impl From<NoteTuple> for Note {
     fn from(tuple: NoteTuple) -> Self {
-        let (user, created, next_update, contents, location) = tuple;
+        let (contents, user, created, next_update) = tuple;
         Self {
             user,
-            created,
-            next_update,
+            created: DateTime::from_utc(NaiveDateTime::from_timestamp(created, 0), Utc),
+            next_update: next_update
+                .map(|ndt| DateTime::from_utc(NaiveDateTime::from_timestamp(ndt, 0), Utc)),
             contents,
-            location,
         }
     }
 }
 
 pub type CustomerTuple = (i64, String, String, String, i64);
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Customer {
     pub id: i64,
     pub name: String,
@@ -173,7 +180,7 @@ impl From<CustomerTuple> for Customer {
 
 pub type UserTuple = (i64, String, String);
 
-#[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
     pub name: String,

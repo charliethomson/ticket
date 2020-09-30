@@ -13,6 +13,7 @@ async fn main() -> std::io::Result<()> {
             .service(workorders_find)
             .service(user_get)
             // .service(user_new)
+            .service(notes_new)
             .service(workorder_new)
             .service(workorder_by_id)
         // .service(device_find)
