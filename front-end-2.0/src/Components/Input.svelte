@@ -1,5 +1,6 @@
 <script>
     export let label
+    let name
 </script>
 
 <style>
@@ -11,6 +12,7 @@
         font-family: inherit;
         font-size: 1.3rem;
         font-weight: lighter;
+        color: white;
 
         width: 100%;
         border: 0;
@@ -21,4 +23,4 @@
 </style>
 
 <label for="name">{label}:</label>
-<input type="text" />
+<input type="text" bind:value={name} />

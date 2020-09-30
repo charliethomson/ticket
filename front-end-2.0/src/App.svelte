@@ -1,5 +1,8 @@
 <script>
     import CreateStore from "./Components/Create/CreateStore.svelte"
+    import SearchStore from "./Components/Search/SearchStore.svelte"
+
+    import { toggleCreate, toggleSearch } from "./stores"
 </script>
 
 <style>
@@ -18,5 +21,11 @@
 </style>
 
 <main>
-    <CreateStore />
+    {#if !$toggleCreate && $toggleSearch}
+        <SearchStore />
+    {:else if $toggleCreate && !$toggleSearch}
+        <CreateStore />
+    {:else}
+        <div>blah</div>
+    {/if}
 </main>
