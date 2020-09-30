@@ -1,20 +1,34 @@
 use {
-    crate::{db, models::*, routes::OkMessage},
+    crate::{db::*, routes::OkMessage},
     actix_web::{get, post, web, HttpResponse, Responder},
     chrono::{serde::ts_seconds, DateTime, Utc},
     futures::stream::StreamExt,
-    mongodb::{bson::document::Document, error::Result as MongoResult},
     serde::{Deserialize, Serialize},
     std::convert::TryFrom,
 };
+
+/*
+{
+    "origin": 1,
+    "travel_status": "Delivered",
+    "quoted_time": null,
+    "status": "Awaiting repair",
+    "customer": 1,
+    "device": 1,
+    "brief": "broken",
+    "initial_note": {
+        "user": 1,
+        "contents": "it no workie",
+        "next_update": null
+    }
+}
+*/
 
 #[derive(Serialize, Deserialize)]
 pub struct WorkorderNew {
     pub origin: i64,
     pub travel_status: String,
-    pub delivered_by: Option<String>,
-    #[serde(with = "ts_seconds")]
-    pub quoted_time: DateTime<Utc>,
+    pub quoted_time: Option<DateTime<Utc>>,
     pub status: String,
     pub customer: i64, // Customer ID
     pub device: i64,   // Device ID
@@ -24,66 +38,58 @@ pub struct WorkorderNew {
 
 #[derive(Serialize, Deserialize)]
 pub struct InitialNote {
-    checked_in_by: i64, // User ID
-    contents: String,
-    #[serde(with = "ts_seconds")]
-    next_update: DateTime<Utc>,
-    location: Option<String>,
+    pub user: i64,
+    pub contents: String,
+    pub next_update: Option<DateTime<Utc>>,
 }
-
 
 // API call to create and handle making a new workorder
 #[post("/api/workorders/new")]
 async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
-    //Get the workorders table
-    let collection = db::get_collection("workorders").await.unwrap();
-    let count = collection.count_documents(None, None).await.unwrap();
-    let workorder = body.into_inner();
-    // TODO: unwrap_or_default
-    // Build the workorder
-    let to_commit = Workorder {
-        id: count,
-        origin: Store::try_from_id(workorder.origin)
-            .await
-            .unwrap_or_default(),
-        travel_status: workorder.travel_status,
+    let note = Note {
+        user: body.initial_note.user,
         created: Utc::now(),
-        quoted_time: workorder.quoted_time,
-        status: workorder.status,
-        customer: Customer::try_from_id(workorder.customer)
-            .await
-            .unwrap_or_default(),
-        device: Device::try_from_id(workorder.device)
-            .await
-            .unwrap_or_default(),
-        brief: workorder.brief,
-        notes: vec![Note {
-            id: db::get_collection("notes")
-                .await
-                .unwrap()
-                .count_documents(None, None)
-                .await
-                .unwrap(),
-            user: User::try_from_id(workorder.initial_note.checked_in_by)
-                .await
-                .unwrap_or_default(),
-            created: Utc::now(),
-            next_update: workorder.initial_note.next_update,
-            contents: workorder.initial_note.contents,
-            location: workorder.initial_note.location.unwrap_or(String::new()),
-        }],
+        next_update: body.initial_note.next_update,
+        contents: body.initial_note.contents.clone(),
+        location: None,
     };
-    println!("{:#?}", to_commit);
-    // Take created workorder and insert it into the workorders table
-    let document: Document = to_commit.into_document();
-    let insert_result = collection.insert_one(document, None).await;
-    match insert_result {
-        //Return the result
-        Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
+
+    let wo = Workorder {
+        workorder_id: None,
+        origin: body.origin,
+        travel_status: body.travel_status.clone(),
+        created: Utc::now(),
+        quoted_time: body.quoted_time,
+        status: body.status.clone(),
+        customer: body.customer,
+        device: body.device,
+        brief: body.brief.clone(),
+    };
+
+    let result = wo.insert();
+
+    match result {
+        Ok(id) => HttpResponse::Ok().json(OkMessage {
             ok: true,
-            message: None,
+            message: Some(id),
         }),
-        Err(e) => HttpResponse::NotModified().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
+}
+
+#[get("/api/workorders/find")]
+async fn workorders_find(body: web::Json<WorkorderFind>) -> impl Responder {
+    let response = Workorder::find(body.into_inner());
+
+    match response {
+        Ok(res) => HttpResponse::Ok().json(OkMessage {
+            ok: res.is_some(),
+            message: res,
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),
@@ -93,41 +99,31 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
 // API call to get all workorders in the table without any filtering
 #[get("/api/workorders/all")]
 async fn workorders_all() -> impl Responder {
-    // Get all workorders from the table
-    let collection = db::get_collection("workorders").await.unwrap();
-    let items_stream = collection.find(None, None).await.unwrap();
-    let items_sync: Vec<MongoResult<Document>> = items_stream.collect().await;
-    println!("{:?}", items_sync);
-    HttpResponse::Ok().json(
-        items_sync
-            .iter()
-            .filter(|res| res.is_ok())
-            .cloned()
-            // Convert documents into workorder objects
-            .map(|res| Workorder::try_from(res.unwrap()).unwrap())
-            .collect::<Vec<Workorder>>(),
-    )
+    let response = Workorder::find(WorkorderFind::default());
+    match response {
+        Ok(res) => HttpResponse::Ok().json(OkMessage {
+            ok: res.is_some(),
+            message: res,
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
-
 
 // API call to get a workorder by its ID
 #[get("/api/workorders/{id}")]
 async fn workorder_by_id(web::Path(id): web::Path<i64>) -> impl Responder {
-    // Get all workorders from the workorders table
-    let collection = db::get_collection("workorders").await.unwrap();
-
-    // Create the filter from the ID
-    let mut filter = Document::new();
-    filter.insert("_id", id);
-
-    // Get the workorder using the filter
-    let result = collection.find_one(Some(filter), None).await;
-    match result {
-        // TODO: Unwrap
-        Ok(Some(workorder)) => HttpResponse::Ok().json(Workorder::try_from(workorder).unwrap()),
-        _ => {
-            eprintln!("{:#?}", result);
-            HttpResponse::NotFound().finish()
-        }
+    let wo = crate::db::models::Workorder::by_id(id);
+    match wo {
+        Ok(wo) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: wo,
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
     }
 }
