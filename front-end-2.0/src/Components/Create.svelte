@@ -1,11 +1,7 @@
 <script>
-    import Input from "./Input.svelte"
-
     export let title
-
-    function handleCreate() {
-        alert("Something has been created")
-    }
+    export let submit
+    export let search
 </script>
 
 <style>
@@ -14,6 +10,12 @@
         font-family: "Fira Sans", sans-serif;
         font-size: 33px;
         font-weight: bold;
+    }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .create {
@@ -29,18 +31,32 @@
     }
 
     .button {
-        padding: 20px;
+        padding: 40px;
         background-color: #212121;
         border-radius: 10px;
         text-align: center;
     }
+
+    .or {
+        margin-left: 50px;
+        margin-right: 50px;
+        text-align: center;
+    }
 </style>
 
-<div>
-    <div class="create">
-        <div class="title">{title}</div>
-        <slot />
+<div class="container">
+    <div>
+        <div class="create">
+            <div class="title">{title}</div>
+            <slot />
+        </div>
+
+        <div class="submit button" on:click={submit}><span>Submit</span></div>
     </div>
 
-    <div class="button" on:click={handleCreate}><span>Submit </span></div>
+    <div class="or">OR</div>
+
+    <div class="search button" on:click={search}>
+        <span>Search for a store</span>
+    </div>
 </div>
