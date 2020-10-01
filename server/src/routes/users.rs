@@ -1,49 +1,23 @@
-use crate::{db, routes::OkMessage};
-use actix_web::{get, post, web, HttpResponse, Responder};
-use serde::Deserialize;
+use crate::{
+    db::{models::User, schema::UserFind},
+    routes::OkMessage,
+};
+use actix_web::{get, post, web, HttpResponse};
 
-// // API and function to create new user
-// #[post("/api/users/new")]
-// async fn user_new(body: web::Json<User>) -> impl Responder {
-//     let new_user = body.into_inner();
-//     let document = new_user.into_document();
+#[post("/api/users")]
+async fn users_post(_body: Option<web::Json<UserFind>>) -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
 
-//     // Get the users table
-//     if let Ok(collection) = db::get_collection("users").await {
-//         // Attempt to insert the user into the users table
-//         let result = collection.insert_one(document, None).await;
-//         // Handle if there's an exception
-//         if let Ok(ok) = result {
-//             println!("{:?}", ok);
-//             HttpResponse::Ok().json(OkMessage::<()> {
-//                 ok: true,
-//                 message: Some(()),
-//             })
-//         } else if let Err(e) = result {
-//             HttpResponse::NotAcceptable().json(OkMessage {
-//                 ok: false,
-//                 message: Some(format!("{}", e)),
-//             })
-//         } else {
-//             unreachable!()
-//         }
-//     } else {
-//         HttpResponse::InternalServerError().json(OkMessage {
-//             ok: false,
-//             message: Some("Failed to get collection `users`"),
-//         })
-//     }
-// }
-
-// API and function to return a user by an ID
-#[get("/api/users/{id}")]
-async fn user_get(web::Path(id): web::Path<i64>) -> impl Responder {
-    match db::models::User::by_id(id) {
+#[get("/api/users")]
+async fn users_get(body: Option<web::Json<UserFind>>) -> HttpResponse {
+    let filter = body.map(|json| json.into_inner()).unwrap_or_default();
+    match User::find(filter) {
         Ok(user) => HttpResponse::Ok().json(OkMessage {
-            ok: user.is_some(),
+            ok: true,
             message: user,
         }),
-        Err(e) => HttpResponse::NotFound().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),

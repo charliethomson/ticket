@@ -1,0 +1,44 @@
+
+/api:
+    :: yields {
+        ok: boolean,
+        message: MessageT | null,
+    }
+
+    /workorders:
+        POST : {
+            "origin": number,
+            "travel_status": string,
+            "quoted_time": number | null, // (unix timestamp)
+            "status": string,
+            "customer": number, // (customer id)
+            "device": number, // (device id)
+            "brief": string, 
+            "initial_note": {
+                "user": number, // user id for the user creating the workorder
+                "contents": string,
+                "next_update": number | null // (unix timestamp)
+            }
+        }
+        MessageT = number; // Id of inserted workorder
+        
+        GET : null | {
+            id: number | null,
+            origin: number | null,
+            travel_status: string | null,
+            created: number | null,
+            quoted_time: number | null,
+            status: string | null,
+            customer: number | null,
+            device: number | null,
+            brief: string | null,
+        }
+        MessageT = Workorder[]; // Workorders matching the filter
+
+    /users:
+        POST : {
+
+        },
+        GET : {
+
+        }

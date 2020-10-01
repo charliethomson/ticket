@@ -1,9 +1,12 @@
 use {
     crate::{
-        db::models::{Note, User},
+        db::{
+            models::{Note, User},
+            schema::NotesOptions,
+        },
         routes::OkMessage,
     },
-    actix_web::{post, web, HttpResponse},
+    actix_web::{get, post, web::Json, HttpResponse},
     chrono::{DateTime, NaiveDateTime, Utc},
     serde::{Deserialize, Serialize},
 };
@@ -16,8 +19,8 @@ pub struct NotesNew {
     next_update: Option<i64>,
 }
 
-#[post("/api/notes/new")]
-pub fn notes_new(web::Json(body): web::Json<NotesNew>) -> HttpResponse {
+#[post("/api/notes")]
+pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
     let note = Note {
         user: body.user.id,
         created: Utc::now(),
@@ -37,5 +40,10 @@ pub fn notes_new(web::Json(body): web::Json<NotesNew>) -> HttpResponse {
             message: Some(e.to_string()),
         }),
     };
+    HttpResponse::Ok().finish()
+}
+
+#[get("/api/notes")]
+pub fn notes_get(_body: Option<Json<NotesOptions>>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }

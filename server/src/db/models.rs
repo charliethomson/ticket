@@ -1,7 +1,6 @@
 // TODO: Input validation for important fields
 
-use chrono::{prelude::*, serde::ts_seconds};
-use mysql::{prelude::*, *};
+use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 pub type WorkorderTuple = (
     i64,

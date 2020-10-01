@@ -1,28 +1,9 @@
 use {
     crate::{db::*, routes::OkMessage},
-    actix_web::{get, post, web, HttpResponse, Responder},
-    chrono::{serde::ts_seconds, DateTime, Utc},
-    futures::stream::StreamExt,
+    actix_web::{get, post, web::Json, HttpResponse, Responder},
+    chrono::{DateTime, Utc},
     serde::{Deserialize, Serialize},
-    std::convert::TryFrom,
 };
-
-/*
-{
-    "origin": 1,
-    "travel_status": "Delivered",
-    "quoted_time": null,
-    "status": "Awaiting repair",
-    "customer": 1,
-    "device": 1,
-    "brief": "broken",
-    "initial_note": {
-        "user": 1,
-        "contents": "it no workie",
-        "next_update": null
-    }
-}
-*/
 
 #[derive(Serialize, Deserialize)]
 pub struct WorkorderNew {
@@ -44,8 +25,8 @@ pub struct InitialNote {
 }
 
 // API call to create and handle making a new workorder
-#[post("/api/workorders/new")]
-async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
+#[post("/api/workorders")]
+async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
     let note = Note {
         user: body.initial_note.user,
         created: Utc::now(),
@@ -102,46 +83,15 @@ async fn workorder_new(body: web::Json<WorkorderNew>) -> impl Responder {
     }
 }
 
-#[get("/api/workorders/find")]
-async fn workorders_find(body: web::Json<WorkorderFind>) -> impl Responder {
-    let response = Workorder::find(body.into_inner());
+#[get("/api/workorders")]
+async fn workorders_get(body: Option<Json<WorkorderFind>>) -> impl Responder {
+    let filter = body.map(|body| body.into_inner()).unwrap_or_default();
+    let response = Workorder::find(filter);
 
     match response {
         Ok(res) => HttpResponse::Ok().json(OkMessage {
-            ok: res.is_some(),
-            message: res,
-        }),
-        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-            ok: false,
-            message: Some(e.to_string()),
-        }),
-    }
-}
-
-// API call to get all workorders in the table without any filtering
-#[get("/api/workorders/all")]
-async fn workorders_all() -> impl Responder {
-    let response = Workorder::find(WorkorderFind::default());
-    match response {
-        Ok(res) => HttpResponse::Ok().json(OkMessage {
-            ok: res.is_some(),
-            message: res,
-        }),
-        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-            ok: false,
-            message: Some(e.to_string()),
-        }),
-    }
-}
-
-// API call to get a workorder by its ID
-#[get("/api/workorders/{id}")]
-async fn workorder_by_id(web::Path(id): web::Path<i64>) -> impl Responder {
-    let wo = crate::db::models::Workorder::by_id(id);
-    match wo {
-        Ok(wo) => HttpResponse::Ok().json(OkMessage {
             ok: true,
-            message: wo,
+            message: res,
         }),
         Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,

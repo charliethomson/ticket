@@ -1,89 +1,73 @@
 use crate::db::models::*;
-use chrono::prelude::*;
 use mysql::{prelude::*, *};
 use serde::Deserialize;
+use std::collections::HashMap;
+
+const FIELD_DELIM: &'static str = ",";
+const ITEM_DELIM: &'static str = ";";
+const TABLE_MARKER: &'static str = "**";
 
 #[derive(Default, Deserialize)]
 pub struct WorkorderFind {
     pub id: Option<i64>,
     pub origin: Option<i64>,
     pub travel_status: Option<String>,
-    pub created: Option<DateTime<Utc>>,
-    pub quoted_time: Option<DateTime<Utc>>,
+    pub created: Option<i64>,
+    pub quoted_time: Option<i64>,
     pub status: Option<String>,
     pub customer: Option<i64>,
     pub device: Option<i64>,
     pub brief: Option<String>,
 }
+
 impl WorkorderFind {
-    pub fn into_filter(&self) -> String {
-        let mut filter = String::new();
-        let mut pushed = false;
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
 
         if let Some(id) = self.id {
-            filter.push_str(&format!("workorders.id={}", id));
-            pushed = true;
+            items.insert("id".to_owned(), id.to_string());
         }
         if let Some(origin) = self.origin {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.origin={}", origin));
-            pushed = true;
+            items.insert("origin".to_owned(), origin.to_string());
         }
         if let Some(travel_status) = &self.travel_status {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.travel_status=\"{}\"", travel_status));
-            pushed = true;
+            items.insert("travel_status".to_owned(), travel_status.to_string());
         }
         if let Some(created) = &self.created {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.created=\"{}\"", created));
-            pushed = true;
+            items.insert("created".to_owned(), created.to_string());
         }
         if let Some(quoted_time) = &self.quoted_time {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.quoted=\"{}\"", quoted_time));
-            pushed = true;
+            items.insert("quoted".to_owned(), quoted_time.to_string());
         }
         if let Some(status) = &self.status {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.status=\"{}\"", status));
-            pushed = true;
+            items.insert("status".to_owned(), status.to_string());
         }
         if let Some(customer) = self.customer {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.customer={}", customer));
-            pushed = true;
+            items.insert("customer".to_owned(), customer.to_string());
         }
         if let Some(device) = self.device {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.device={}", device));
-            pushed = true;
+            items.insert("device".to_owned(), device.to_string());
         }
         if let Some(brief) = &self.brief {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("workorders.brief=\"{}\"", brief));
+            items.insert("brief".to_owned(), brief.to_string());
         }
-        if pushed {
-            filter
-        } else {
-            String::new()
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
         }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "workorders")
     }
 }
 
@@ -95,123 +79,101 @@ pub struct DeviceFind {
     pub password: Option<String>,
 }
 impl DeviceFind {
-    pub fn into_filter(&self) -> String {
-        let mut filter = String::new();
-        let mut pushed = false;
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
 
         if let Some(id) = self.id {
-            filter.push_str(&format!("devices.id={}", id));
-            pushed = true;
+            items.insert("id".to_owned(), id.to_string());
         }
         if let Some(serial) = &self.serial {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("devices.serial=\"{}\"", serial));
-            pushed = true;
+            items.insert("serial".to_owned(), serial.to_string());
         }
         if let Some(name) = &self.name {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("devices.name=\"{}\"", name));
-            pushed = true;
+            items.insert("name".to_owned(), name.to_string());
         }
         if let Some(password) = &self.password {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("devices.password=\"{}\"", password));
+            items.insert("password".to_owned(), password.to_string());
         }
-        if pushed {
-            filter
-        } else {
-            String::new()
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
         }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "devices")
     }
 }
 
-#[derive(Default)]
-pub struct StoreFind {
+#[derive(Default, Deserialize)]
+pub struct StoreOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub contact_name: Option<String>,
-    pub phone_number: Option<i32>,
+    pub phone_number: Option<String>,
     pub email: Option<String>,
     pub address: Option<String>,
     pub city: Option<String>,
     pub state: Option<String>,
-    pub zip: Option<i32>,
+    pub zip: Option<String>,
 }
-impl StoreFind {
-    pub fn into_filter(&self) -> String {
-        let mut filter = String::new();
-        let mut pushed = false;
+impl StoreOptions {
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
 
         if let Some(id) = self.id {
-            filter.push_str(&format!("stores.id={}", id));
-            pushed = true;
+            items.insert("id".to_owned(), id.to_string());
         }
         if let Some(name) = &self.name {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.name=\"{}\"", name));
-            pushed = true;
+            items.insert("store_name".to_owned(), name.to_string());
         }
         if let Some(contact_name) = &self.contact_name {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.contact_name=\"{}\"", contact_name));
-            pushed = true;
+            items.insert("contact_name".to_owned(), contact_name.to_string());
         }
         if let Some(phone_number) = &self.phone_number {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.phone_number=\"{}\"", phone_number));
-            pushed = true;
+            items.insert("phone_number".to_owned(), phone_number.to_string());
         }
         if let Some(email) = &self.email {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.email_address=\"{}\"", email));
-            pushed = true;
+            items.insert("email_address".to_owned(), email.to_string());
         }
         if let Some(address) = &self.address {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.address=\"{}\"", address));
-            pushed = true;
+            items.insert("address".to_owned(), address.to_string());
         }
         if let Some(city) = &self.city {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.city=\"{}\"", city));
-            pushed = true;
+            items.insert("city".to_owned(), city.to_string());
         }
         if let Some(state) = &self.state {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.state=\"{}\"", state));
-            pushed = true;
+            items.insert("state".to_owned(), state.to_string());
         }
         if let Some(zip) = &self.zip {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("stores.zip={}", zip));
+            items.insert("zip".to_owned(), zip.to_string());
         }
-        if pushed {
-            filter
-        } else {
-            String::new()
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
         }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "stores")
     }
 }
 
@@ -224,50 +186,45 @@ pub struct CustomerFind {
     pub store_id: Option<i64>,
 }
 impl CustomerFind {
-    pub fn into_filter(&self) -> String {
-        let mut filter = String::new();
-        let mut pushed = false;
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
 
         if let Some(id) = self.id {
-            filter.push_str(&format!("customers.id={}", id));
-            pushed = true;
+            items.insert("id".into(), id.to_string());
         }
         if let Some(name) = &self.name {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("customers.name=\"{}\"", name));
-            pushed = true;
+            items.insert("name".into(), name.to_string());
         }
         if let Some(phone_number) = &self.phone_number {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("customers.phone_number=\"{}\"", phone_number));
-            pushed = true;
+            items.insert("phone_number".into(), phone_number.to_string());
         }
         if let Some(email) = &self.email {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("customers.email=\"{}\"", email));
-            pushed = true;
+            items.insert("email".into(), email.to_string());
         }
         if let Some(store_id) = &self.store_id {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("customers.store_id={}", store_id));
+            items.insert("store_id".into(), store_id.to_string());
         }
-        if pushed {
-            filter
-        } else {
-            String::new()
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
         }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "customers")
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Deserialize)]
 pub struct UserFind {
     pub id: Option<i64>,
     pub name: Option<String>,
@@ -275,35 +232,70 @@ pub struct UserFind {
     // TODO:
 }
 impl UserFind {
-    // Converts the struct into a string:
-    // { id: None, name: Some("foo"), phone_number: Some("5402292296") }
-    // -> "where users.name="foo" and users.phone_number="5402292296""
-    pub fn into_filter(&self) -> String {
-        let mut filter = String::new();
-        let mut pushed = false;
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
 
         if let Some(id) = self.id {
-            filter.push_str(&format!("users.id={}", id));
-            pushed = true;
+            items.insert("id".to_owned(), id.to_string());
         }
         if let Some(name) = &self.name {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("users.name=\"{}\"", name));
-            pushed = true;
+            items.insert("name".to_owned(), name.to_string());
         }
         if let Some(phone_number) = &self.phone_number {
-            if pushed {
-                filter.push_str(" and ")
-            }
-            filter.push_str(&format!("users.phone_number=\"{}\"", phone_number));
+            items.insert("phone_number".to_owned(), phone_number.to_string());
         }
-        if pushed {
-            filter
-        } else {
-            String::new()
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
         }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "users")
+    }
+}
+
+#[derive(Default, Deserialize)]
+pub struct NotesOptions {
+    pub note_id: Option<i64>,
+    pub workorder_id: Option<i64>,
+}
+impl NotesOptions {
+    pub fn into_delimited(&self) -> String {
+        let mut items: HashMap<String, String> = HashMap::new();
+
+        if let Some(note_id) = self.note_id {
+            items.insert("note_id".to_owned(), note_id.to_string());
+        }
+        if let Some(workorder_id) = self.workorder_id {
+            items.insert("wo_key".to_owned(), workorder_id.to_string());
+        }
+
+        let mut strs = vec![];
+
+        for (key, value) in items {
+            strs.push(format!(
+                "{}.{}{}{:?}",
+                TABLE_MARKER, key, FIELD_DELIM, value
+            ));
+        }
+
+        strs.join(ITEM_DELIM)
+    }
+    pub fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, "=")
+            .replace(TABLE_MARKER, "notes")
     }
 }
 
@@ -429,7 +421,7 @@ impl Device {
         Ok(0)
     }
 
-    pub fn find(filter: DeviceFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: DeviceFind) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 
@@ -448,11 +440,70 @@ impl Device {
 
 impl Store {
     pub fn insert(&self) -> mysql::Result<i64> {
-        Ok(0)
+        let mut conn = crate::db::get_connection()?;
+        conn.exec_drop(
+            "insert into stores
+        (   
+            store_name,
+            contact_name,
+            phone_number,
+            email_address,
+            address,
+            city,
+            state,
+            zip
+        ) values (
+            :store_name,
+            :contact_name,
+            :phone_number,
+            :email_address,
+            :address,
+            :city,
+            :state,
+            :zip
+        );",
+            params! {
+                "store_name" => self.name.to_string(),
+                "contact_name" => self.contact_name.to_string(),
+                "phone_number" => self.phone_number.to_string(),
+                "email_address" => self.email.to_string(),
+                "address" => self.address.to_string(),
+                "city" => self.city.to_string(),
+                "state" => self.state.to_string(),
+                "zip" => self.zip.to_string()
+            },
+        )?;
+
+        // TODO: Unwrap
+        Ok(conn
+            .query_first::<i64, String>("SELECT LAST_INSERT_ID(id) FROM stores".to_owned())?
+            .unwrap())
     }
 
-    pub fn find(filter: StoreFind) -> mysql::Result<Option<Self>> {
-        Ok(None)
+    pub fn find(filter: StoreOptions) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let filter = filter.into_filter();
+        let stores: Vec<Store> = conn
+            .query::<i64, String>(format!(
+                "select id from stores{}",
+                if filter.len() != 0 {
+                    format!(" where {}", filter)
+                } else {
+                    "".to_string()
+                }
+            ))?
+            .iter()
+            // BIG TODO
+            .map(|id| Store::by_id(*id))
+            .filter(|res| res.is_ok() && res.as_ref().unwrap().is_some())
+            .map(|resop| resop.unwrap().unwrap())
+            .collect();
+
+        Ok(if stores.len() == 0 {
+            None
+        } else {
+            Some(stores)
+        })
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
@@ -473,7 +524,7 @@ impl Customer {
         Ok(0)
     }
 
-    pub fn find(filter: CustomerFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: CustomerFind) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 
@@ -495,7 +546,7 @@ impl User {
         Ok(0)
     }
 
-    pub fn find(filter: UserFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: UserFind) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 
@@ -545,7 +596,7 @@ impl Note {
             .unwrap())
     }
 
-    pub fn find(filter: StoreFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: NotesOptions) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 

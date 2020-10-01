@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 mod db;
 mod routes;
 
@@ -9,15 +10,23 @@ async fn main() -> std::io::Result<()> {
     use routes::*;
     let server = HttpServer::new(|| {
         App::new()
-            .service(workorders_all)
-            .service(workorders_find)
-            .service(user_get)
-            // .service(user_new)
-            .service(notes_new)
-            .service(workorder_new)
-            .service(workorder_by_id)
-        // .service(device_find)
-        // .service(device_new)
+            .service(users_post)
+            .service(users_get)
+            //
+            .service(workorders_post)
+            .service(workorders_get)
+            //
+            .service(stores_put)
+            .service(stores_post)
+            .service(stores_get)
+            //
+            .service(notes_get)
+            .service(notes_post)
+        // .service()
+        // .service()
+        // .service()
+        // .service()
+        // .service()
     })
     .bind(URL)?;
     println!("Listening on http://{}", URL);
