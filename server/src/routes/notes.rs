@@ -1,9 +1,6 @@
 use {
     crate::{
-        db::{
-            models::{Note, User},
-            schema::NotesOptions,
-        },
+        db::{models::Note, schema::NotesOptions},
         routes::OkMessage,
     },
     actix_web::{get, post, web::Json, HttpResponse},
@@ -14,7 +11,7 @@ use {
 #[derive(Serialize, Deserialize)]
 pub struct NotesNew {
     workorder_id: i64,
-    user: User,
+    user_id: i64,
     contents: String,
     next_update: Option<i64>,
 }
@@ -22,7 +19,7 @@ pub struct NotesNew {
 #[post("/api/notes")]
 pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
     let note = Note {
-        user: body.user.id,
+        user: body.user_id,
         created: Utc::now(),
         next_update: body
             .next_update
@@ -44,6 +41,16 @@ pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
 }
 
 #[get("/api/notes")]
-pub fn notes_get(_body: Option<Json<NotesOptions>>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
+    let filter = body.map(|json| json.into_inner()).unwrap_or_default();
+    match Note::find(filter) {
+        Ok(notes) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: notes,
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }

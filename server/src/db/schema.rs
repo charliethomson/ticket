@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::db::models::*;
 use mysql::{prelude::*, *};
 use serde::Deserialize;
@@ -5,9 +7,9 @@ use std::collections::HashMap;
 
 const FIELD_DELIM: &'static str = "#$++,";
 const ITEM_DELIM: &'static str = "$!@;";
-const TABLE_MARKER: &'static str = "$%^$**";
+const TABLE_MARKER: &'static str = "$%^$#$!$@#";
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct WorkorderFind {
     pub id: Option<i64>,
     pub origin: Option<i64>,
@@ -40,7 +42,7 @@ impl WorkorderFind {
             items.insert("quoted".to_owned(), quoted_time.to_string());
         }
         if let Some(status) = &self.status {
-            items.insert("status".to_owned(), status.to_string());
+            items.insert("workorder_status".to_owned(), status.to_string());
         }
         if let Some(customer) = self.customer {
             items.insert("customer".to_owned(), customer.to_string());
@@ -55,7 +57,13 @@ impl WorkorderFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -63,7 +71,7 @@ impl WorkorderFind {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "workorders.")
     }
 }
@@ -95,7 +103,13 @@ impl DeviceFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -103,7 +117,7 @@ impl DeviceFind {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "devices.")
     }
 }
@@ -155,7 +169,13 @@ impl StoreOptions {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -163,7 +183,7 @@ impl StoreOptions {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "stores.")
     }
 }
@@ -199,7 +219,13 @@ impl CustomerFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -207,7 +233,7 @@ impl CustomerFind {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "customers.")
     }
 }
@@ -235,7 +261,13 @@ impl UserFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -243,7 +275,7 @@ impl UserFind {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "users.")
     }
 }
@@ -267,7 +299,13 @@ impl NotesOptions {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
+            strs.push(format!(
+                "{}{}{}{:?}",
+                TABLE_MARKER,
+                key,
+                FIELD_DELIM,
+                format!("%{}%", value)
+            ));
         }
 
         strs.join(ITEM_DELIM)
@@ -275,7 +313,7 @@ impl NotesOptions {
     pub fn into_filter(&self) -> String {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, "=")
+            .replace(FIELD_DELIM, " like ")
             .replace(TABLE_MARKER, "notes.")
     }
 }
@@ -314,13 +352,16 @@ impl Workorder {
                 "brief" =>self.brief.clone(),
             },
         )?;
-        Ok(conn
-            .query_first::<i64, String>("SELECT LAST_INSERT_ID(id) FROM workorders".to_owned())?)
+        Ok(conn.query_first::<i64, String>(
+            "SELECT max(LAST_INSERT_ID(id)) FROM workorders".to_owned(),
+        )?)
     }
 
     pub fn find(filter: WorkorderFind) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
+        dbg!(filter.clone());
         let filter = filter.into_filter();
+        dbg!(filter.clone());
         let query = format!(
             "select id from workorders{};",
             if filter.len() != 0 {
@@ -329,7 +370,7 @@ impl Workorder {
                 "".to_string()
             }
         );
-        eprintln!("{}", query);
+        dbg!(query.clone());
         let ids: Vec<i64> = conn.query(query)?;
 
         let wos = ids
@@ -458,7 +499,7 @@ impl Store {
         // Unwrap _should_ be safe because LAST_INSERT_ID would be set by the query above.
         // FIXME: I'll keep this here just in case, but it should be fine.
         Ok(conn
-            .query_first::<i64, String>("SELECT LAST_INSERT_ID(id) FROM stores".to_owned())?
+            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM stores".to_owned())?
             .unwrap())
     }
 
@@ -564,7 +605,7 @@ impl User {
             "set {}",
             rawstr
                 .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
+                .replace(FIELD_DELIM, " like ")
                 .replace(TABLE_MARKER, "")
         );
 
@@ -623,8 +664,31 @@ impl Note {
             .unwrap())
     }
 
-    pub fn find(_filter: NotesOptions) -> mysql::Result<Option<Self>> {
-        Ok(None)
+    pub fn find(filter: NotesOptions) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let filter = filter.into_filter();
+        let query = format!(
+            "select note_id from notes{};",
+            if filter.len() != 0 {
+                format!(" where {}", filter)
+            } else {
+                "".to_string()
+            }
+        );
+        let ids: Vec<i64> = conn.query(query)?;
+
+        // TODO (this and also in Workorders and Users)
+        let notes = ids
+            .iter()
+            .map(|id| Note::by_id(*id))
+            .filter(|note| note.is_ok() && note.as_ref().unwrap().is_some())
+            .map(|note| note.unwrap().unwrap())
+            .collect::<Vec<Note>>();
+        if notes.len() != 0 {
+            Ok(Some(notes))
+        } else {
+            Ok(None)
+        }
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {

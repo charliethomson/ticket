@@ -1,7 +1,7 @@
 use {
     crate::{db::*, routes::OkMessage},
     actix_web::{get, post, web::Json, HttpResponse, Responder},
-    chrono::{DateTime, Utc},
+    chrono::{DateTime, NaiveDateTime, Utc},
     serde::{Deserialize, Serialize},
 };
 
@@ -9,7 +9,7 @@ use {
 pub struct WorkorderNew {
     pub origin: i64,
     pub travel_status: String,
-    pub quoted_time: Option<DateTime<Utc>>,
+    pub quoted_time: Option<i64>,
     pub status: String,
     pub customer: i64, // Customer ID
     pub device: i64,   // Device ID
@@ -21,7 +21,7 @@ pub struct WorkorderNew {
 pub struct InitialNote {
     pub user: i64,
     pub contents: String,
-    pub next_update: Option<DateTime<Utc>>,
+    pub next_update: Option<i64>,
 }
 
 // API call to create and handle making a new workorder
@@ -30,7 +30,10 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
     let note = Note {
         user: body.initial_note.user,
         created: Utc::now(),
-        next_update: body.initial_note.next_update,
+        next_update: body
+            .initial_note
+            .next_update
+            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
         contents: body.initial_note.contents.clone(),
     };
 
@@ -44,6 +47,8 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
         }
     };
 
+    // this is a solid enough approximation of the workorder id, leaving a FIXME JIC
+    // FIXME:
     let wo_id = match conn
         .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
     {
@@ -57,37 +62,30 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
         }
     };
 
-    let res = match note.insert(wo_id) {
-        Ok(result) => result,
-        Err(e) => {
-            return HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            })
-        }
-    };
-
-    eprintln!("{:?}", res);
-
+    if let Err(e) = note.insert(wo_id) {
+        return HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        });
+    }
     let wo = Workorder {
         workorder_id: None,
         origin: body.origin,
         travel_status: body.travel_status.clone(),
         created: Utc::now(),
-        quoted_time: body.quoted_time,
+        quoted_time: body
+            .quoted_time
+            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
         status: body.status.clone(),
         customer: body.customer,
         device: body.device,
         brief: body.brief.clone(),
     };
 
-    let result = wo.insert();
-    eprintln!("{:?}", result);
-
-    match result {
+    match wo.insert() {
         Ok(id) => HttpResponse::Ok().json(OkMessage {
             ok: true,
-            message: Some(id),
+            message: id,
         }),
         Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
