@@ -36,8 +36,7 @@ pub async fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
             ok: false,
             message: Some(e.to_string()),
         }),
-    };
-    HttpResponse::Ok().finish()
+    }
 }
 
 #[get("/api/notes")]
