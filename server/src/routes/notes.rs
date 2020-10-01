@@ -3,7 +3,7 @@ use {
         db::{models::Note, schema::NotesOptions},
         routes::OkMessage,
     },
-    actix_web::{get, post, put, web::Json, HttpResponse},
+    actix_web::{get, post, web::Json, HttpResponse},
     chrono::{DateTime, NaiveDateTime, Utc},
     serde::{Deserialize, Serialize},
 };

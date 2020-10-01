@@ -3,11 +3,26 @@ use crate::{
     routes::OkMessage,
 };
 use actix_web::{get, post, put, web, HttpResponse};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct UserNew {
+    pub name: String,
+    pub phone_number: String,
+}
 
 #[post("/api/users")]
-pub async fn users_post(_body: Option<web::Json<UserOptions>>) -> HttpResponse {
-    // TODO
-    HttpResponse::Ok().finish()
+pub async fn users_post(body: web::Json<UserNew>) -> HttpResponse {
+    match User::insert(body.into_inner()) {
+        Ok(id) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: Some(id),
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
 
 #[get("/api/users")]

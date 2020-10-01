@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::db::models::*;
+use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -8,6 +9,7 @@ use std::collections::HashMap;
 const FIELD_DELIM: &'static str = "#$++,";
 const ITEM_DELIM: &'static str = "$!@;";
 const TABLE_MARKER: &'static str = "$%^$#$!$@#";
+const PADDING_VALUE: &'static str = "$%&&#$*@@";
 
 #[derive(Default, Deserialize, Debug, Clone)]
 pub struct WorkorderOptions {
@@ -58,11 +60,8 @@ impl WorkorderOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -72,6 +71,8 @@ impl WorkorderOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "workorders.")
     }
 }
@@ -104,11 +105,8 @@ impl DeviceOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -118,6 +116,7 @@ impl DeviceOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "devices.")
     }
 }
@@ -170,11 +169,8 @@ impl StoreOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -184,6 +180,7 @@ impl StoreOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "stores.")
     }
 }
@@ -220,11 +217,8 @@ impl CustomerOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -234,6 +228,7 @@ impl CustomerOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "customers.")
     }
 }
@@ -262,11 +257,8 @@ impl UserOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -276,6 +268,7 @@ impl UserOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "users.")
     }
 }
@@ -300,11 +293,8 @@ impl NotesOptions {
 
         for (key, value) in items {
             strs.push(format!(
-                "{}{}{}{:?}",
-                TABLE_MARKER,
-                key,
-                FIELD_DELIM,
-                format!("%{}%", value)
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
             ));
         }
 
@@ -314,6 +304,7 @@ impl NotesOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
             .replace(TABLE_MARKER, "notes.")
     }
 }
@@ -562,8 +553,26 @@ impl Customer {
 }
 
 impl User {
-    pub fn insert(&self) -> mysql::Result<i64> {
-        Ok(0)
+    pub fn insert(user: UserNew) -> mysql::Result<i64> {
+        let mut conn = crate::db::get_connection()?;
+        conn.exec_drop(
+            "insert into users
+        (   
+            name,
+            phone_number
+        ) values (
+            :name,
+            :phone_number
+        );",
+            params! {
+                "name" => user.name.clone(),
+                "phone_number" => user.phone_number.clone()
+            },
+        )?;
+
+        Ok(conn
+            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM users".to_owned())?
+            .unwrap())
     }
 
     pub fn find(filter: UserOptions) -> mysql::Result<Option<Vec<Self>>> {
@@ -602,7 +611,8 @@ impl User {
             "set {}",
             rawstr
                 .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, " like ")
+                .replace(FIELD_DELIM, "=")
+                .replace(PADDING_VALUE, "")
                 .replace(TABLE_MARKER, "")
         );
 
