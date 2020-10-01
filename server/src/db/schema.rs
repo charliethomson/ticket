@@ -10,7 +10,7 @@ const ITEM_DELIM: &'static str = "$!@;";
 const TABLE_MARKER: &'static str = "$%^$#$!$@#";
 
 #[derive(Default, Deserialize, Debug, Clone)]
-pub struct WorkorderFind {
+pub struct WorkorderOptions {
     pub id: Option<i64>,
     pub origin: Option<i64>,
     pub travel_status: Option<String>,
@@ -22,7 +22,7 @@ pub struct WorkorderFind {
     pub brief: Option<String>,
 }
 
-impl WorkorderFind {
+impl WorkorderOptions {
     pub fn into_delimited(&self) -> String {
         let mut items: HashMap<String, String> = HashMap::new();
 
@@ -239,12 +239,12 @@ impl CustomerOptions {
 }
 
 #[derive(Default, Deserialize)]
-pub struct UserFind {
+pub struct UserOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
 }
-impl UserFind {
+impl UserOptions {
     pub fn into_delimited(&self) -> String {
         let mut items: HashMap<String, String> = HashMap::new();
 
@@ -357,7 +357,7 @@ impl Workorder {
         )?)
     }
 
-    pub fn find(filter: WorkorderFind) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
+    pub fn find(filter: WorkorderOptions) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         let query = format!(
@@ -566,7 +566,7 @@ impl User {
         Ok(0)
     }
 
-    pub fn find(filter: UserFind) -> mysql::Result<Option<Vec<Self>>> {
+    pub fn find(filter: UserOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         let query = format!(
@@ -594,7 +594,7 @@ impl User {
         }
     }
 
-    pub fn update(&mut self, changes: UserFind) -> mysql::Result<bool> {
+    pub fn update(&mut self, changes: UserOptions) -> mysql::Result<bool> {
         let mut conn = crate::db::get_connection()?;
 
         let rawstr = changes.into_delimited();

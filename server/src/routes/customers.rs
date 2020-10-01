@@ -7,10 +7,21 @@ use {
     serde::{Deserialize, Serialize},
 };
 #[derive(Serialize, Deserialize)]
-pub struct CustomerNew {}
+pub struct CustomerNew {
+    name: String,
+    phone_number: String,
+    email_address: String,
+    store_id: i64,
+}
 
 #[derive(Serialize, Deserialize)]
-pub struct CustomerUpdate {}
+pub struct CustomerUpdate {
+    id: i64,
+    name: Option<String>,
+    phone_number: Option<String>,
+    email_address: Option<String>,
+    store_id: Option<i64>,
+}
 
 // TODO
 #[post("/api/customers")]

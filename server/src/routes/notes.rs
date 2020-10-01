@@ -54,8 +54,3 @@ pub async fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
         }),
     }
 }
-
-#[put("/api/notes")]
-pub async fn notes_put(_body: Option<Json<NotesOptions>>) -> HttpResponse {
-    HttpResponse::Ok().finish()
-}

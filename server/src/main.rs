@@ -23,7 +23,6 @@ async fn main() -> std::io::Result<()> {
             //
             .service(notes_get)
             .service(notes_post)
-            .service(notes_put)
             //
             .service(devices_put)
             .service(devices_post)

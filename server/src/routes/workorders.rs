@@ -95,7 +95,7 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
 }
 
 #[get("/api/workorders")]
-pub async fn workorders_get(body: Option<Json<WorkorderFind>>) -> HttpResponse {
+pub async fn workorders_get(body: Option<Json<WorkorderOptions>>) -> HttpResponse {
     let filter = body.map(|body| body.into_inner()).unwrap_or_default();
     let response = Workorder::find(filter);
 
@@ -112,6 +112,6 @@ pub async fn workorders_get(body: Option<Json<WorkorderFind>>) -> HttpResponse {
 }
 
 #[put("/api/workorders")]
-pub async fn workorders_put(_body: Option<Json<WorkorderFind>>) -> HttpResponse {
+pub async fn workorders_put(_body: Option<Json<WorkorderOptions>>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
