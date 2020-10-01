@@ -138,7 +138,7 @@ pub type NoteTuple = (String, i64, i64, Option<i64>);
 pub struct Note {
     pub user: i64,
     pub created: DateTime<Utc>,
-    pub next_update: Option<DateTime<Utc>>, // TODO ?
+    pub next_update: Option<DateTime<Utc>>,
     pub contents: String,
 }
 impl From<NoteTuple> for Note {

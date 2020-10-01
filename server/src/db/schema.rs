@@ -229,7 +229,6 @@ pub struct UserFind {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
-    // TODO:
 }
 impl UserFind {
     pub fn into_delimited(&self) -> String {
@@ -474,7 +473,8 @@ impl Store {
             },
         )?;
 
-        // TODO: Unwrap
+        // Unwrap _should_ be safe because LAST_INSERT_ID would be set by the query above.
+        // FIXME: I'll keep this here just in case, but it should be fine.
         Ok(conn
             .query_first::<i64, String>("SELECT LAST_INSERT_ID(id) FROM stores".to_owned())?
             .unwrap())
@@ -590,7 +590,6 @@ impl Note {
             },
         )?;
 
-        // TODO: Unwrap
         Ok(conn
             .query_first::<i64, String>("SELECT LAST_INSERT_ID(note_id) FROM notes".to_owned())?
             .unwrap())

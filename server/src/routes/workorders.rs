@@ -34,24 +34,37 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
         contents: body.initial_note.contents.clone(),
     };
 
-    // TODO;
-    let wo_id: i64 = crate::db::get_connection()
-        .unwrap()
-        .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
-        .unwrap()
-        .unwrap()
-        .unwrap_or(0)
-        + 1;
-
-    // TODO;
-    let res = match note.insert(wo_id) {
+    let mut conn = match crate::db::get_connection() {
+        Ok(conn) => conn,
         Err(e) => {
             return HttpResponse::InternalServerError().json(OkMessage {
                 ok: false,
                 message: Some(e.to_string()),
             })
         }
+    };
+
+    let mut wo_id = match conn
+        .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
+    {
+        Ok(Some(Some(prev_max))) => prev_max + 1,
+        Ok(_) => 1,
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            })
+        }
+    };
+
+    let res = match note.insert(wo_id) {
         Ok(result) => result,
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            })
+        }
     };
 
     eprintln!("{:?}", res);

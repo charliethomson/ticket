@@ -26,7 +26,7 @@ pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
         created: Utc::now(),
         next_update: body
             .next_update
-            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)), // TODO ?
+            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
         contents: body.contents,
     };
 
