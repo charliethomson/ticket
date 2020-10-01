@@ -52,6 +52,35 @@ pub async fn devices_get(Json(filter): Json<DeviceOptions>) -> HttpResponse {
 
 // TODO
 #[put("/api/devices")]
-pub async fn devices_put(Json(_body): Json<DeviceOptions>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn devices_put(Json(body): Json<DeviceOptions>) -> HttpResponse {
+    let id = match body.id {
+        Some(id) => id,
+        None => {
+            return HttpResponse::PartialContent().json(OkMessage {
+                ok: false,
+                message: Some("Missing required field `id`"),
+            })
+        }
+    };
+
+    match Device::by_id(id) {
+        Ok(Some(mut device)) => match device.update(body) {
+            Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
+                ok: true,
+                message: None,
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        },
+        Ok(None) => HttpResponse::NotFound().json(OkMessage {
+            ok: false,
+            message: Some(format!("No device found for id {}", id)),
+        }),
+        Err(e) => HttpResponse::Ok().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }

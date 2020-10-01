@@ -92,10 +92,10 @@ impl DeviceOptions {
             items.insert("id".to_owned(), id.to_string());
         }
         if let Some(serial) = &self.serial {
-            items.insert("serial".to_owned(), serial.to_string());
+            items.insert("serial_no".to_owned(), serial.to_string());
         }
         if let Some(name) = &self.name {
-            items.insert("name".to_owned(), name.to_string());
+            items.insert("device_name".to_owned(), name.to_string());
         }
         if let Some(password) = &self.password {
             items.insert("password".to_owned(), password.to_string());
@@ -468,7 +468,7 @@ impl Device {
                 }
             ))?
             .iter()
-            // BIG TODO
+            // TODO: BIG BOI
             .map(|id| Device::by_id(*id))
             .filter(|res| res.is_ok() && res.as_ref().unwrap().is_some())
             .map(|resop| resop.unwrap().unwrap())
@@ -491,6 +491,27 @@ impl Device {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn update(&mut self, changes: DeviceOptions) -> mysql::Result<()> {
+        let mut conn = crate::db::get_connection()?;
+
+        let rawstr = changes.into_delimited();
+        let update_str = format!(
+            "set {}",
+            rawstr
+                .replace(ITEM_DELIM, ", ")
+                .replace(FIELD_DELIM, "=")
+                .replace(PADDING_VALUE, "")
+                .replace(TABLE_MARKER, "")
+        );
+
+        conn.query::<Vec<_>, String>(format!(
+            "update devices {} where devices.id={}",
+            update_str, self.id
+        ))?;
+
+        Ok(())
     }
 }
 
@@ -550,7 +571,7 @@ impl Store {
                 }
             ))?
             .iter()
-            // BIG TODO
+            // TODO: BIG BOI
             .map(|id| Store::by_id(*id))
             .filter(|res| res.is_ok() && res.as_ref().unwrap().is_some())
             .map(|resop| resop.unwrap().unwrap())
