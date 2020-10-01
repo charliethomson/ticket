@@ -18,19 +18,6 @@ pub struct StoreNew {
     zip: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct StoreUpdate {
-    id: i64,
-    name: Option<String>,
-    contact_name: Option<String>,
-    phone_number: Option<String>,
-    email: Option<String>,
-    address: Option<String>,
-    city: Option<String>,
-    state: Option<String>,
-    zip: Option<String>,
-}
-
 #[post("/api/stores")]
 pub async fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
     match Store::insert(&Store {
@@ -57,7 +44,6 @@ pub async fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
 
 #[get("/api/stores")]
 pub async fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
-    eprintln!("{}", filter.into_filter());
     match Store::find(filter) {
         Ok(option) => HttpResponse::Ok().json(OkMessage {
             ok: true,
@@ -71,6 +57,34 @@ pub async fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
 }
 
 #[put("/api/stores")]
-pub async fn stores_put(Json(_body): Json<StoreUpdate>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn stores_put(Json(body): Json<StoreOptions>) -> HttpResponse {
+    let id = match body.id {
+        Some(id) => id,
+        None => {
+            return HttpResponse::PartialContent().json(OkMessage {
+                ok: false,
+                message: Some("Required option `id` not found"),
+            })
+        }
+    };
+    match Store::by_id(id) {
+        Ok(Some(mut store)) => match store.update(body) {
+            Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
+                ok: true,
+                message: None,
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        },
+        Ok(None) => HttpResponse::NotFound().json(OkMessage {
+            ok: false,
+            message: Some(format!("No store found for id {}", id)),
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }

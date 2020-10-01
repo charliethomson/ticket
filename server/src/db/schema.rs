@@ -528,6 +528,27 @@ impl Store {
             Ok(None)
         }
     }
+
+    pub fn update(&mut self, changes: StoreOptions) -> mysql::Result<()> {
+        let mut conn = crate::db::get_connection()?;
+
+        let rawstr = changes.into_delimited();
+        let update_str = format!(
+            "set {}",
+            rawstr
+                .replace(ITEM_DELIM, ", ")
+                .replace(FIELD_DELIM, "=")
+                .replace(PADDING_VALUE, "")
+                .replace(TABLE_MARKER, "")
+        );
+
+        conn.query::<Vec<_>, String>(format!(
+            "update stores {} where stores.id={}",
+            update_str, self.id
+        ))?;
+
+        Ok(())
+    }
 }
 
 impl Customer {
