@@ -188,15 +188,15 @@ impl StoreOptions {
     }
 }
 
-#[derive(Default)]
-pub struct CustomerFind {
+#[derive(Default, Deserialize)]
+pub struct CustomerOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
     pub store_id: Option<i64>,
 }
-impl CustomerFind {
+impl CustomerOptions {
     pub fn into_delimited(&self) -> String {
         let mut items: HashMap<String, String> = HashMap::new();
 
@@ -359,9 +359,7 @@ impl Workorder {
 
     pub fn find(filter: WorkorderFind) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
-        dbg!(filter.clone());
         let filter = filter.into_filter();
-        dbg!(filter.clone());
         let query = format!(
             "select id from workorders{};",
             if filter.len() != 0 {
@@ -370,7 +368,6 @@ impl Workorder {
                 "".to_string()
             }
         );
-        dbg!(query.clone());
         let ids: Vec<i64> = conn.query(query)?;
 
         let wos = ids
@@ -547,7 +544,7 @@ impl Customer {
         Ok(0)
     }
 
-    pub fn find(_filter: CustomerFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: CustomerOptions) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 

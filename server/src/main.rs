@@ -28,11 +28,6 @@ async fn main() -> std::io::Result<()> {
             .service(devices_put)
             .service(devices_post)
             .service(devices_get)
-        // .service()
-        // .service()
-        // .service()
-        // .service()
-        // .service()
     })
     .bind(URL)?;
     println!("Listening on http://{}", URL);
