@@ -428,11 +428,57 @@ impl Workorder {
 
 impl Device {
     pub fn insert(&self) -> mysql::Result<i64> {
-        Ok(0)
+        let mut conn = crate::db::get_connection()?;
+        conn.exec_drop(
+            "insert into devices
+        (   
+            serial_no,
+            device_name,
+            customer,
+            password
+        ) values (
+            :serial_no,
+            :device_name,
+            :customer,
+            :password
+        );",
+            params! {
+                "serial_no" => self.serial.clone(),
+                "device_name" => self.name.clone(),
+                "customer" => self.customer_id,
+                "password" => self.password.clone()
+            },
+        )?;
+
+        Ok(conn
+            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM devices".to_owned())?
+            .unwrap())
     }
 
-    pub fn find(_filter: DeviceOptions) -> mysql::Result<Option<Self>> {
-        Ok(None)
+    pub fn find(filter: DeviceOptions) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let filter = filter.into_filter();
+        let devices: Vec<Device> = conn
+            .query::<i64, String>(format!(
+                "select id from devices{}",
+                if filter.len() != 0 {
+                    format!(" where {}", filter)
+                } else {
+                    "".to_string()
+                }
+            ))?
+            .iter()
+            // BIG TODO
+            .map(|id| Device::by_id(*id))
+            .filter(|res| res.is_ok() && res.as_ref().unwrap().is_some())
+            .map(|resop| resop.unwrap().unwrap())
+            .collect();
+
+        Ok(if devices.len() == 0 {
+            None
+        } else {
+            Some(devices)
+        })
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {

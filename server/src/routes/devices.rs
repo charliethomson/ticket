@@ -37,8 +37,17 @@ pub async fn devices_post(Json(body): Json<DeviceNew>) -> HttpResponse {
 
 // TODO
 #[get("/api/devices")]
-pub async fn devices_get(Json(_filter): Json<DeviceOptions>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn devices_get(Json(filter): Json<DeviceOptions>) -> HttpResponse {
+    match Device::find(filter) {
+        Ok(devices) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: devices,
+        }),
+        Err(e) => HttpResponse::Ok().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
 
 // TODO
