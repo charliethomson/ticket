@@ -44,7 +44,7 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
         }
     };
 
-    let mut wo_id = match conn
+    let wo_id = match conn
         .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
     {
         Ok(Some(Some(prev_max))) => prev_max + 1,

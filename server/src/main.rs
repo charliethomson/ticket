@@ -12,6 +12,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(users_post)
             .service(users_get)
+            .service(users_put)
             //
             .service(workorders_post)
             .service(workorders_get)

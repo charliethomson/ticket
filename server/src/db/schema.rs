@@ -3,9 +3,9 @@ use mysql::{prelude::*, *};
 use serde::Deserialize;
 use std::collections::HashMap;
 
-const FIELD_DELIM: &'static str = ",";
-const ITEM_DELIM: &'static str = ";";
-const TABLE_MARKER: &'static str = "**";
+const FIELD_DELIM: &'static str = "#$++,";
+const ITEM_DELIM: &'static str = "$!@;";
+const TABLE_MARKER: &'static str = "$%^$**";
 
 #[derive(Default, Deserialize)]
 pub struct WorkorderFind {
@@ -55,10 +55,7 @@ impl WorkorderFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -67,7 +64,7 @@ impl WorkorderFind {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "workorders")
+            .replace(TABLE_MARKER, "workorders.")
     }
 }
 
@@ -98,10 +95,7 @@ impl DeviceFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -110,7 +104,7 @@ impl DeviceFind {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "devices")
+            .replace(TABLE_MARKER, "devices.")
     }
 }
 
@@ -161,10 +155,7 @@ impl StoreOptions {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -173,7 +164,7 @@ impl StoreOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "stores")
+            .replace(TABLE_MARKER, "stores.")
     }
 }
 
@@ -208,10 +199,7 @@ impl CustomerFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -220,7 +208,7 @@ impl CustomerFind {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "customers")
+            .replace(TABLE_MARKER, "customers.")
     }
 }
 
@@ -247,10 +235,7 @@ impl UserFind {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -259,7 +244,7 @@ impl UserFind {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "users")
+            .replace(TABLE_MARKER, "users.")
     }
 }
 
@@ -282,10 +267,7 @@ impl NotesOptions {
         let mut strs = vec![];
 
         for (key, value) in items {
-            strs.push(format!(
-                "{}.{}{}{:?}",
-                TABLE_MARKER, key, FIELD_DELIM, value
-            ));
+            strs.push(format!("{}{}{}{:?}", TABLE_MARKER, key, FIELD_DELIM, value));
         }
 
         strs.join(ITEM_DELIM)
@@ -294,7 +276,7 @@ impl NotesOptions {
         self.into_delimited()
             .replace(ITEM_DELIM, " and ")
             .replace(FIELD_DELIM, "=")
-            .replace(TABLE_MARKER, "notes")
+            .replace(TABLE_MARKER, "notes.")
     }
 }
 
@@ -546,8 +528,54 @@ impl User {
         Ok(0)
     }
 
-    pub fn find(_filter: UserFind) -> mysql::Result<Option<Self>> {
-        Ok(None)
+    pub fn find(filter: UserFind) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let filter = filter.into_filter();
+        let query = format!(
+            "select id from users{};",
+            if filter.len() != 0 {
+                format!(" where {}", filter)
+            } else {
+                "".to_string()
+            }
+        );
+        eprintln!("{}", query);
+        let ids: Vec<i64> = conn.query(query)?;
+
+        // TODO (this and also in Workorders)
+        let users = ids
+            .iter()
+            .map(|id| User::by_id(*id))
+            .filter(|user| user.is_ok() && user.as_ref().unwrap().is_some())
+            .map(|user| user.unwrap().unwrap())
+            .collect::<Vec<User>>();
+        if users.len() != 0 {
+            Ok(Some(users))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn update(&mut self, changes: UserFind) -> mysql::Result<bool> {
+        let mut conn = crate::db::get_connection()?;
+
+        let rawstr = changes.into_delimited();
+        let update_str = format!(
+            "set {}",
+            rawstr
+                .replace(ITEM_DELIM, ", ")
+                .replace(FIELD_DELIM, "=")
+                .replace(TABLE_MARKER, "")
+        );
+
+        dbg!(update_str.clone());
+
+        conn.query::<Vec<_>, String>(format!(
+            "update users {} where users.id={}",
+            update_str, self.id
+        ))?;
+
+        Ok(true)
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
