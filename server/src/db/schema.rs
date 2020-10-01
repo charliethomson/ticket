@@ -201,7 +201,7 @@ impl CustomerOptions {
             items.insert("id".into(), id.to_string());
         }
         if let Some(name) = &self.name {
-            items.insert("name".into(), name.to_string());
+            items.insert("customer_name".into(), name.to_string());
         }
         if let Some(phone_number) = &self.phone_number {
             items.insert("phone_number".into(), phone_number.to_string());
@@ -620,11 +620,59 @@ impl Store {
 
 impl Customer {
     pub fn insert(&self) -> mysql::Result<i64> {
-        Ok(0)
+        let mut conn = crate::db::get_connection()?;
+        conn.exec_drop(
+            "insert into customers
+        (   
+            customer_name,
+            phone_number,
+            email_address,
+            store_id
+        ) values (
+            :customer_name,
+            :phone_number,
+            :email_address,
+            :store_id
+        );",
+            params! {
+                "customer_name" => self.name.clone(),
+                "phone_number" => self.phone_number.clone(),
+                "email_address" => self.email.clone(),
+                "store_id" => self.store_id,
+            },
+        )?;
+
+        // Unwrap _should_ be safe because LAST_INSERT_ID would be set by the query above.
+        // FIXME: I'll keep this here just in case, but it should be fine.
+        Ok(conn
+            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM customers".to_owned())?
+            .unwrap())
     }
 
-    pub fn find(_filter: CustomerOptions) -> mysql::Result<Option<Self>> {
-        Ok(None)
+    pub fn find(filter: CustomerOptions) -> mysql::Result<Option<Vec<Self>>> {
+        let mut conn = crate::db::get_connection()?;
+        let filter = filter.into_filter();
+        let customers: Vec<Customer> = conn
+            .query::<i64, String>(format!(
+                "select id from customers{}",
+                if filter.len() != 0 {
+                    format!(" where {}", filter)
+                } else {
+                    "".to_string()
+                }
+            ))?
+            .iter()
+            // TODO: BIG BOI
+            .map(|id| Customer::by_id(*id))
+            .filter(|res| res.is_ok() && res.as_ref().unwrap().is_some())
+            .map(|resop| resop.unwrap().unwrap())
+            .collect();
+
+        Ok(if customers.len() == 0 {
+            None
+        } else {
+            Some(customers)
+        })
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
@@ -637,6 +685,27 @@ impl Customer {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn update(&mut self, changes: CustomerOptions) -> mysql::Result<()> {
+        let mut conn = crate::db::get_connection()?;
+
+        let rawstr = changes.into_delimited();
+        let update_str = format!(
+            "set {}",
+            rawstr
+                .replace(ITEM_DELIM, ", ")
+                .replace(FIELD_DELIM, "=")
+                .replace(PADDING_VALUE, "")
+                .replace(TABLE_MARKER, "")
+        );
+
+        conn.query::<Vec<_>, String>(format!(
+            "update customers {} where customers.id={}",
+            update_str, self.id
+        ))?;
+
+        Ok(())
     }
 }
 

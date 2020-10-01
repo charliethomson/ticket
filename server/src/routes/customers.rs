@@ -14,29 +14,72 @@ pub struct CustomerNew {
     store_id: i64,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct CustomerUpdate {
-    id: i64,
-    name: Option<String>,
-    phone_number: Option<String>,
-    email_address: Option<String>,
-    store_id: Option<i64>,
-}
-
-// TODO
 #[post("/api/customers")]
-pub async fn customers_post(Json(_body): Json<CustomerNew>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn customers_post(Json(body): Json<CustomerNew>) -> HttpResponse {
+    match Customer::insert(&Customer {
+        id: 0,
+        name: body.name,
+        phone_number: body.phone_number,
+        email: body.email_address,
+        store_id: body.store_id,
+    }) {
+        Ok(id) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: Some(id),
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
 
 // TODO
 #[get("/api/customers")]
-pub async fn customers_get(Json(_filter): Json<CustomerOptions>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn customers_get(Json(filter): Json<CustomerOptions>) -> HttpResponse {
+    match Customer::find(filter) {
+        Ok(customer) => HttpResponse::Ok().json(OkMessage {
+            ok: true,
+            message: customer,
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
 
 // TODO
 #[put("/api/customers")]
-pub async fn customers_put(Json(_body): Json<CustomerUpdate>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn customers_put(Json(body): Json<CustomerOptions>) -> HttpResponse {
+    let id = match body.id {
+        Some(id) => id,
+        None => {
+            return HttpResponse::PartialContent().json(OkMessage {
+                ok: false,
+                message: Some("Missing required field `id`"),
+            })
+        }
+    };
+
+    match Customer::by_id(id) {
+        Ok(Some(mut customer)) => match customer.update(body) {
+            Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
+                ok: true,
+                message: None,
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        },
+        Ok(None) => HttpResponse::NotFound().json(OkMessage {
+            ok: false,
+            message: Some(format!("No customer found for id {}", id)),
+        }),
+        Err(e) => HttpResponse::Ok().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }
