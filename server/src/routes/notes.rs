@@ -3,7 +3,7 @@ use {
         db::{models::Note, schema::NotesOptions},
         routes::OkMessage,
     },
-    actix_web::{get, post, web::Json, HttpResponse},
+    actix_web::{get, post, put, web::Json, HttpResponse},
     chrono::{DateTime, NaiveDateTime, Utc},
     serde::{Deserialize, Serialize},
 };
@@ -17,7 +17,7 @@ pub struct NotesNew {
 }
 
 #[post("/api/notes")]
-pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
+pub async fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
     let note = Note {
         user: body.user_id,
         created: Utc::now(),
@@ -41,7 +41,7 @@ pub fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
 }
 
 #[get("/api/notes")]
-pub fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
+pub async fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
     let filter = body.map(|json| json.into_inner()).unwrap_or_default();
     match Note::find(filter) {
         Ok(notes) => HttpResponse::Ok().json(OkMessage {
@@ -53,4 +53,9 @@ pub fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
             message: Some(e.to_string()),
         }),
     }
+}
+
+#[put("/api/notes")]
+pub async fn notes_put(_body: Option<Json<NotesOptions>>) -> HttpResponse {
+    HttpResponse::Ok().finish()
 }

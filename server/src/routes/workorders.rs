@@ -1,6 +1,6 @@
 use {
     crate::{db::*, routes::OkMessage},
-    actix_web::{get, post, web::Json, HttpResponse, Responder},
+    actix_web::{get, post, put, web::Json, HttpResponse},
     chrono::{DateTime, NaiveDateTime, Utc},
     serde::{Deserialize, Serialize},
 };
@@ -26,7 +26,7 @@ pub struct InitialNote {
 
 // API call to create and handle making a new workorder
 #[post("/api/workorders")]
-async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
+pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
     let note = Note {
         user: body.initial_note.user,
         created: Utc::now(),
@@ -95,7 +95,7 @@ async fn workorders_post(body: Json<WorkorderNew>) -> impl Responder {
 }
 
 #[get("/api/workorders")]
-async fn workorders_get(body: Option<Json<WorkorderFind>>) -> impl Responder {
+pub async fn workorders_get(body: Option<Json<WorkorderFind>>) -> HttpResponse {
     let filter = body.map(|body| body.into_inner()).unwrap_or_default();
     let response = Workorder::find(filter);
 
@@ -109,4 +109,9 @@ async fn workorders_get(body: Option<Json<WorkorderFind>>) -> impl Responder {
             message: Some(e.to_string()),
         }),
     }
+}
+
+#[put("/api/workorders")]
+pub async fn workorders_put(_body: Option<Json<WorkorderFind>>) -> HttpResponse {
+    HttpResponse::Ok().finish()
 }

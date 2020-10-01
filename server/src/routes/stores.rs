@@ -32,7 +32,7 @@ pub struct StoreUpdate {
 }
 
 #[post("/api/stores")]
-pub fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
+pub async fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
     match Store::insert(&Store {
         id: 0,
         name: body.name,
@@ -56,7 +56,7 @@ pub fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
 }
 
 #[get("/api/stores")]
-pub fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
+pub async fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
     eprintln!("{}", filter.into_filter());
     match Store::find(filter) {
         Ok(option) => HttpResponse::Ok().json(OkMessage {
@@ -71,6 +71,6 @@ pub fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
 }
 
 #[put("/api/stores")]
-pub fn stores_put(Json(_body): Json<StoreUpdate>) -> HttpResponse {
+pub async fn stores_put(Json(_body): Json<StoreUpdate>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }

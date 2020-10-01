@@ -5,12 +5,13 @@ use crate::{
 use actix_web::{get, post, put, web, HttpResponse};
 
 #[post("/api/users")]
-async fn users_post(_body: Option<web::Json<UserFind>>) -> HttpResponse {
+pub async fn users_post(_body: Option<web::Json<UserFind>>) -> HttpResponse {
+    // TODO
     HttpResponse::Ok().finish()
 }
 
 #[get("/api/users")]
-async fn users_get(body: Option<web::Json<UserFind>>) -> HttpResponse {
+pub async fn users_get(body: Option<web::Json<UserFind>>) -> HttpResponse {
     let filter = body.map(|json| json.into_inner()).unwrap_or_default();
     match User::find(filter) {
         Ok(user) => HttpResponse::Ok().json(OkMessage {
@@ -25,7 +26,7 @@ async fn users_get(body: Option<web::Json<UserFind>>) -> HttpResponse {
 }
 
 #[put("/api/users")]
-async fn users_put(_body: web::Json<UserFind>) -> HttpResponse {
+pub async fn users_put(_body: web::Json<UserFind>) -> HttpResponse {
     let options = _body.into_inner();
     let mut user = User::by_id(options.id.unwrap()).unwrap().unwrap();
     match user.update(options) {

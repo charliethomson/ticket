@@ -15,6 +15,7 @@ async fn main() -> std::io::Result<()> {
             //
             .service(workorders_post)
             .service(workorders_get)
+            .service(workorders_put)
             //
             .service(stores_put)
             .service(stores_post)
@@ -22,6 +23,11 @@ async fn main() -> std::io::Result<()> {
             //
             .service(notes_get)
             .service(notes_post)
+            .service(notes_put)
+            //
+            .service(devices_put)
+            .service(devices_post)
+            .service(devices_get)
         // .service()
         // .service()
         // .service()

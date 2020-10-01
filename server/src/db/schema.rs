@@ -76,14 +76,14 @@ impl WorkorderFind {
     }
 }
 
-#[derive(Default)]
-pub struct DeviceFind {
+#[derive(Default, Deserialize)]
+pub struct DeviceOptions {
     pub id: Option<i64>,
     pub serial: Option<String>,
     pub name: Option<String>,
     pub password: Option<String>,
 }
-impl DeviceFind {
+impl DeviceOptions {
     pub fn into_delimited(&self) -> String {
         let mut items: HashMap<String, String> = HashMap::new();
 
@@ -443,7 +443,7 @@ impl Device {
         Ok(0)
     }
 
-    pub fn find(_filter: DeviceFind) -> mysql::Result<Option<Self>> {
+    pub fn find(_filter: DeviceOptions) -> mysql::Result<Option<Self>> {
         Ok(None)
     }
 
