@@ -1603,6 +1603,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "schema_macros"
+version = "0.1.0"
+
+[[package]]
+name = "schema_proc_macros"
+version = "0.1.0"
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1706,6 +1714,8 @@ dependencies = [
  "chrono",
  "futures",
  "mysql",
+ "schema_macros",
+ "schema_proc_macros",
  "semval",
  "serde",
 ]
