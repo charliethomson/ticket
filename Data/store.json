@@ -1,11 +1,16 @@
 {
-    "id": 0,
-    "store": "fredericksburg",
-    "phoneNumber": 5403083687,
-    "contact": "colton",
-    "email": "c.hobbs@ubreakifix.com",
-    "address": "1909 plank rd",
-    "city": "Fredericksburg",
-    "state": "Va",
-    "zip": 22401
+    "ok": true,
+    "message": [
+        {
+            "id": 4,
+            "name": "Not a real store",
+            "contact_name": "Test contact",
+            "phone_number": "5555555555",
+            "email": "notarealstore@ubreakifix.com",
+            "address": "123 Not-a Rd",
+            "city": "NotaCity",
+            "state": "NotaState",
+            "zip": "0"
+        }
+    ]
 }

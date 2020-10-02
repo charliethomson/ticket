@@ -1,6 +1,12 @@
 {
-    "id": 0,
-    "name": "Justin Moore",
-    "phoneNumber": 5403083687,
-    "email": "jdmdevelops@gmail.com"
+    "ok": true,
+    "message": [
+        {
+            "id": 3,
+            "name": "Jack Johnson",
+            "phone_number": "7894561235",
+            "email": "decline@customer.com",
+            "store_id": 1
+        }
+    ]
 }

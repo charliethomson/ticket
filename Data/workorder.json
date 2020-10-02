@@ -1,12 +1,58 @@
 {
-    "id": 0,
-    "device": "device.json",
-    "origin": "store.json",
-    "created": 1600883149,
-    "timeQuote": "5-7 Days",
-    "description": "No power/Doa",
-    "deliveryStatus": "in-transit",
-    "status": "awaiting repair",
-    "storageLocation": "C7",
-    "notes": []
+    "ok": true,
+    "message": [
+        {
+            "workorder_id": 17,
+            "origin": {
+                "id": 1,
+                "name": "Fredericksburg",
+                "contact_name": "Nicky",
+                "phone_number": "5403713349",
+                "email": "fredericksburg@ubreakifix.com",
+                "address": "1909 Plank Road",
+                "city": "Fredericksburg",
+                "state": "VA",
+                "zip": "22401"
+            },
+            "travel_status": "Test travel status",
+            "created": 1601558022,
+            "quoted_time": null,
+            "status": "Test status part 2",
+            "customer": {
+                "id": 1,
+                "name": "Test User 1",
+                "phone_number": "5555551234",
+                "email": "decline@customer.com",
+                "store_id": 1
+            },
+            "device": {
+                "id": 1,
+                "serial": "not a serial number",
+                "name": "Macbook 20000",
+                "customer_id": 1,
+                "password": "password1"
+            },
+            "brief": "Test brief",
+            "notes": [
+                {
+                    "user": 1,
+                    "created": "2020-10-01T13:13:42Z",
+                    "next_update": null,
+                    "contents": "Test long form comment for blah blah blah blah blah"
+                },
+                {
+                    "user": 1,
+                    "created": "2020-10-01T18:56:21Z",
+                    "next_update": null,
+                    "contents": "Test comment on wo no 17"
+                },
+                {
+                    "user": 1,
+                    "created": "2020-10-01T18:56:43Z",
+                    "next_update": null,
+                    "contents": "Test comment on wo no 17"
+                }
+            ]
+        }
+    ]
 }
