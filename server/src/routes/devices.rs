@@ -56,7 +56,7 @@ pub async fn devices_put(Json(body): Json<DeviceOptions>) -> HttpResponse {
     let id = match body.id {
         Some(id) => id,
         None => {
-            return HttpResponse::PartialContent().json(OkMessage {
+            return HttpResponse::BadRequest().json(OkMessage {
                 ok: false,
                 message: Some("Missing required field `id`"),
             })

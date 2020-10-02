@@ -55,7 +55,7 @@ pub async fn customers_put(Json(body): Json<CustomerOptions>) -> HttpResponse {
     let id = match body.id {
         Some(id) => id,
         None => {
-            return HttpResponse::PartialContent().json(OkMessage {
+            return HttpResponse::BadRequest().json(OkMessage {
                 ok: false,
                 message: Some("Missing required field `id`"),
             })

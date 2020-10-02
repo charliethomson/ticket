@@ -61,7 +61,7 @@ pub async fn stores_put(Json(body): Json<StoreOptions>) -> HttpResponse {
     let id = match body.id {
         Some(id) => id,
         None => {
-            return HttpResponse::PartialContent().json(OkMessage {
+            return HttpResponse::BadRequest().json(OkMessage {
                 ok: false,
                 message: Some("Required option `id` not found"),
             })

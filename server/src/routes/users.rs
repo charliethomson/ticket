@@ -46,7 +46,7 @@ pub async fn users_put(body: web::Json<UserOptions>) -> HttpResponse {
     let user_id = match options.id {
         Some(id) => id,
         None => {
-            return HttpResponse::PartialContent().json(OkMessage {
+            return HttpResponse::BadRequest().json(OkMessage {
                 ok: false,
                 message: Some("Missing required field `id`"),
             })
