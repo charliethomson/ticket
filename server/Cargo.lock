@@ -1455,9 +1455,9 @@ checksum = "eba180dafb9038b050a4c280019bbedf9f2467b61e5d892dcad585bb57aadc5a"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.21"
+version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36e28516df94f3dd551a587da5357459d9b36d945a7c37c3557928c1c2ff2a2c"
+checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
  "unicode-xid",
 ]
@@ -1603,12 +1603,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "schema_macros"
-version = "0.1.0"
-
-[[package]]
 name = "schema_proc_macros"
 version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "scopeguard"
@@ -1714,7 +1715,6 @@ dependencies = [
  "chrono",
  "futures",
  "mysql",
- "schema_macros",
  "schema_proc_macros",
  "semval",
  "serde",

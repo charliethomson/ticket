@@ -10,6 +10,10 @@ const FIELD_DELIM: &'static str = "#$++,";
 const ITEM_DELIM: &'static str = "$!@;";
 const TABLE_MARKER: &'static str = "$%^$#$!$@#";
 const PADDING_VALUE: &'static str = "$%&&#$*@@";
+pub trait IntoDelimited {
+    fn into_delimited(&self) -> String;
+    fn into_filter(&self) -> String;
+}
 
 #[derive(Default, Deserialize, Debug, Clone)]
 pub struct WorkorderOptions {
