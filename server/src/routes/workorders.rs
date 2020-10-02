@@ -69,7 +69,7 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
         });
     }
     let wo = Workorder {
-        workorder_id: None,
+        workorder_id: 0,
         origin: body.origin,
         travel_status: body.travel_status.clone(),
         created: Utc::now(),
@@ -111,8 +111,35 @@ pub async fn workorders_get(body: Option<Json<WorkorderOptions>>) -> HttpRespons
     }
 }
 
-// TODO
 #[put("/api/workorders")]
-pub async fn workorders_put(_body: Option<Json<WorkorderOptions>>) -> HttpResponse {
-    HttpResponse::Ok().finish()
+pub async fn workorders_put(Json(body): Json<WorkorderOptions>) -> HttpResponse {
+    let id = match body.id {
+        Some(id) => id,
+        None => {
+            return HttpResponse::BadRequest().json(OkMessage {
+                ok: false,
+                message: Some("Required option `id` not found"),
+            })
+        }
+    };
+    match Workorder::by_id(id) {
+        Ok(Some(mut workorder)) => match workorder.update(body) {
+            Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
+                ok: true,
+                message: None,
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        },
+        Ok(None) => HttpResponse::NotFound().json(OkMessage {
+            ok: false,
+            message: Some(format!("No workorder found for id {}", id)),
+        }),
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e.to_string()),
+        }),
+    }
 }

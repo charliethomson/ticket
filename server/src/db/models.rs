@@ -30,7 +30,7 @@ pub struct WorkorderResponse {
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Workorder {
-    pub workorder_id: Option<i64>,
+    pub workorder_id: i64,
     pub origin: i64,
     pub travel_status: String,
     pub created: DateTime<Utc>,
@@ -55,7 +55,7 @@ impl From<WorkorderTuple> for Workorder {
         ) = tuple;
 
         Self {
-            workorder_id: Some(workorder_id),
+            workorder_id,
             origin,
             travel_status,
             created,

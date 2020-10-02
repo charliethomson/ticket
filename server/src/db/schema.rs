@@ -426,6 +426,26 @@ impl Workorder {
     }
 }
 
+impl WorkorderResponse {
+    pub fn update(&mut self, changes: WorkorderOptions) -> mysql::Result<()> {
+        let mut conn = crate::db::get_connection()?;
+        let rawstr = changes.into_delimited();
+        let update_str = format!(
+            "set {}",
+            rawstr
+                .replace(ITEM_DELIM, ", ")
+                .replace(FIELD_DELIM, "=")
+                .replace(PADDING_VALUE, "")
+                .replace(TABLE_MARKER, "")
+        );
+        conn.query::<Vec<_>, String>(format!(
+            "update workorders {} where workorders.id={}",
+            update_str, self.workorder_id
+        ))?;
+        Ok(())
+    }
+}
+
 impl Device {
     pub fn insert(&self) -> mysql::Result<i64> {
         let mut conn = crate::db::get_connection()?;
