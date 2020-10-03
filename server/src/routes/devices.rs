@@ -22,7 +22,7 @@ pub async fn devices_post(Json(body): Json<DeviceNew>) -> HttpResponse {
         serial: body.serial.clone(),
         name: body.name.clone(),
         customer_id: body.customer_id,
-        password: body.password.clone(),
+        password: body.password,
     }) {
         Ok(id) => HttpResponse::Ok().json(OkMessage {
             ok: true,

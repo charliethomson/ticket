@@ -3,7 +3,7 @@ mod routes;
 
 use actix_web::{App, HttpServer};
 
-const URL: &'static str = "localhost:8080";
+const URL: &str = "localhost:8080";
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use routes::*;

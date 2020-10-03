@@ -1,15 +1,18 @@
 #![allow(dead_code)]
 
+// TODO: Convert `update` to a proc macro
+
 use crate::db::models::*;
 use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
 use schema_proc_macros::*;
 use serde::Deserialize;
 
-const FIELD_DELIM: &'static str = "#$++,";
-const ITEM_DELIM: &'static str = "$!@;";
-const TABLE_MARKER: &'static str = "$%^$#$!$@#";
-const PADDING_VALUE: &'static str = "$%&&#$*@@";
+const FIELD_DELIM: &str = "#$++,";
+const ITEM_DELIM: &str = "$!@;";
+const TABLE_MARKER: &str = "$%^$#$!$@#";
+const PADDING_VALUE: &str = "$%&&#$*@@";
+
 pub trait IntoDelimited {
     fn into_delimited(&self) -> String;
     fn into_filter(&self) -> String;
@@ -123,13 +126,12 @@ impl Workorder {
         let filter = filter.into_filter();
         let query = format!(
             "select id from workorders{};",
-            if filter.len() != 0 {
+            if !filter.is_empty() {
                 format!(" where {}", filter)
             } else {
                 "".to_string()
             }
         );
-        dbg!(query.clone());
         let ids: Vec<i64> = conn.query(query)?;
 
         let wos = ids
@@ -138,7 +140,7 @@ impl Workorder {
             .filter(|wo| wo.is_ok() && wo.as_ref().unwrap().is_some())
             .map(|wo| wo.unwrap().unwrap())
             .collect::<Vec<WorkorderResponse>>();
-        if wos.len() != 0 {
+        if !wos.is_empty() {
             Ok(Some(wos))
         } else {
             Ok(None)
@@ -183,7 +185,7 @@ impl Workorder {
                 workorder_id: id,
                 origin,
                 travel_status,
-                created: created,
+                created,
                 quoted_time: quoted,
                 status,
                 customer,
@@ -252,7 +254,7 @@ impl Device {
         let devices: Vec<Device> = conn
             .query::<i64, String>(format!(
                 "select id from devices{}",
-                if filter.len() != 0 {
+                if !filter.is_empty() {
                     format!(" where {}", filter)
                 } else {
                     "".to_string()
@@ -265,7 +267,7 @@ impl Device {
             .map(|resop| resop.unwrap().unwrap())
             .collect();
 
-        Ok(if devices.len() == 0 {
+        Ok(if devices.is_empty() {
             None
         } else {
             Some(devices)
@@ -355,7 +357,7 @@ impl Store {
         let stores: Vec<Store> = conn
             .query::<i64, String>(format!(
                 "select id from stores{}",
-                if filter.len() != 0 {
+                if !filter.is_empty() {
                     format!(" where {}", filter)
                 } else {
                     "".to_string()
@@ -368,7 +370,7 @@ impl Store {
             .map(|resop| resop.unwrap().unwrap())
             .collect();
 
-        Ok(if stores.len() == 0 {
+        Ok(if stores.is_empty() {
             None
         } else {
             Some(stores)
@@ -446,7 +448,7 @@ impl Customer {
         let customers: Vec<Customer> = conn
             .query::<i64, String>(format!(
                 "select id from customers{}",
-                if filter.len() != 0 {
+                if !filter.is_empty() {
                     format!(" where {}", filter)
                 } else {
                     "".to_string()
@@ -459,7 +461,7 @@ impl Customer {
             .map(|resop| resop.unwrap().unwrap())
             .collect();
 
-        Ok(if customers.len() == 0 {
+        Ok(if customers.is_empty() {
             None
         } else {
             Some(customers)
@@ -514,7 +516,7 @@ impl User {
         );",
             params! {
                 "name" => user.name.clone(),
-                "phone_number" => user.phone_number.clone()
+                "phone_number" => user.phone_number
             },
         )?;
 
@@ -528,7 +530,7 @@ impl User {
         let filter = filter.into_filter();
         let query = format!(
             "select id from users{};",
-            if filter.len() != 0 {
+            if !filter.is_empty() {
                 format!(" where {}", filter)
             } else {
                 "".to_string()
@@ -544,7 +546,7 @@ impl User {
             .filter(|user| user.is_ok() && user.as_ref().unwrap().is_some())
             .map(|user| user.unwrap().unwrap())
             .collect::<Vec<User>>();
-        if users.len() != 0 {
+        if !users.is_empty() {
             Ok(Some(users))
         } else {
             Ok(None)
@@ -563,8 +565,6 @@ impl User {
                 .replace(PADDING_VALUE, "")
                 .replace(TABLE_MARKER, "")
         );
-
-        dbg!(update_str.clone());
 
         conn.query::<Vec<_>, String>(format!(
             "update users {} where users.id={}",
@@ -624,7 +624,7 @@ impl Note {
         let filter = filter.into_filter();
         let query = format!(
             "select note_id from notes{};",
-            if filter.len() != 0 {
+            if !filter.is_empty() {
                 format!(" where {}", filter)
             } else {
                 "".to_string()
@@ -639,7 +639,7 @@ impl Note {
             .filter(|note| note.is_ok() && note.as_ref().unwrap().is_some())
             .map(|note| note.unwrap().unwrap())
             .collect::<Vec<Note>>();
-        if notes.len() != 0 {
+        if !notes.is_empty() {
             Ok(Some(notes))
         } else {
             Ok(None)
