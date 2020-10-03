@@ -3,6 +3,7 @@
 use crate::db::models::*;
 use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
+use schema_proc_macros::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -10,71 +11,24 @@ const FIELD_DELIM: &'static str = "#$++,";
 const ITEM_DELIM: &'static str = "$!@;";
 const TABLE_MARKER: &'static str = "$%^$#$!$@#";
 const PADDING_VALUE: &'static str = "$%&&#$*@@";
+pub trait IntoDelimited {
+    fn into_delimited(&self) -> String;
+    fn into_filter(&self) -> String;
+}
 
-#[derive(Default, Deserialize, Debug, Clone)]
+#[derive(Default, Deserialize, Debug, Clone, IntoDelimited)]
 pub struct WorkorderOptions {
     pub id: Option<i64>,
     pub origin: Option<i64>,
     pub travel_status: Option<String>,
     pub created: Option<i64>,
+    #[db_name("quoted")]
     pub quoted_time: Option<i64>,
+    #[db_name("workorder_status")]
     pub status: Option<String>,
     pub customer: Option<i64>,
     pub device: Option<i64>,
     pub brief: Option<String>,
-}
-
-impl WorkorderOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
-
-        if let Some(id) = self.id {
-            items.insert("id".to_owned(), id.to_string());
-        }
-        if let Some(origin) = self.origin {
-            items.insert("origin".to_owned(), origin.to_string());
-        }
-        if let Some(travel_status) = &self.travel_status {
-            items.insert("travel_status".to_owned(), travel_status.to_string());
-        }
-        if let Some(created) = &self.created {
-            items.insert("created".to_owned(), created.to_string());
-        }
-        if let Some(quoted_time) = &self.quoted_time {
-            items.insert("quoted".to_owned(), quoted_time.to_string());
-        }
-        if let Some(status) = &self.status {
-            items.insert("workorder_status".to_owned(), status.to_string());
-        }
-        if let Some(customer) = self.customer {
-            items.insert("customer".to_owned(), customer.to_string());
-        }
-        if let Some(device) = self.device {
-            items.insert("device".to_owned(), device.to_string());
-        }
-        if let Some(brief) = &self.brief {
-            items.insert("brief".to_owned(), brief.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "workorders.")
-    }
 }
 
 #[derive(Default, Deserialize)]
@@ -359,6 +313,7 @@ impl Workorder {
                 "".to_string()
             }
         );
+        dbg!(query.clone());
         let ids: Vec<i64> = conn.query(query)?;
 
         let wos = ids
