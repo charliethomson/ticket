@@ -5,7 +5,6 @@ use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
 use schema_proc_macros::*;
 use serde::Deserialize;
-use std::collections::HashMap;
 
 const FIELD_DELIM: &'static str = "#$++,";
 const ITEM_DELIM: &'static str = "$!@;";
@@ -31,236 +30,53 @@ pub struct WorkorderOptions {
     pub brief: Option<String>,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, IntoDelimited)]
 pub struct DeviceOptions {
     pub id: Option<i64>,
+    #[db_name("serial_no")]
     pub serial: Option<String>,
+    #[db_name("device_name")]
     pub name: Option<String>,
     pub password: Option<String>,
 }
-impl DeviceOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
 
-        if let Some(id) = self.id {
-            items.insert("id".to_owned(), id.to_string());
-        }
-        if let Some(serial) = &self.serial {
-            items.insert("serial_no".to_owned(), serial.to_string());
-        }
-        if let Some(name) = &self.name {
-            items.insert("device_name".to_owned(), name.to_string());
-        }
-        if let Some(password) = &self.password {
-            items.insert("password".to_owned(), password.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "devices.")
-    }
-}
-
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, IntoDelimited)]
 pub struct StoreOptions {
     pub id: Option<i64>,
+    #[db_name("store_name")]
     pub name: Option<String>,
     pub contact_name: Option<String>,
     pub phone_number: Option<String>,
+    #[db_name("email_address")]
     pub email: Option<String>,
     pub address: Option<String>,
     pub city: Option<String>,
     pub state: Option<String>,
     pub zip: Option<String>,
 }
-impl StoreOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
 
-        if let Some(id) = self.id {
-            items.insert("id".to_owned(), id.to_string());
-        }
-        if let Some(name) = &self.name {
-            items.insert("store_name".to_owned(), name.to_string());
-        }
-        if let Some(contact_name) = &self.contact_name {
-            items.insert("contact_name".to_owned(), contact_name.to_string());
-        }
-        if let Some(phone_number) = &self.phone_number {
-            items.insert("phone_number".to_owned(), phone_number.to_string());
-        }
-        if let Some(email) = &self.email {
-            items.insert("email_address".to_owned(), email.to_string());
-        }
-        if let Some(address) = &self.address {
-            items.insert("address".to_owned(), address.to_string());
-        }
-        if let Some(city) = &self.city {
-            items.insert("city".to_owned(), city.to_string());
-        }
-        if let Some(state) = &self.state {
-            items.insert("state".to_owned(), state.to_string());
-        }
-        if let Some(zip) = &self.zip {
-            items.insert("zip".to_owned(), zip.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "stores.")
-    }
-}
-
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, IntoDelimited)]
 pub struct CustomerOptions {
     pub id: Option<i64>,
+    #[db_name("customer_name")]
     pub name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
     pub store_id: Option<i64>,
 }
-impl CustomerOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
 
-        if let Some(id) = self.id {
-            items.insert("id".into(), id.to_string());
-        }
-        if let Some(name) = &self.name {
-            items.insert("customer_name".into(), name.to_string());
-        }
-        if let Some(phone_number) = &self.phone_number {
-            items.insert("phone_number".into(), phone_number.to_string());
-        }
-        if let Some(email) = &self.email {
-            items.insert("email".into(), email.to_string());
-        }
-        if let Some(store_id) = &self.store_id {
-            items.insert("store_id".into(), store_id.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "customers.")
-    }
-}
-
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, IntoDelimited)]
 pub struct UserOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
 }
-impl UserOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
 
-        if let Some(id) = self.id {
-            items.insert("id".to_owned(), id.to_string());
-        }
-        if let Some(name) = &self.name {
-            items.insert("name".to_owned(), name.to_string());
-        }
-        if let Some(phone_number) = &self.phone_number {
-            items.insert("phone_number".to_owned(), phone_number.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "users.")
-    }
-}
-
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, IntoDelimited)]
 pub struct NotesOptions {
     pub note_id: Option<i64>,
+    #[db_name("wo_key")]
     pub workorder_id: Option<i64>,
-}
-impl NotesOptions {
-    pub fn into_delimited(&self) -> String {
-        let mut items: HashMap<String, String> = HashMap::new();
-
-        if let Some(note_id) = self.note_id {
-            items.insert("note_id".to_owned(), note_id.to_string());
-        }
-        if let Some(workorder_id) = self.workorder_id {
-            items.insert("wo_key".to_owned(), workorder_id.to_string());
-        }
-
-        let mut strs = vec![];
-
-        for (key, value) in items {
-            strs.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                TABLE_MARKER, key, FIELD_DELIM, PADDING_VALUE, value, PADDING_VALUE,
-            ));
-        }
-
-        strs.join(ITEM_DELIM)
-    }
-    pub fn into_filter(&self) -> String {
-        self.into_delimited()
-            .replace(ITEM_DELIM, " and ")
-            .replace(FIELD_DELIM, " like ")
-            .replace(PADDING_VALUE, "%")
-            .replace(TABLE_MARKER, "notes.")
-    }
 }
 
 impl Workorder {
