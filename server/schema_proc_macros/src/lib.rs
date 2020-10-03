@@ -20,7 +20,7 @@ fn get_db_name(attr: &syn::Attribute) -> String {
     .to_owned()
 }
 
-#[proc_macro_derive(IntoDelimited, attributes(db_name))]
+#[proc_macro_derive(Options, attributes(db_name))]
 pub fn derive_into_delimited(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_ident = input.ident;
@@ -55,18 +55,18 @@ pub fn derive_into_delimited(input: TokenStream) -> TokenStream {
     }).fold(TokenStream2::new(), |mut ret, cur_ts| {ret.extend(cur_ts.into_iter()); ret});
 
     let db_table: String = match format!("{}", struct_ident).as_str() {
-        "WorkorderOptions" => "workorders.",
-        "DeviceOptions" => "devices.",
-        "StoreOptions" => "stores.",
-        "CustomerOptions" => "customers.",
-        "UserOptions" => "users.",
-        "NotesOptions" => "notes.",
+        "WorkorderOptions" => "workorders",
+        "DeviceOptions" => "devices",
+        "StoreOptions" => "stores",
+        "CustomerOptions" => "customers",
+        "UserOptions" => "users",
+        "NotesOptions" => "notes",
         _ => unreachable!("Only derive on the Options structs, if there's a new one, don't forget to add it's table to schema_proc_macros")
     }
     .to_owned();
 
     let gen = quote! {
-        impl IntoDelimited for #struct_ident {
+        impl Options for #struct_ident {
             fn into_delimited(&self) -> String {
                 let mut ____strs__ = Vec::new();
 
@@ -76,11 +76,31 @@ pub fn derive_into_delimited(input: TokenStream) -> TokenStream {
             }
 
             fn into_filter(&self) -> String {
+                let mut table_spec = #db_table.to_owned();
+                table_spec.push('.');
                 self.into_delimited()
                     .replace(#ITEM_DELIM, " and ")
                     .replace(#FIELD_DELIM, " like ")
                     .replace(#PADDING_VALUE, "%")
-                    .replace(#TABLE_MARKER, #db_table)
+                    .replace(#TABLE_MARKER, &table_spec)
+            }
+
+            fn into_update(&self) -> String {
+                format!(
+                    "update {} {} where {}.id={}",
+                    #db_table,
+                    format!(
+                        "set {}",
+                        self.into_delimited()
+                            .replace(ITEM_DELIM, ", ")
+                            .replace(FIELD_DELIM, "=")
+                            .replace(PADDING_VALUE, "")
+                            .replace(TABLE_MARKER, "")
+                    ),
+                    #db_table,
+                    self.id.unwrap()
+            )
+
             }
         }
     };

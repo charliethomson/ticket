@@ -1,5 +1,8 @@
 use crate::{
-    db::{models::User, schema::UserOptions},
+    db::{
+        models::User,
+        schema::{Update, UserOptions},
+    },
     routes::OkMessage,
 };
 use actix_web::{get, post, put, web, HttpResponse};
@@ -68,8 +71,8 @@ pub async fn users_put(body: web::Json<UserOptions>) -> HttpResponse {
         }
     };
     match user.update(options) {
-        Ok(successful) => HttpResponse::Ok().json(OkMessage::<()> {
-            ok: successful,
+        Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
+            ok: true,
             message: None,
         }),
         Err(e) => HttpResponse::InternalServerError().json(OkMessage {

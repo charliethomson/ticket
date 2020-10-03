@@ -1,6 +1,9 @@
 use {
     crate::{
-        db::{models::Store, schema::StoreOptions},
+        db::{
+            models::Store,
+            schema::{StoreOptions, Update},
+        },
         routes::OkMessage,
     },
     actix_web::{get, post, put, web::Json, HttpResponse},

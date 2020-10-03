@@ -1,6 +1,9 @@
 use {
     crate::{
-        db::{models::Device, schema::DeviceOptions},
+        db::{
+            models::Device,
+            schema::{DeviceOptions, Update},
+        },
         routes::OkMessage,
     },
     actix_web::{get, post, put, web::Json, HttpResponse},

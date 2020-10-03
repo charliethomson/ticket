@@ -13,12 +13,22 @@ const ITEM_DELIM: &str = "$!@;";
 const TABLE_MARKER: &str = "$%^$#$!$@#";
 const PADDING_VALUE: &str = "$%&&#$*@@";
 
-pub trait IntoDelimited {
+pub trait Options {
     fn into_delimited(&self) -> String;
     fn into_filter(&self) -> String;
+    fn into_update(&self) -> String;
 }
 
-#[derive(Default, Deserialize, Debug, Clone, IntoDelimited)]
+pub trait Update<Changes: Options> {
+    fn update(&mut self, changes: Changes) -> mysql::Result<()> {
+        let mut conn = crate::db::get_connection()?;
+        let query = changes.into_update();
+        conn.query::<Vec<_>, String>(query)?;
+        Ok(())
+    }
+}
+
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct WorkorderOptions {
     pub id: Option<i64>,
     pub origin: Option<i64>,
@@ -33,7 +43,7 @@ pub struct WorkorderOptions {
     pub brief: Option<String>,
 }
 
-#[derive(Default, Deserialize, IntoDelimited)]
+#[derive(Default, Deserialize, Options)]
 pub struct DeviceOptions {
     pub id: Option<i64>,
     #[db_name("serial_no")]
@@ -43,7 +53,7 @@ pub struct DeviceOptions {
     pub password: Option<String>,
 }
 
-#[derive(Default, Deserialize, IntoDelimited)]
+#[derive(Default, Deserialize, Options)]
 pub struct StoreOptions {
     pub id: Option<i64>,
     #[db_name("store_name")]
@@ -58,7 +68,7 @@ pub struct StoreOptions {
     pub zip: Option<String>,
 }
 
-#[derive(Default, Deserialize, IntoDelimited)]
+#[derive(Default, Deserialize, Options)]
 pub struct CustomerOptions {
     pub id: Option<i64>,
     #[db_name("customer_name")]
@@ -68,16 +78,17 @@ pub struct CustomerOptions {
     pub store_id: Option<i64>,
 }
 
-#[derive(Default, Deserialize, IntoDelimited)]
+#[derive(Default, Deserialize, Options)]
 pub struct UserOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
 }
 
-#[derive(Default, Deserialize, IntoDelimited)]
+#[derive(Default, Deserialize, Options)]
 pub struct NotesOptions {
-    pub note_id: Option<i64>,
+    #[db_name("note_id")]
+    pub id: Option<i64>,
     #[db_name("wo_key")]
     pub workorder_id: Option<i64>,
 }
@@ -199,25 +210,11 @@ impl Workorder {
     }
 }
 
-impl WorkorderResponse {
-    pub fn update(&mut self, changes: WorkorderOptions) -> mysql::Result<()> {
-        let mut conn = crate::db::get_connection()?;
-        let rawstr = changes.into_delimited();
-        let update_str = format!(
-            "set {}",
-            rawstr
-                .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
-                .replace(PADDING_VALUE, "")
-                .replace(TABLE_MARKER, "")
-        );
-        conn.query::<Vec<_>, String>(format!(
-            "update workorders {} where workorders.id={}",
-            update_str, self.workorder_id
-        ))?;
-        Ok(())
-    }
-}
+impl Update<WorkorderOptions> for WorkorderResponse {}
+impl Update<DeviceOptions> for Device {}
+impl Update<StoreOptions> for Store {}
+impl Update<CustomerOptions> for Customer {}
+impl Update<UserOptions> for User {}
 
 impl Device {
     pub fn insert(&self) -> mysql::Result<i64> {
@@ -285,27 +282,6 @@ impl Device {
             Ok(None)
         }
     }
-
-    pub fn update(&mut self, changes: DeviceOptions) -> mysql::Result<()> {
-        let mut conn = crate::db::get_connection()?;
-
-        let rawstr = changes.into_delimited();
-        let update_str = format!(
-            "set {}",
-            rawstr
-                .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
-                .replace(PADDING_VALUE, "")
-                .replace(TABLE_MARKER, "")
-        );
-
-        conn.query::<Vec<_>, String>(format!(
-            "update devices {} where devices.id={}",
-            update_str, self.id
-        ))?;
-
-        Ok(())
-    }
 }
 
 impl Store {
@@ -313,7 +289,7 @@ impl Store {
         let mut conn = crate::db::get_connection()?;
         conn.exec_drop(
             "insert into stores
-        (   
+        (
             store_name,
             contact_name,
             phone_number,
@@ -388,27 +364,6 @@ impl Store {
             Ok(None)
         }
     }
-
-    pub fn update(&mut self, changes: StoreOptions) -> mysql::Result<()> {
-        let mut conn = crate::db::get_connection()?;
-
-        let rawstr = changes.into_delimited();
-        let update_str = format!(
-            "set {}",
-            rawstr
-                .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
-                .replace(PADDING_VALUE, "")
-                .replace(TABLE_MARKER, "")
-        );
-
-        conn.query::<Vec<_>, String>(format!(
-            "update stores {} where stores.id={}",
-            update_str, self.id
-        ))?;
-
-        Ok(())
-    }
 }
 
 impl Customer {
@@ -479,27 +434,6 @@ impl Customer {
             Ok(None)
         }
     }
-
-    pub fn update(&mut self, changes: CustomerOptions) -> mysql::Result<()> {
-        let mut conn = crate::db::get_connection()?;
-
-        let rawstr = changes.into_delimited();
-        let update_str = format!(
-            "set {}",
-            rawstr
-                .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
-                .replace(PADDING_VALUE, "")
-                .replace(TABLE_MARKER, "")
-        );
-
-        conn.query::<Vec<_>, String>(format!(
-            "update customers {} where customers.id={}",
-            update_str, self.id
-        ))?;
-
-        Ok(())
-    }
 }
 
 impl User {
@@ -507,7 +441,7 @@ impl User {
         let mut conn = crate::db::get_connection()?;
         conn.exec_drop(
             "insert into users
-        (   
+        (
             name,
             phone_number
         ) values (
@@ -551,27 +485,6 @@ impl User {
         } else {
             Ok(None)
         }
-    }
-
-    pub fn update(&mut self, changes: UserOptions) -> mysql::Result<bool> {
-        let mut conn = crate::db::get_connection()?;
-
-        let rawstr = changes.into_delimited();
-        let update_str = format!(
-            "set {}",
-            rawstr
-                .replace(ITEM_DELIM, ", ")
-                .replace(FIELD_DELIM, "=")
-                .replace(PADDING_VALUE, "")
-                .replace(TABLE_MARKER, "")
-        );
-
-        conn.query::<Vec<_>, String>(format!(
-            "update users {} where users.id={}",
-            update_str, self.id
-        ))?;
-
-        Ok(true)
     }
 
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
