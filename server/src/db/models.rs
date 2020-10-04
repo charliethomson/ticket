@@ -66,7 +66,6 @@ pub struct Store {
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Note {
-<<<<<<< HEAD
     pub contents: String,
     pub user: i64,
     pub created: i64,
@@ -74,27 +73,6 @@ pub struct Note {
 }
 
 #[build_tuple]
-=======
-    pub user: i64,
-    pub created: i64,
-    pub next_update: Option<i64>,
-    pub contents: String,
-}
-impl From<NoteTuple> for Note {
-    fn from(tuple: NoteTuple) -> Self {
-        let (contents, user, created, next_update) = tuple;
-        Self {
-            user,
-            created,
-            next_update,
-            contents,
-        }
-    }
-}
-
-pub type CustomerTuple = (i64, String, String, String, i64);
-
->>>>>>> 50b4f7d50a31b0db5e95197ca22b2b5ad65ba482
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Customer {
     pub id: i64,
