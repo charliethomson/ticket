@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 // TODO: Convert `update` to a proc macro
 
 use crate::db::{models::*, Options, Update};
