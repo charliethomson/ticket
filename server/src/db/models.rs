@@ -2,10 +2,6 @@
 
 use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
-<<<<<<< HEAD
-=======
-pub type WorkorderTuple = (i64, i64, String, i64, Option<i64>, String, i64, i64, String);
->>>>>>> 50b4f7d50a31b0db5e95197ca22b2b5ad65ba482
 
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -38,10 +34,7 @@ pub struct Workorder {
     pub brief: String,
 }
 
-<<<<<<< HEAD
 #[build_tuple]
-=======
->>>>>>> 50b4f7d50a31b0db5e95197ca22b2b5ad65ba482
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Device {
     pub id: i64,
@@ -54,10 +47,7 @@ pub struct Device {
     pub password: String,
 }
 
-<<<<<<< HEAD
 #[build_tuple]
-=======
->>>>>>> 50b4f7d50a31b0db5e95197ca22b2b5ad65ba482
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Store {
     pub id: i64,
