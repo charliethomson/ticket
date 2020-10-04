@@ -191,6 +191,7 @@ pub fn derive_insert(input: TokenStream) -> TokenStream {
     };
     gen.into()
 }
+<<<<<<< HEAD
 
 #[proc_macro_attribute]
 pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
@@ -248,3 +249,5 @@ pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
     };
     gen.into()
 }
+=======
+>>>>>>> 50b4f7d50a31b0db5e95197ca22b2b5ad65ba482
