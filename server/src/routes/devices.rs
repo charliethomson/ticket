@@ -14,7 +14,6 @@ pub struct DeviceNew {
     pub password: String,
 }
 
-// TODO
 #[post("/api/devices")]
 pub async fn devices_post(Json(body): Json<DeviceNew>) -> HttpResponse {
     match Device::insert(&Device {
@@ -35,7 +34,6 @@ pub async fn devices_post(Json(body): Json<DeviceNew>) -> HttpResponse {
     }
 }
 
-// TODO
 #[get("/api/devices")]
 pub async fn devices_get(Json(filter): Json<DeviceOptions>) -> HttpResponse {
     match Device::find(filter) {
@@ -43,14 +41,13 @@ pub async fn devices_get(Json(filter): Json<DeviceOptions>) -> HttpResponse {
             ok: true,
             message: devices,
         }),
-        Err(e) => HttpResponse::Ok().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),
     }
 }
 
-// TODO
 #[put("/api/devices")]
 pub async fn devices_put(Json(body): Json<DeviceOptions>) -> HttpResponse {
     let id = match body.id {
@@ -78,7 +75,7 @@ pub async fn devices_put(Json(body): Json<DeviceOptions>) -> HttpResponse {
             ok: false,
             message: Some(format!("No device found for id {}", id)),
         }),
-        Err(e) => HttpResponse::Ok().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),

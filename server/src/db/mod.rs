@@ -1,7 +1,7 @@
 pub mod models;
 pub mod schema;
 pub use models::*;
-pub use mysql::{prelude::*, *};
+use mysql::{prelude::*, *};
 pub use schema::*;
 
 const DB_URI: &str = "mysql://manager:SuperSecureManagerPassword1@localhost:3306/offsite";

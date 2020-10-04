@@ -35,7 +35,7 @@ pub async fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
             ok: true,
             message: Some(id),
         }),
-        Err(e) => HttpResponse::Ok().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),

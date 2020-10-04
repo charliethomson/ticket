@@ -77,7 +77,7 @@ pub async fn customers_put(Json(body): Json<CustomerOptions>) -> HttpResponse {
             ok: false,
             message: Some(format!("No customer found for id {}", id)),
         }),
-        Err(e) => HttpResponse::Ok().json(OkMessage {
+        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,
             message: Some(e.to_string()),
         }),

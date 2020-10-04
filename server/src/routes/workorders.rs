@@ -46,6 +46,7 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
 
     // this is a solid enough approximation of the workorder id, leaving a FIXME JIC
     // FIXME:
+    use mysql::prelude::Queryable;
     let wo_id = match conn
         .query_first::<Option<i64>, &'static str>("select max(id) as max_id from workorders")
     {
