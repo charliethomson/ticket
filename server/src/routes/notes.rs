@@ -4,7 +4,7 @@ use {
         routes::OkMessage,
     },
     actix_web::{get, post, web::Json, HttpResponse},
-    chrono::{DateTime, NaiveDateTime, Utc},
+    chrono::Utc,
     serde::{Deserialize, Serialize},
 };
 
@@ -20,10 +20,8 @@ pub struct NotesNew {
 pub async fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
     let note = Note {
         user: body.user_id,
-        created: Utc::now(),
-        next_update: body
-            .next_update
-            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
+        created: Utc::now().timestamp(),
+        next_update: body.next_update,
         contents: body.contents,
     };
 

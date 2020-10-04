@@ -2,31 +2,16 @@
 
 // TODO: Convert `update` to a proc macro
 
-use crate::db::models::*;
+use crate::db::{models::*, Options, Update};
 use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
 use schema_proc_macros::*;
 use serde::Deserialize;
 
-const FIELD_DELIM: &str = "#$++,";
-const ITEM_DELIM: &str = "$!@;";
-const TABLE_MARKER: &str = "$%^$#$!$@#";
-const PADDING_VALUE: &str = "$%&&#$*@@";
-
-pub trait Options {
-    fn into_delimited(&self) -> String;
-    fn into_filter(&self) -> String;
-    fn into_update(&self) -> String;
-}
-
-pub trait Update<Changes: Options> {
-    fn update(&mut self, changes: Changes) -> mysql::Result<()> {
-        let mut conn = crate::db::get_connection()?;
-        let query = changes.into_update();
-        conn.query::<Vec<_>, String>(query)?;
-        Ok(())
-    }
-}
+pub const FIELD_DELIM: &str = "#$++,";
+pub const ITEM_DELIM: &str = "$!@;";
+pub const TABLE_MARKER: &str = "$%^$#$!$@#";
+pub const PADDING_VALUE: &str = "$%&&#$*@@";
 
 #[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct WorkorderOptions {
@@ -43,7 +28,7 @@ pub struct WorkorderOptions {
     pub brief: Option<String>,
 }
 
-#[derive(Default, Deserialize, Options)]
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct DeviceOptions {
     pub id: Option<i64>,
     #[db_name("serial_no")]
@@ -53,7 +38,7 @@ pub struct DeviceOptions {
     pub password: Option<String>,
 }
 
-#[derive(Default, Deserialize, Options)]
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct StoreOptions {
     pub id: Option<i64>,
     #[db_name("store_name")]
@@ -68,7 +53,7 @@ pub struct StoreOptions {
     pub zip: Option<String>,
 }
 
-#[derive(Default, Deserialize, Options)]
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct CustomerOptions {
     pub id: Option<i64>,
     #[db_name("customer_name")]
@@ -78,14 +63,14 @@ pub struct CustomerOptions {
     pub store_id: Option<i64>,
 }
 
-#[derive(Default, Deserialize, Options)]
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct UserOptions {
     pub id: Option<i64>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
 }
 
-#[derive(Default, Deserialize, Options)]
+#[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct NotesOptions {
     #[db_name("note_id")]
     pub id: Option<i64>,
@@ -94,44 +79,6 @@ pub struct NotesOptions {
 }
 
 impl Workorder {
-    pub fn insert(&self) -> mysql::Result<Option<i64>> {
-        let mut conn = crate::db::get_connection()?;
-        conn.exec_drop(
-            "insert into workorders
-        (   origin, 
-            travel_status, 
-            created, 
-            quoted, 
-            workorder_status, 
-            customer, 
-            device,
-            brief
-        ) values (
-            :origin, 
-            :travel_status, 
-            :created, 
-            :quoted, 
-            :workorder_status, 
-            :customer, 
-            :device,
-            :brief
-        );",
-            params! {
-                "origin" =>self.origin,
-                "travel_status" =>self.travel_status.clone(),
-                "created" => self.created.timestamp(),
-                "quoted" => self.quoted_time.map(|dt| dt.timestamp()),
-                "workorder_status" =>self.status.clone(),
-                "customer" =>self.customer,
-                "device" =>self.device,
-                "brief" =>self.brief.clone(),
-            },
-        )?;
-        Ok(conn.query_first::<i64, String>(
-            "SELECT max(LAST_INSERT_ID(id)) FROM workorders".to_owned(),
-        )?)
-    }
-
     pub fn find(filter: WorkorderOptions) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
@@ -217,34 +164,6 @@ impl Update<CustomerOptions> for Customer {}
 impl Update<UserOptions> for User {}
 
 impl Device {
-    pub fn insert(&self) -> mysql::Result<i64> {
-        let mut conn = crate::db::get_connection()?;
-        conn.exec_drop(
-            "insert into devices
-        (   
-            serial_no,
-            device_name,
-            customer,
-            password
-        ) values (
-            :serial_no,
-            :device_name,
-            :customer,
-            :password
-        );",
-            params! {
-                "serial_no" => self.serial.clone(),
-                "device_name" => self.name.clone(),
-                "customer" => self.customer_id,
-                "password" => self.password.clone()
-            },
-        )?;
-
-        Ok(conn
-            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM devices".to_owned())?
-            .unwrap())
-    }
-
     pub fn find(filter: DeviceOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
@@ -285,48 +204,6 @@ impl Device {
 }
 
 impl Store {
-    pub fn insert(&self) -> mysql::Result<i64> {
-        let mut conn = crate::db::get_connection()?;
-        conn.exec_drop(
-            "insert into stores
-        (
-            store_name,
-            contact_name,
-            phone_number,
-            email_address,
-            address,
-            city,
-            state,
-            zip
-        ) values (
-            :store_name,
-            :contact_name,
-            :phone_number,
-            :email_address,
-            :address,
-            :city,
-            :state,
-            :zip
-        );",
-            params! {
-                "store_name" => self.name.to_string(),
-                "contact_name" => self.contact_name.to_string(),
-                "phone_number" => self.phone_number.to_string(),
-                "email_address" => self.email.to_string(),
-                "address" => self.address.to_string(),
-                "city" => self.city.to_string(),
-                "state" => self.state.to_string(),
-                "zip" => self.zip.to_string()
-            },
-        )?;
-
-        // Unwrap _should_ be safe because LAST_INSERT_ID would be set by the query above.
-        // FIXME: I'll keep this here just in case, but it should be fine.
-        Ok(conn
-            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM stores".to_owned())?
-            .unwrap())
-    }
-
     pub fn find(filter: StoreOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
@@ -367,36 +244,6 @@ impl Store {
 }
 
 impl Customer {
-    pub fn insert(&self) -> mysql::Result<i64> {
-        let mut conn = crate::db::get_connection()?;
-        conn.exec_drop(
-            "insert into customers
-        (   
-            customer_name,
-            phone_number,
-            email_address,
-            store_id
-        ) values (
-            :customer_name,
-            :phone_number,
-            :email_address,
-            :store_id
-        );",
-            params! {
-                "customer_name" => self.name.clone(),
-                "phone_number" => self.phone_number.clone(),
-                "email_address" => self.email.clone(),
-                "store_id" => self.store_id,
-            },
-        )?;
-
-        // Unwrap _should_ be safe because LAST_INSERT_ID would be set by the query above.
-        // FIXME: I'll keep this here just in case, but it should be fine.
-        Ok(conn
-            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM customers".to_owned())?
-            .unwrap())
-    }
-
     pub fn find(filter: CustomerOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
@@ -470,7 +317,6 @@ impl User {
                 "".to_string()
             }
         );
-        eprintln!("{}", query);
         let ids: Vec<i64> = conn.query(query)?;
 
         // TODO (this and also in Workorders)
@@ -522,13 +368,15 @@ impl Note {
                 "wo_key" => workorder_id,
                 "contents" => self.contents.clone(),
                 "user" => self.user,
-                "posted" => self.created.timestamp(),
-                "next_update" => self.next_update.map(|op| op.timestamp())
+                "posted" => self.created,
+                "next_update" => self.next_update
             },
         )?;
 
         Ok(conn
-            .query_first::<i64, String>("SELECT LAST_INSERT_ID(note_id) FROM notes".to_owned())?
+            .query_first::<i64, String>(
+                "SELECT max(LAST_INSERT_ID(note_id)) FROM notes".to_owned(),
+            )?
             .unwrap())
     }
 

@@ -1,4 +1,3 @@
-extern crate proc_macro;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -20,30 +19,35 @@ fn get_db_name(attr: &syn::Attribute) -> String {
     .to_owned()
 }
 
+fn get_map(
+    named: syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
+) -> std::collections::HashMap<proc_macro2::Ident, String> {
+    let mut map = std::collections::HashMap::new();
+    for field in named.into_iter() {
+        let key = field.ident.unwrap();
+        let value = if !field.attrs.is_empty() {
+            let attr: &syn::Attribute = field.attrs.get(0).unwrap();
+            get_db_name(attr)
+        } else {
+            format!("{}", key.clone())
+        };
+        map.insert(key, value);
+    }
+    map
+}
+
 #[proc_macro_derive(Options, attributes(db_name))]
-pub fn derive_into_delimited(input: TokenStream) -> TokenStream {
+pub fn derive_options(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_ident = input.ident;
-    let mut map = std::collections::HashMap::new();
     let data = input.data;
-    match data {
+    let map = match data {
         syn::Data::Struct(syn::DataStruct {
             fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
             ..
-        }) => {
-            for field in named.into_iter() {
-                let key = field.ident.unwrap();
-                let value = if !field.attrs.is_empty() {
-                    let attr: &syn::Attribute = field.attrs.get(0).unwrap();
-                    get_db_name(attr)
-                } else {
-                    format!("{}", key.clone())
-                };
-                map.insert(key, value);
-            }
-        }
+        }) => get_map(named),
         _ => unreachable!("Why did you try to derive on not a struct lol"),
-    }
+    };
 
     let for_body = map.iter().map(|(struct_name, db_field)| quote!{
         if let Some(__value) = self.#struct_name.clone() {
@@ -101,6 +105,144 @@ pub fn derive_into_delimited(input: TokenStream) -> TokenStream {
                     self.id.unwrap()
             )
 
+            }
+        }
+    };
+    gen.into()
+}
+
+#[proc_macro_derive(Insert, attributes(db_name))]
+pub fn derive_insert(input: TokenStream) -> TokenStream {
+    // allow syn to parse the input
+    let input = parse_macro_input!(input as DeriveInput);
+    // get the ident for the struct
+    let struct_ident = input.ident;
+    // map the identifier used in the struct to the identifier used in the database
+    let map = match input.data {
+        syn::Data::Struct(syn::DataStruct {
+            fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
+            ..
+        }) => get_map(named),
+        _ => unreachable!("Why did you try to derive on not a struct lol"),
+    };
+
+    // Get the database table name based on the struct name
+    let db_table: String = match format!("{}", struct_ident).as_str() {
+        "Workorder" | "WorkorderResponse" => "workorders",
+        "Device" => "devices",
+        "Store" => "stores",
+        "Customer" => "customers",
+        _ => unreachable!("Only derive on some structs, if there's a new one, don't forget to add it's table to schema_proc_macros")
+    }
+    .to_owned();
+
+    // Generate the query string
+    let query_str = format!(
+        "insert into {} ({}) values ({});",
+        db_table,
+        map.values().cloned().collect::<Vec<String>>().join(", "),
+        map.values()
+            .map(|s| {
+                let mut m = String::from(":");
+                m.push_str(&s);
+                m
+            })
+            .collect::<Vec<String>>()
+            .join(", "),
+    );
+    let params_fields: TokenStream2 = map
+        .iter()
+        .map(|(ident, db_name)| {
+            quote! {
+                #db_name => self.#ident.clone(),
+            }
+        })
+        .fold(TokenStream2::new(), |mut ret, cur_ts| {
+            ret.extend(cur_ts.into_iter());
+            ret
+        });
+
+    let gen = quote! {
+        impl crate::db::Insert for #struct_ident {
+            fn insert(&self) -> ::mysql::Result<Option<i64>> {
+                use ::mysql::{params, prelude::Queryable};
+                let mut ___conn = crate::db::get_connection()?;
+                ___conn.exec_drop(
+                    #query_str,
+                    params! {
+                        #params_fields
+                    }
+                )?;
+                let ___pk_name__ = ___conn.exec_first::<String, String,  mysql::params::Params>(
+                    format!("
+                        select COLUMN_NAME
+                        from information_schema.KEY_COLUMN_USAGE 
+                        where 
+                            TABLE_NAME='{}' 
+                            and CONSTRAINT_NAME='PRIMARY';", 
+                        #db_table),
+                    mysql::params::Params::Empty)?
+                    .unwrap();
+                Ok(___conn.query_first::<i64, String>(
+                    format!("SELECT max(LAST_INSERT_ID({})) FROM {}", ___pk_name__, #db_table),
+                )?)
+            }
+        }
+    };
+    gen.into()
+}
+
+#[proc_macro_attribute]
+pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
+    let original_input = TokenStream2::from(input.clone());
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+    let struct_ident = input.ident;
+    let tuple_ty = syn::Ident::new(
+        &format!("{}Tuple", struct_ident),
+        proc_macro2::Span::call_site(),
+    );
+
+    let mut map = vec![];
+    if let syn::Data::Struct(syn::DataStruct {
+        fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
+        ..
+    }) = input.data
+    {
+        let mut iter = named.into_iter();
+        while let Some(syn::Field {
+            ident: Some(ident),
+            ty,
+            ..
+        }) = iter.next()
+        {
+            map.push((ident, ty));
+        }
+    }
+
+    let parts = map.iter().fold(TokenStream2::new(), |mut ret, (_, ty)| {
+        ret.extend(quote! {
+            #ty,
+        });
+        ret
+    });
+    let names = map.iter().fold(TokenStream2::new(), |mut ret, (ident, _)| {
+        ret.extend(quote! {
+            #ident,
+        });
+        ret
+    });
+
+    let gen = quote! {
+        pub type #tuple_ty = (#parts);
+
+        #original_input
+
+        impl From<#tuple_ty> for #struct_ident {
+            fn from(tuple: #tuple_ty) -> #struct_ident {
+                let (#names) = tuple;
+                #struct_ident {
+                    #names
+                }
             }
         }
     };

@@ -1,7 +1,7 @@
 use {
     crate::{db::*, routes::OkMessage},
     actix_web::{get, post, put, web::Json, HttpResponse},
-    chrono::{DateTime, NaiveDateTime, Utc},
+    chrono::Utc,
     serde::{Deserialize, Serialize},
 };
 
@@ -29,11 +29,8 @@ pub struct InitialNote {
 pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
     let note = Note {
         user: body.initial_note.user,
-        created: Utc::now(),
-        next_update: body
-            .initial_note
-            .next_update
-            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
+        created: Utc::now().timestamp(),
+        next_update: body.initial_note.next_update,
         contents: body.initial_note.contents.clone(),
     };
 
@@ -72,10 +69,8 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
         workorder_id: 0,
         origin: body.origin,
         travel_status: body.travel_status.clone(),
-        created: Utc::now(),
-        quoted_time: body
-            .quoted_time
-            .map(|stamp| DateTime::from_utc(NaiveDateTime::from_timestamp(stamp, 0), Utc)),
+        created: Utc::now().timestamp(),
+        quoted_time: body.quoted_time,
         status: body.status.clone(),
         customer: body.customer,
         device: body.device,
