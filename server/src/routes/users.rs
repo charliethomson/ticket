@@ -1,8 +1,5 @@
 use crate::{
-    db::{
-        models::User,
-        schema::{Update, UserOptions},
-    },
+    db::{models::User, schema::UserOptions, Update},
     routes::OkMessage,
 };
 use actix_web::{get, post, put, web, HttpResponse};

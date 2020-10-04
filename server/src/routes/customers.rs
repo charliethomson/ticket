@@ -1,9 +1,6 @@
 use {
     crate::{
-        db::{
-            models::Customer,
-            schema::{CustomerOptions, Update},
-        },
+        db::{models::Customer, schema::CustomerOptions, Insert, Update},
         routes::OkMessage,
     },
     actix_web::{get, post, put, web::Json, HttpResponse},
