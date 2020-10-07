@@ -2,18 +2,18 @@ CREATE TABLE IF NOT EXISTS workorders (
     id INT NOT NULL AUTO_INCREMENT,
     CONSTRAINT `id_unique_workorders` UNIQUE (id),
     CONSTRAINT `id_primary_key_workorders` PRIMARY KEY (id),
+    active BOOLEAN NOT NULL,
     origin INT NOT NULL,
     CONSTRAINT `fk_origin_store` FOREIGN KEY (origin) REFERENCES stores (id) ON DELETE CASCADE ON UPDATE RESTRICT,
     travel_status VARCHAR(40) NOT NULL,
-    created DATETIME NOT NULL,
-    quoted DATETIME,
+    created INT NOT NULL,
+    quoted INT,
     workorder_status VARCHAR(40) NOT NULL,
     customer INT NOT NULL,
     CONSTRAINT `fk_wo_customer_id` FOREIGN KEY (customer) REFERENCES customers (id) ON DELETE CASCADE ON UPDATE RESTRICT,
     device INT NOT NULL,
     CONSTRAINT `fk_device_id` FOREIGN KEY (device) REFERENCES devices (id) ON DELETE CASCADE ON UPDATE RESTRICT,
-    brief VARCHAR(144) NOT NULL,
-    notes_key INT NOT NULL,
+    brief VARCHAR(144) NOT NULL
 );
 CREATE TABLE IF NOT EXISTS customers (
     id INT NOT NULL AUTO_INCREMENT,
@@ -44,9 +44,9 @@ CREATE TABLE IF NOT EXISTS devices (
     CONSTRAINT `id_primary_key_devices` PRIMARY KEY (id),
     serial_no VARCHAR(30) NOT NULL,
     device_name VARCHAR(30) NOT NULL,
-    password TEXT,
     customer INT NOT NULL,
-    CONSTRAINT `fk_customer_id` FOREIGN KEY (customer) REFERENCES customers (id) ON DELETE CASCADE ON UPDATE RESTRICT
+    CONSTRAINT `fk_customer_id` FOREIGN KEY (customer) REFERENCES customers (id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    password TEXT
 );
 CREATE TABLE notes (
     note_id INT NOT NULL AUTO_INCREMENT,
@@ -55,8 +55,8 @@ CREATE TABLE notes (
     contents TEXT NOT NULL,
     user INT NOT NULL,
     CONSTRAINT `fk_user_id` FOREIGN KEY (user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT,
-    posted DATETIME NOT NULL,
-    next_update DATETIME
+    posted INT NOT NULL,
+    next_update INT
 );
 CREATE TABLE users (
     id INT NOT NULL AUTO_INCREMENT,

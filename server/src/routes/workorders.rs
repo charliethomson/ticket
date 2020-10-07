@@ -68,6 +68,7 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
     }
     let wo = Workorder {
         workorder_id: 0,
+        active: true,
         origin: body.origin,
         travel_status: body.travel_status.clone(),
         created: Utc::now().timestamp(),
@@ -119,7 +120,7 @@ pub async fn workorders_put(Json(body): Json<WorkorderOptions>) -> HttpResponse 
         }
     };
     match Workorder::by_id(id) {
-        Ok(Some(mut workorder)) => match workorder.update(body) {
+        Ok(Some(Ok(mut workorder))) => match workorder.update(body) {
             Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
                 ok: true,
                 message: None,
@@ -132,6 +133,10 @@ pub async fn workorders_put(Json(body): Json<WorkorderOptions>) -> HttpResponse 
         Ok(None) => HttpResponse::NotFound().json(OkMessage {
             ok: false,
             message: Some(format!("No workorder found for id {}", id)),
+        }),
+        Ok(Some(Err(e))) => HttpResponse::InternalServerError().json(OkMessage {
+            ok: false,
+            message: Some(e),
         }),
         Err(e) => HttpResponse::InternalServerError().json(OkMessage {
             ok: false,

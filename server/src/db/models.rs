@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct WorkorderResponse {
     pub workorder_id: i64,
+    pub active: bool,
     pub origin: Store,
     pub travel_status: String,
     pub created: i64,
@@ -18,10 +19,12 @@ pub struct WorkorderResponse {
     pub notes: Vec<Note>,
 }
 
+#[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Workorder {
     #[db_name("id")]
     pub workorder_id: i64,
+    pub active: bool,
     pub origin: i64,
     pub travel_status: String,
     pub created: i64,

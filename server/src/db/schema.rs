@@ -14,6 +14,7 @@ pub const PADDING_VALUE: &str = "$%&&#$*@@";
 #[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct WorkorderOptions {
     pub id: Option<i64>,
+    pub active: Option<bool>,
     pub origin: Option<i64>,
     pub travel_status: Option<String>,
     pub created: Option<i64>,
@@ -93,8 +94,12 @@ impl Workorder {
         let wos = ids
             .iter()
             .map(|id| Workorder::by_id(*id))
-            .filter(|wo| wo.is_ok() && wo.as_ref().unwrap().is_some())
-            .map(|wo| wo.unwrap().unwrap())
+            .filter(|wo| {
+                wo.is_ok()
+                    && wo.as_ref().unwrap().is_some()
+                    && wo.as_ref().unwrap().as_ref().unwrap().is_ok()
+            })
+            .map(|wo| wo.unwrap().unwrap().unwrap())
             .collect::<Vec<WorkorderResponse>>();
         if !wos.is_empty() {
             Ok(Some(wos))
@@ -103,10 +108,11 @@ impl Workorder {
         }
     }
 
-    pub fn by_id(id: i64) -> mysql::Result<Option<WorkorderResponse>> {
+    pub fn by_id(id: i64) -> mysql::Result<Option<std::result::Result<WorkorderResponse, String>>> {
         let mut conn = crate::db::get_connection()?;
         if let Some((
             id,
+            active,
             store_id,
             travel_status,
             created,
@@ -115,30 +121,45 @@ impl Workorder {
             device_id,
             customer_id,
             brief,
-        )) = conn
-            .query_first::<(i64, i64, String, i64, Option<i64>, String, i64, i64, String), String>(
-                format!("select * from workorders where workorders.id={}", id),
-            )?
-        {
+        )) = conn.query_first::<WorkorderTuple, String>(format!(
+            "select * from workorders where workorders.id={}",
+            id
+        ))? {
             let origin = match Store::by_id(store_id)? {
                 Some(store) => store,
-                _ => panic!(),
+                _ => {
+                    return Ok(Some(Err(format!(
+                        "Failed to get Store from id {}",
+                        store_id
+                    ))))
+                }
             };
             let device = match Device::by_id(device_id)? {
                 Some(device) => device,
-                _ => panic!(),
+                _ => {
+                    return Ok(Some(Err(format!(
+                        "Failed to get Device from id {}",
+                        device_id
+                    ))))
+                }
             };
             let customer = match Customer::by_id(customer_id)? {
                 Some(customer) => customer,
-                _ => panic!(),
+                _ => {
+                    return Ok(Some(Err(format!(
+                        "Failed to get Customer from id {}",
+                        customer_id
+                    ))))
+                }
             };
             let notes = match Note::all_for_wo(id)? {
                 Some(notes) => notes,
-                _ => panic!(),
+                _ => return Ok(Some(Err(format!("Failed to get Notes from id {}", id)))),
             };
 
-            Ok(Some(WorkorderResponse {
+            Ok(Some(Ok(WorkorderResponse {
                 workorder_id: id,
+                active,
                 origin,
                 travel_status,
                 created,
@@ -148,7 +169,7 @@ impl Workorder {
                 device,
                 brief,
                 notes,
-            }))
+            })))
         } else {
             Ok(None)
         }
