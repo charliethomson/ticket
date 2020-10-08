@@ -48,12 +48,19 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
         }) => get_map(named),
         _ => unreachable!("Why did you try to derive on not a struct lol"),
     };
+    let get_value = quote! {
+        match __value.to_string().as_str() {
+            "true" => "1",
+            "false" => "0",
+            e => &e
+        }
+    };
 
     let for_body = map.iter().map(|(struct_name, db_field)| quote!{
         if let Some(__value) = self.#struct_name.clone() {
             ____strs__.push(format!(
                 "{}{}{}\"{}{}{}\"",
-                #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, __value.to_string(), #PADDING_VALUE,
+                #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
             ));
         }
     }).fold(TokenStream2::new(), |mut ret, cur_ts| {ret.extend(cur_ts.into_iter()); ret});
