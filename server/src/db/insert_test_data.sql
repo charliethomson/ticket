@@ -58,10 +58,10 @@ insert into workorders (
 values (
         1,
         1,
-        "Test travel_status",
+        0,
         UNIX_TIMESTAMP(),
         UNIX_TIMESTAMP(),
-        "Test workorder_status",
+        0,
         1,
         1,
         "Test brief"

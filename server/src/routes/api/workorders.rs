@@ -8,9 +8,10 @@ use {
 #[derive(Serialize, Deserialize)]
 pub struct WorkorderNew {
     pub origin: i64,
-    pub travel_status: String,
+    pub travel_status: i64,
     pub quoted_time: Option<i64>,
-    pub status: String,
+    pub status: i64,
+    pub location: Option<String>,
     pub customer: i64, // Customer ID
     pub device: i64,   // Device ID
     pub brief: String,
@@ -70,10 +71,11 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
         workorder_id: 0,
         active: true,
         origin: body.origin,
-        travel_status: body.travel_status.clone(),
+        travel_status: body.travel_status,
         created: Utc::now().timestamp(),
         quoted_time: body.quoted_time,
-        status: body.status.clone(),
+        status: body.status,
+        location: body.location.clone(),
         customer: body.customer,
         device: body.device,
         brief: body.brief.clone(),

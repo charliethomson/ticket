@@ -1,8 +1,8 @@
 CREATE TABLE users (
     id INT NOT NULL AUTO_INCREMENT,
     CONSTRAINT `pk_user_id` PRIMARY KEY (id),
-    phone_number VARCHAR(15) NOT NULL,
-    email_address VARCHAR(40) NOT NULL
+    name VARCHAR(25) NOT NULL,
+    phone_number VARCHAR(15) NOT NULL
 );
 CREATE TABLE notes (
     note_id INT NOT NULL AUTO_INCREMENT,
@@ -63,8 +63,5 @@ CREATE TABLE workorders (
     CONSTRAINT `fk_wo_customer_id` FOREIGN KEY (customer) REFERENCES customers (id) ON DELETE CASCADE ON UPDATE RESTRICT,
     device INT NOT NULL,
     CONSTRAINT `fk_device_id` FOREIGN KEY (device) REFERENCES devices (id) ON DELETE CASCADE ON UPDATE RESTRICT,
-    brief VARCHAR(144) NOT NULL,
-    CONSTRAINT `pk_user_id` FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT,
-    name VARCHAR(30) NOT NULL,
-    phone_number VARCHAR(15)
+    brief VARCHAR(144) NOT NULL
 );
