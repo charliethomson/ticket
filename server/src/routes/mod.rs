@@ -1,21 +1,12 @@
-pub mod customers;
-pub mod devices;
-pub mod notes;
-pub mod stores;
-pub mod users;
-pub mod workorders;
+mod api;
+pub use api::*;
 
-pub use customers::*;
-pub use devices::*;
-pub use notes::*;
-pub use stores::*;
-pub use users::*;
-pub use workorders::*;
+mod auth;
+pub use auth::*;
 
-use serde::Serialize;
-
-#[derive(Serialize)]
-pub struct OkMessage<Message: Serialize> {
-    pub ok: bool,
-    pub message: Option<Message>,
+#[derive(Debug)]
+pub struct AppState {
+    pub oauth_client: oauth2::basic::BasicClient,
+    pub verifier: oauth2::PkceCodeVerifier,
+    pub auth_url: String,
 }
