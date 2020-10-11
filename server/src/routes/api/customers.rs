@@ -3,7 +3,11 @@ use {
         db::{models::Customer, schema::CustomerOptions, Insert, Update},
         routes::OkMessage,
     },
-    actix_web::{get, post, put, web::Json, HttpResponse},
+    actix_web::{
+        get, post, put,
+        web::{Json, Query},
+        HttpResponse,
+    },
     serde::{Deserialize, Serialize},
 };
 #[derive(Serialize, Deserialize)]
@@ -36,8 +40,8 @@ pub async fn customers_post(Json(body): Json<CustomerNew>) -> HttpResponse {
 
 // TODO
 #[get("/api/customers")]
-pub async fn customers_get(Json(filter): Json<CustomerOptions>) -> HttpResponse {
-    match Customer::find(filter) {
+pub async fn customers_get(filter: Query<CustomerOptions>) -> HttpResponse {
+    match Customer::find(filter.into_inner()) {
         Ok(customer) => HttpResponse::Ok().json(OkMessage {
             ok: true,
             message: customer,

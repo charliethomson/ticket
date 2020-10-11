@@ -3,7 +3,11 @@ use {
         db::{models::Store, schema::StoreOptions, Insert, Update},
         routes::OkMessage,
     },
-    actix_web::{get, post, put, web::Json, HttpResponse},
+    actix_web::{
+        get, post, put,
+        web::{Json, Query},
+        HttpResponse,
+    },
     serde::{Deserialize, Serialize},
 };
 #[derive(Serialize, Deserialize)]
@@ -43,8 +47,8 @@ pub async fn stores_post(Json(body): Json<StoreNew>) -> HttpResponse {
 }
 
 #[get("/api/stores")]
-pub async fn stores_get(Json(filter): Json<StoreOptions>) -> HttpResponse {
-    match Store::find(filter) {
+pub async fn stores_get(filter: Query<StoreOptions>) -> HttpResponse {
+    match Store::find(filter.into_inner()) {
         Ok(option) => HttpResponse::Ok().json(OkMessage {
             ok: true,
             message: option,

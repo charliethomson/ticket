@@ -26,7 +26,7 @@ pub async fn users_post(body: web::Json<UserNew>) -> HttpResponse {
 }
 
 #[get("/api/users")]
-pub async fn users_get(body: Option<web::Json<UserOptions>>) -> HttpResponse {
+pub async fn users_get(body: Option<web::Query<UserOptions>>) -> HttpResponse {
     let filter = body.map(|json| json.into_inner()).unwrap_or_default();
     match User::find(filter) {
         Ok(user) => HttpResponse::Ok().json(OkMessage {

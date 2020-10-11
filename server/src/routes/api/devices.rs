@@ -3,7 +3,11 @@ use {
         db::{models::Device, schema::DeviceOptions, Insert, Update},
         routes::OkMessage,
     },
-    actix_web::{get, post, put, web::Json, HttpResponse},
+    actix_web::{
+        get, post, put,
+        web::{Json, Query},
+        HttpResponse,
+    },
     serde::{Deserialize, Serialize},
 };
 #[derive(Serialize, Deserialize)]
@@ -35,8 +39,8 @@ pub async fn devices_post(Json(body): Json<DeviceNew>) -> HttpResponse {
 }
 
 #[get("/api/devices")]
-pub async fn devices_get(Json(filter): Json<DeviceOptions>) -> HttpResponse {
-    match Device::find(filter) {
+pub async fn devices_get(filter: Query<DeviceOptions>) -> HttpResponse {
+    match Device::find(filter.into_inner()) {
         Ok(devices) => HttpResponse::Ok().json(OkMessage {
             ok: true,
             message: devices,

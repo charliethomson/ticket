@@ -1,6 +1,10 @@
 use {
     crate::{db::*, routes::OkMessage},
-    actix_web::{get, post, put, web::Json, HttpResponse},
+    actix_web::{
+        get, post, put,
+        web::{Json, Query},
+        HttpResponse,
+    },
     chrono::Utc,
     serde::{Deserialize, Serialize},
 };
@@ -94,7 +98,7 @@ pub async fn workorders_post(body: Json<WorkorderNew>) -> HttpResponse {
 }
 
 #[get("/api/workorders")]
-pub async fn workorders_get(body: Option<Json<WorkorderOptions>>) -> HttpResponse {
+pub async fn workorders_get(body: Option<Query<WorkorderOptions>>) -> HttpResponse {
     let filter = body.map(|body| body.into_inner()).unwrap_or_default();
     let response = Workorder::find(filter);
 

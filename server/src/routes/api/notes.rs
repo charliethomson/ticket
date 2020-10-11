@@ -3,7 +3,11 @@ use {
         db::{models::Note, schema::NotesOptions},
         routes::OkMessage,
     },
-    actix_web::{get, post, web::Json, HttpResponse},
+    actix_web::{
+        get, post,
+        web::{Json, Query},
+        HttpResponse,
+    },
     chrono::Utc,
     serde::{Deserialize, Serialize},
 };
@@ -38,7 +42,7 @@ pub async fn notes_post(Json(body): Json<NotesNew>) -> HttpResponse {
 }
 
 #[get("/api/notes")]
-pub async fn notes_get(body: Option<Json<NotesOptions>>) -> HttpResponse {
+pub async fn notes_get(body: Option<Query<NotesOptions>>) -> HttpResponse {
     let filter = body.map(|json| json.into_inner()).unwrap_or_default();
     match Note::find(filter) {
         Ok(notes) => HttpResponse::Ok().json(OkMessage {
