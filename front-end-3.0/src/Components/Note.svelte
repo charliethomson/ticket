@@ -7,7 +7,7 @@
 <style>
     .top {
         display: flex;
-        border-bottom: 1px solid white;
+        border-bottom: 1px solid #e3e3e3;
         margin-bottom: 10px;
         margin-top: 10px;
     }

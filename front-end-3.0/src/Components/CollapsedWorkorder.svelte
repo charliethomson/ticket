@@ -17,8 +17,9 @@
     .container {
         display: flex;
         justify-content: space-between;
-        border-bottom: 2px solid white;
+        border-bottom: 2px solid #e3e3e3;
         padding: 10px;
+        cursor: pointer;
     }
 </style>
 
