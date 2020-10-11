@@ -1,9 +1,32 @@
 <script>
-    import Note from "./Note.svelte"
+    import { workorderExpanded } from "../stores";
+    import Note from "./Note.svelte";
 
     function createNote() {
-        alert("Note created")
+        console.log("Note created");
     }
+
+    async function getWorkorder() {
+        return await fetch(
+            `http://localhost:8080/api/workorders?id=${$workorderExpanded}`,
+            { mode: "cors" }
+        )
+            .then(async (response) => await response.json())
+            .then((json) => {
+                if (json.ok) {
+                    return json.message[0];
+                } else {
+                    throw "Got err response from server: ${json.message}";
+                }
+            })
+            .then((message) => {
+                console.log(message);
+                return message;
+            })
+            .catch((e) => console.error(e));
+    }
+
+    console.log(getWorkorder());
 </script>
 
 <style>
@@ -31,18 +54,22 @@
 </style>
 
 <div class="container">
-    <div class="create-note">
-        <input type="text" placeholder="Enter notes here..." />
-        <div class="button" on:click={createNote}>Create note</div>
-    </div>
     <div class="notes">
-        <Note
-            name="Nicholas Belet"
-            date="May 30 @ 11:29AM"
-            notes="Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam" />
-        <Note
-            name="Nicholas Belet"
-            date="May 30 @ 11:29AM"
-            notes="Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam, Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam" />
+        {#await getWorkorder()}
+            <p>loading</p>
+        {:then workorderContent}
+            <div class="create-note">
+                <input type="text" placeholder="Enter notes here..." />
+                <div class="button" on:click={createNote}>Create note</div>
+            </div>
+
+            {#each workorderContent.notes as { userId, contents, created, next_update }}
+                <Note
+                    user={userId}
+                    {created}
+                    {contents}
+                    next_udpate={next_update} />
+            {/each}
+        {/await}
     </div>
 </div>

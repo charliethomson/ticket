@@ -1,21 +1,21 @@
 <script>
-    export let customer
+    export let customer;
 
-    import Button from "./Button.svelte"
+    import Button from "./Button.svelte";
 
-    import { workorderExpanded, seeModal } from "../stores"
+    import { workorderExpanded, seeModal } from "../stores";
 
     function goToCreate() {
-        $seeModal = true
+        $seeModal = true;
     }
     function goToRepairQ() {
-        alert("Switching the queue to repairs that need to completed")
+        console.log("Switching the queue to repairs that need to completed");
     }
     function goToInProgress() {
-        alert("Switching the queue to repairs in progress")
+        console.log("Switching the queue to repairs in progress");
     }
     function viewWorkorders() {
-        $workorderExpanded = !$workorderExpanded
+        $workorderExpanded = null;
     }
 </script>
 

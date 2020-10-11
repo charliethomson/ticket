@@ -1,15 +1,17 @@
 <script>
-    import { workorderExpanded } from "../stores"
+    import { workorderExpanded } from "../stores";
 
-    export let customer
-    export let device
-    export let description
-    export let status
-    export let location
+    export let customer;
+    export let device;
+    export let description;
+    export let status;
+    export let travelStatus;
+    export let location;
+    export let workorderId;
 
     function handleClick() {
-        $workorderExpanded = !$workorderExpanded
-        alert("Expanding workorder to take up entire div")
+        $workorderExpanded = workorderId;
+        console.log("Expanding workorder to take up entire div");
     }
 </script>
 
@@ -28,5 +30,9 @@
     <div>{device}</div>
     <div>{description}</div>
     <div>{status}</div>
-    <div>{location}</div>
+    {#if location}
+        <div>{travelStatus} - {location}</div>
+    {:else}
+        <div>{travelStatus}</div>
+    {/if}
 </div>
