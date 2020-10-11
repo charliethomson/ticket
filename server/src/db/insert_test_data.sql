@@ -47,10 +47,10 @@ values (
 insert into workorders (
         active,
         origin,
-        travel_status,
         created,
         quoted,
         workorder_status,
+        travel_status,
         customer,
         device,
         brief
@@ -58,9 +58,9 @@ insert into workorders (
 values (
         1,
         1,
+        UNIX_TIMESTAMP(),
+        UNIX_TIMESTAMP(),
         0,
-        UNIX_TIMESTAMP(),
-        UNIX_TIMESTAMP(),
         0,
         1,
         1,

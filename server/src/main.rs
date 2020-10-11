@@ -1,6 +1,7 @@
 mod db;
 mod routes;
 
+use actix_cors::Cors;
 use actix_session::CookieSession;
 use actix_web::{App, HttpServer};
 use oauth2::{
@@ -60,6 +61,7 @@ async fn main() -> std::io::Result<()> {
                 auth_url: auth_url.to_string(),
             })
             .wrap(CookieSession::signed(&[0; 32]))
+            .wrap(Cors::new().send_wildcard().finish())
             .service(users_post)
             .service(users_get)
             .service(users_put)
