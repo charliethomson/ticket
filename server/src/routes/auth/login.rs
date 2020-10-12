@@ -19,8 +19,8 @@ pub async fn auth_response(
     params: web::Query<super::AuthRequest>,
 ) -> HttpResponse {
     let code = AuthorizationCode::new(params.code.clone());
-    let state = CsrfToken::new(params.state.clone());
-    let scope = params.scope.clone();
+    let _state = CsrfToken::new(params.state.clone());
+    let _scope = params.scope.clone();
 
     eprintln!("IN RESPONSE:\n{:#?}", data);
 
@@ -44,7 +44,7 @@ pub async fn auth_response(
 
     let user_id = 0;
 
-    session.set("loggedInUser", user_id);
+    session.set("loggedInUser", user_id).unwrap();
     println!("User id: {}", user_id);
 
     let html = r#""#;

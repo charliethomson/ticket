@@ -84,8 +84,12 @@ async fn main() -> std::io::Result<()> {
             .service(customers_put)
             .service(customers_post)
             .service(customers_get)
+            //
             .service(auth_login)
             .service(auth_response)
+            //
+            .service(index)
+            .service(actix_files::Files::new("/static/", "./static").show_files_listing())
     })
     .bind(URL)?;
     println!("Listening on http://{}", URL);
