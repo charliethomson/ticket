@@ -1,5 +1,10 @@
-insert into users (name, phone_number)
-values ("Test User", "5555551234");
+insert into users (google_id, name, phone_number, email)
+values (
+        113960148803902249233,
+        "Charlie Thomson",
+        "5402292296",
+        "c.thomson@ubreakifix.com"
+    );
 insert into stores (
         store_name,
         contact_name,

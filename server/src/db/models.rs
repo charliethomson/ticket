@@ -93,7 +93,8 @@ pub struct Customer {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
+    pub google_id: String,
     pub name: String,
     pub phone_number: String,
-    // TODO:
+    pub email: String,
 }

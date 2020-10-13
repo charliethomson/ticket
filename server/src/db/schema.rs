@@ -16,12 +16,12 @@ pub struct WorkorderOptions {
     pub id: Option<i64>,
     pub active: Option<bool>,
     pub origin: Option<i64>,
-    pub travel_status: Option<String>,
+    pub travel_status: Option<i64>,
     pub created: Option<i64>,
     #[db_name("quoted")]
     pub quoted_time: Option<i64>,
     #[db_name("workorder_status")]
-    pub status: Option<String>,
+    pub status: Option<i64>,
     pub customer: Option<i64>,
     pub device: Option<i64>,
     pub brief: Option<String>,
@@ -65,8 +65,10 @@ pub struct CustomerOptions {
 #[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct UserOptions {
     pub id: Option<i64>,
+    pub google_id: Option<i128>,
     pub name: Option<String>,
     pub phone_number: Option<String>,
+    pub email: Option<String>,
 }
 
 #[derive(Default, Deserialize, Debug, Clone, Options)]
@@ -307,20 +309,44 @@ impl Customer {
 impl User {
     pub fn insert(user: UserNew) -> mysql::Result<i64> {
         let mut conn = crate::db::get_connection()?;
-        conn.exec_drop(
-            "insert into users
-        (
-            name,
-            phone_number
-        ) values (
-            :name,
-            :phone_number
-        );",
+        match conn.exec_drop(
+            "insert into users (
+                google_id,
+                name,
+                phone_number,
+                email
+            ) values (
+                :google_id,
+                :name,
+                :phone_number,
+                :email
+            );",
             params! {
+                "google_id" => user.google_id,
                 "name" => user.name.clone(),
-                "phone_number" => user.phone_number
+                "phone_number" => user.phone_number,
+                "email" => user.email.clone(),
             },
-        )?;
+        ) {
+            Ok(_) => {}
+            // Duplicate user
+            Err(mysql::Error::MySqlError(mysql::error::MySqlError { code: 1062, .. })) => {
+                return Ok(User::find(UserOptions {
+                    google_id: Some(user.google_id),
+                    ..UserOptions::default()
+                })?
+                // Unwraps are safe because of the error type, we _will_ find something
+                // filtering by the (unique) google_id.
+                .unwrap()
+                .iter()
+                .next()
+                .unwrap()
+                .id);
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
         Ok(conn
             .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM users".to_owned())?

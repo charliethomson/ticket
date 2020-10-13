@@ -12,10 +12,10 @@ pub use stores::*;
 pub use users::*;
 pub use workorders::*;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
-pub struct OkMessage<Message: Serialize> {
+#[derive(Serialize, Deserialize)]
+pub struct OkMessage<Message> {
     pub ok: bool,
     pub message: Option<Message>,
 }

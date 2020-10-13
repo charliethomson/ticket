@@ -1,8 +1,11 @@
 CREATE TABLE users (
     id INT NOT NULL AUTO_INCREMENT,
     CONSTRAINT `pk_user_id` PRIMARY KEY (id),
+    google_id BINARY(32) NOT NULL,
+    CONSTRAINT `unq_google_id` UNIQUE (google_id),
     name VARCHAR(25) NOT NULL,
-    phone_number VARCHAR(15) NOT NULL
+    phone_number VARCHAR(15) NOT NULL,
+    email VARCHAR(50) NOT NULL
 );
 CREATE TABLE notes (
     note_id INT NOT NULL AUTO_INCREMENT,
