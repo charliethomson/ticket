@@ -98,3 +98,22 @@ pub struct User {
     pub phone_number: String,
     pub email: String,
 }
+
+#[build_tuple]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub struct UserResponse {
+    pub id: i64,
+    pub name: String,
+    pub phone_number: String,
+    pub email: String,
+}
+impl From<User> for UserResponse {
+    fn from(user: User) -> UserResponse {
+        UserResponse {
+            id: user.id,
+            name: user.name,
+            phone_number: user.phone_number,
+            email: user.email,
+        }
+    }
+}

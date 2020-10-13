@@ -1,4 +1,7 @@
-use crate::routes::{AppState, OkMessage, UserNew};
+use crate::{
+    db::{User, UserResponse},
+    routes::{AppState, OkMessage, UserNew},
+};
 use actix_session::Session;
 use actix_web::{
     client::{Client, Connector},
@@ -62,7 +65,14 @@ pub async fn auth_response(
                         Ok(mut res) => {
                             // println!("{:#?}", res.body().await.unwrap().slice(..));
                             match res.json::<OkMessage<i64>>().await {
-                                Ok(body) => HttpResponseBuilder::new(res.status()).json(body),
+                                Ok(body) => {
+                                    if let Some(id) = body.message {
+                                        session.set("userId", id).unwrap();
+                                        HttpResponseBuilder::new(res.status()).json(body)
+                                    } else {
+                                        unreachable!()
+                                    }
+                                }
                                 Err(e) => HttpResponseBuilder::new(res.status()).json(OkMessage {
                                     ok: false,
                                     message: Some(e.to_string()),
@@ -93,6 +103,20 @@ pub async fn auth_response(
 
 #[get("/api/auth/me")]
 pub async fn auth_me(session: Session) -> HttpResponse {
-    let user_id: Option<i64> = session.get("loggedInUser").unwrap();
-    HttpResponse::Ok().json(user_id)
+    match session.get("userId") {
+        Ok(Some(id)) => match User::by_id(id) {
+            Ok(user) => HttpResponse::Ok().json(OkMessage {
+                ok: true,
+                message: user.map(|user| UserResponse::from(user)),
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        },
+        _ => HttpResponse::Unauthorized().json(OkMessage {
+            ok: false,
+            message: Some("No user logged in"),
+        }),
+    }
 }
