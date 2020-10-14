@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
                 .expect("Invalid redirect URL"),
         );
 
-        let (_pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
+        let (_pkce_code_challenge, _pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
 
         let (authorize_url, csrf_state) = client
             .authorize_url(CsrfToken::new_random)
@@ -63,9 +63,11 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(AppState {
                 oauth_client: client,
-                verifier: pkce_code_verifier,
+                // verifier: pkce_code_verifier,
                 csrf: csrf_state,
                 auth_url: authorize_url.to_string(),
+                expiry: chrono::Utc::now(),
+                refresh_token: oauth2::RefreshToken::new("".to_owned()),
             })
             .wrap(CookieSession::signed(&[0; 32]).name("offsite").secure(true))
             .wrap(Cors::new().send_wildcard().finish())

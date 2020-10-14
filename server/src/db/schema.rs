@@ -338,8 +338,7 @@ impl User {
                 // Unwraps are safe because of the error type, we _will_ find something
                 // filtering by the (unique) google_id.
                 .unwrap()
-                .iter()
-                .next()
+                .get(0)
                 .unwrap()
                 .id);
             }

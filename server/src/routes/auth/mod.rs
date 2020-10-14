@@ -26,7 +26,7 @@ impl From<UserInfo> for crate::routes::UserNew {
                 .as_ref()
                 .unwrap()
                 .parse::<i128>()
-                .expect(&format!("Failed to parse {} as i64", info.id.unwrap())),
+                .unwrap_or_else(|_| panic!("Failed to parse {} as i64", info.id.as_ref().unwrap())),
             name: info.name.unwrap(),
             phone_number: String::new(),
             email: info.email.unwrap(),
