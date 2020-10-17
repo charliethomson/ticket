@@ -19,6 +19,7 @@ pub async fn auth_login(session: Session, data: web::Data<AppState>) -> HttpResp
             .header(actix_web::http::header::LOCATION, data.auth_url.to_string())
             .finish(),
         // User already logged in
+        // FIXME: Not redirecting
         Ok(Some(true)) => HttpResponse::Ok()
             .header(actix_web::http::header::LOCATION, "/")
             .json(OkMessage {
