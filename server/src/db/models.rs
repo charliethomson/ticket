@@ -95,7 +95,6 @@ pub struct User {
     pub id: i64,
     pub google_id: String,
     pub name: String,
-    pub phone_number: String,
     pub email: String,
 }
 
@@ -104,7 +103,6 @@ pub struct User {
 pub struct UserResponse {
     pub id: i64,
     pub name: String,
-    pub phone_number: String,
     pub email: String,
 }
 impl From<User> for UserResponse {
@@ -112,7 +110,6 @@ impl From<User> for UserResponse {
         UserResponse {
             id: user.id,
             name: user.name,
-            phone_number: user.phone_number,
             email: user.email,
         }
     }

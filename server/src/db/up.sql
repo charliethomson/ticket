@@ -4,7 +4,6 @@ CREATE TABLE users (
     google_id BINARY(32) NOT NULL,
     CONSTRAINT `unq_google_id` UNIQUE (google_id),
     name VARCHAR(25) NOT NULL,
-    phone_number VARCHAR(15) NOT NULL,
     email VARCHAR(50) NOT NULL
 );
 CREATE TABLE notes (

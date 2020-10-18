@@ -1,34 +1,42 @@
-use crate::{
-    db::{models::User, schema::UserOptions, Update},
-    routes::OkMessage,
+use {
+    crate::{
+        db::{models::User, schema::UserOptions, Update},
+        routes::OkMessage,
+        validate_ok,
+    },
+    actix_session::Session,
+    actix_web::{get, post, put, web, HttpResponse},
+    lazy_static::lazy_static,
+    regex::Regex,
+    serde::{Deserialize, Serialize},
+    webforms::validate::*,
 };
-use actix_session::Session;
-use actix_web::{get, post, put, web, HttpResponse};
-use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Serialize, Deserialize, ValidateForm)]
 pub struct UserNew {
     pub google_id: i128,
     pub name: String,
-    pub phone_number: String,
+    #[validate(email)]
     pub email: String,
 }
 
 #[post("/api/users")]
-pub async fn users_post(_session: Session, body: web::Json<UserNew>) -> HttpResponse {
+pub async fn users_post(_session: Session, web::Json(body): web::Json<UserNew>) -> HttpResponse {
     // TODO: Check auth
     /*match session.get::<bool>("authenticated") {
     Ok(Some(true)) =>*/
-    match User::insert(body.into_inner()) {
-        Ok(id) => HttpResponse::Ok().json(OkMessage {
-            ok: true,
-            message: Some(id),
-        }),
-        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-            ok: false,
-            message: Some(e.to_string()),
-        }),
-    }
+    validate_ok!(body, {
+        match User::insert(body) {
+            Ok(id) => HttpResponse::Ok().json(OkMessage {
+                ok: true,
+                message: Some(id),
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        }
+    })
     //     Ok(_) => HttpResponse::Unauthorized().json(OkMessage {
     //         ok: false,
     //         message: Some(format!("Authorization check failed")),

@@ -28,8 +28,13 @@ impl From<UserInfo> for crate::routes::UserNew {
                 .parse::<i128>()
                 .unwrap_or_else(|_| panic!("Failed to parse {} as i64", info.id.as_ref().unwrap())),
             name: info.name.unwrap(),
-            phone_number: String::new(),
+
             email: info.email.unwrap(),
         }
     }
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
+pub struct UserPhoneNumber {
+    value: String,
 }

@@ -6,6 +6,8 @@ use mysql::{prelude::*, *};
 use schema_proc_macros::*;
 use serde::Deserialize;
 
+// TODO: Validation
+
 pub const FIELD_DELIM: &str = "#$++,";
 pub const ITEM_DELIM: &str = "$!@;";
 pub const TABLE_MARKER: &str = "$%^$#$!$@#";
@@ -313,25 +315,24 @@ impl User {
             "insert into users (
                 google_id,
                 name,
-                phone_number,
                 email
             ) values (
                 :google_id,
                 :name,
-                :phone_number,
                 :email
             );",
             params! {
                 "google_id" => user.google_id,
                 "name" => user.name.clone(),
-                "phone_number" => user.phone_number,
                 "email" => user.email.clone(),
             },
         ) {
-            Ok(_) => {}
+            Ok(_) => Ok(conn
+                .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM users".to_owned())?
+                .unwrap()),
             // Duplicate user
             Err(mysql::Error::MySqlError(mysql::error::MySqlError { code: 1062, .. })) => {
-                return Ok(User::find(UserOptions {
+                Ok(User::find(UserOptions {
                     google_id: Some(user.google_id),
                     ..UserOptions::default()
                 })?
@@ -340,16 +341,10 @@ impl User {
                 .unwrap()
                 .get(0)
                 .unwrap()
-                .id);
+                .id)
             }
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
-        Ok(conn
-            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM users".to_owned())?
-            .unwrap())
+            Err(e) => Err(e),
+        }
     }
 
     pub fn find(filter: UserOptions) -> mysql::Result<Option<Vec<Self>>> {

@@ -2,40 +2,49 @@ use {
     crate::{
         db::{models::Customer, schema::CustomerOptions, Insert, Update},
         routes::OkMessage,
+        validate_ok,
     },
     actix_web::{
         get, post, put,
         web::{Json, Query},
         HttpResponse,
     },
+    lazy_static::lazy_static,
+    regex::Regex,
     serde::{Deserialize, Serialize},
+    webforms::validate::*,
 };
-#[derive(Serialize, Deserialize)]
+
+#[derive(Serialize, Deserialize, ValidateForm)]
 pub struct CustomerNew {
     name: String,
+    #[validate(phone)]
     phone_number: String,
+    #[validate(email)]
     email_address: String,
     store_id: i64,
 }
 
 #[post("/api/customers")]
 pub async fn customers_post(Json(body): Json<CustomerNew>) -> HttpResponse {
-    match Customer::insert(&Customer {
-        id: 0,
-        name: body.name,
-        phone_number: body.phone_number,
-        email: body.email_address,
-        store_id: body.store_id,
-    }) {
-        Ok(id) => HttpResponse::Ok().json(OkMessage {
-            ok: true,
-            message: Some(id),
-        }),
-        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-            ok: false,
-            message: Some(e.to_string()),
-        }),
-    }
+    validate_ok!(body, {
+        match Customer::insert(&Customer {
+            id: 0,
+            name: body.name,
+            phone_number: body.phone_number,
+            email: body.email_address,
+            store_id: body.store_id,
+        }) {
+            Ok(id) => HttpResponse::Ok().json(OkMessage {
+                ok: true,
+                message: Some(id),
+            }),
+            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            }),
+        }
+    })
 }
 
 // TODO

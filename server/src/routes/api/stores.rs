@@ -8,17 +8,25 @@ use {
         web::{Json, Query},
         HttpResponse,
     },
+    lazy_static::lazy_static,
+    regex::Regex,
     serde::{Deserialize, Serialize},
+    webforms::validate::*,
 };
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ValidateForm)]
 pub struct StoreNew {
     name: String,
     contact_name: String,
+    #[validate(phone)]
     phone_number: String,
+    #[validate(email)]
     email: String,
     address: String,
     city: String,
+    #[validate(max_length = 2)]
+    #[validate(min_length = 2)]
     state: String,
+    #[validate(regex = r"^\d{5}$")]
     zip: String,
 }
 

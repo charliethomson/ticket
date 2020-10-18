@@ -1,4 +1,5 @@
 mod db;
+mod macros;
 mod routes;
 
 use actix_cors::Cors;

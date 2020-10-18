@@ -1,8 +1,7 @@
-insert into users (google_id, name, phone_number, email)
+insert into users (google_id, name, email)
 values (
         113960148803902249233,
         "Charlie Thomson",
-        "5402292296",
         "c.thomson@ubreakifix.com"
     );
 insert into stores (
