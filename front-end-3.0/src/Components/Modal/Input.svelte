@@ -15,11 +15,27 @@
 </script>
 
 <style>
+    .exit {
+        display: flex;
+        position: fixed;
+        left: 540px;
+        top: 20px;
+
+        justify-content: center;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+
+        font-weight: bold;
+        border-radius: 10px;
+        background-color: #f44336;
+    }
     .title {
         font-size: 35px;
         font-weight: bold;
-        text-align: center;
         margin-bottom: 20px;
+        text-align: center;
     }
 
     .box {
@@ -89,7 +105,10 @@
 
 {#if activeIndex == 1}
     <div class="container">
-        <div class="title">Store</div>
+        <div class="bar">
+            <div class="title">Store</div>
+            <div class="exit" on:click={handleEnd}>X</div>
+        </div>
         <div class="box">
             <div class="name">Search</div>
             <input type="text" />
@@ -118,7 +137,10 @@
     </div>
 {:else if activeIndex == 2}
     <div class="container">
-        <div class="title">Customer</div>
+        <div class="bar">
+            <div class="title">Customer</div>
+            <div class="exit" on:click={handleEnd}>X</div>
+        </div>
         <div class="box">
             <div class="name">Search</div>
             <input type="text" />
@@ -137,7 +159,10 @@
     <div class="button" on:click={handleClick}>Submit</div>
 {:else}
     <div class="container">
-        <div class="title">Device</div>
+        <div class="bar">
+            <div class="title">Device</div>
+            <div class="exit" on:click={handleEnd}>X</div>
+        </div>
         <div class="box">
             <div class="name">Search</div>
             <input type="text" />

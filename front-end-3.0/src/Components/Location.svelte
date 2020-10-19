@@ -1,0 +1,107 @@
+<script>
+    let activeIndex = 0
+    let statusesActive = false
+
+    let newLocation = "C7"
+
+    const statuses = [
+        {
+            status: "Arrived",
+            color: "green",
+        },
+        {
+            status: "En-route",
+            color: "yellow",
+        },
+        {
+            status: "OG store",
+            color: "yellow",
+        },
+    ]
+
+    function handleClick() {
+        statusesActive = !statusesActive
+    }
+
+    function handleNewLocation() {
+        currentLocation = newLocation
+    }
+</script>
+
+<style>
+    .inactive-statuses {
+        display: flex;
+        font-weight: normal;
+        cursor: pointer;
+    }
+    .green:hover {
+        color: #388e3c;
+    }
+
+    .yellow:hover {
+        color: #ffeb3b;
+    }
+    .status {
+        margin-right: 10px;
+    }
+    .active-status {
+        margin-right: 10px;
+        cursor: pointer;
+    }
+    .active-status.green {
+        color: #388e3c;
+    }
+    .active-status.yellow {
+        color: #ffeb3b;
+    }
+    .location {
+        font-size: 18px;
+        display: flex;
+        font-weight: bold;
+        margin-top: 10px;
+        margin-right: 50px;
+    }
+    .storage {
+        font-size: 16px;
+        margin-left: -5px;
+        font-family: "Montserrat", sans-serif;
+        border: none;
+        background: transparent;
+        color: #e3e3e3;
+        opacity: 1;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .storage:active {
+        border: 2px solid #e3e3e3;
+    }
+</style>
+
+<div class="location">
+    <div class="inactive-statuses">
+        {#if statusesActive}
+            {#each statuses as { status, color }, i}
+                <div
+                    class={'status ' + color}
+                    on:click={() => {
+                        activeIndex = i
+                        statusesActive = !statusesActive
+                    }}>
+                    {status}
+                </div>
+            {/each}
+        {/if}
+    </div>
+    <div
+        class={'active-status ' + statuses[activeIndex].color}
+        on:click={handleClick}>
+        {statuses[activeIndex].status}
+    </div>
+    <input
+        type="text"
+        class="storage"
+        size="1"
+        bind:value={newLocation}
+        on:input={handleNewLocation} />
+</div>

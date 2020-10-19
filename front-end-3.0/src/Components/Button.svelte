@@ -1,18 +1,21 @@
 <script>
     export let content
     export let handleClick
+    export let handleHover
 </script>
 
 <style>
     .button {
+        align-items: center;
         font-weight: bold;
         align-self: flex-end;
-        background-color: #212121;
-        border-radius: 10px;
-        padding: 20px;
-        margin: 20px;
-        margin-top: 0px;
+        padding: 25px;
+    }
+    .button:hover {
+        background-color: #121212;
     }
 </style>
 
-<div class="button" on:click={handleClick}>{content}</div>
+<div class="button" on:click={handleClick} on:mouseover={handleHover}>
+    {content}
+</div>
