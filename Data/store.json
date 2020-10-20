@@ -2,15 +2,15 @@
     "ok": true,
     "message": [
         {
-            "id": 4,
-            "name": "Not a real store",
-            "contact_name": "Test contact",
-            "phone_number": "5555555555",
-            "email": "notarealstore@ubreakifix.com",
-            "address": "123 Not-a Rd",
-            "city": "NotaCity",
-            "state": "NotaState",
-            "zip": "0"
+            "id": 1,
+            "name": "Test store",
+            "contact_name": "Test Contact",
+            "phone_number": "5555551234",
+            "email": "test@store.com",
+            "address": "102 Road Rd",
+            "city": "Real City",
+            "state": "Real State",
+            "zip": "12345"
         }
     ]
 }

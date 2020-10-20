@@ -3,8 +3,8 @@
     "message": [
         {
             "id": 1,
-            "serial": "not a serial number",
-            "name": "Macbook 20000",
+            "serial": "0123456789",
+            "name": "Test device",
             "customer_id": 1,
             "password": "password1"
         }

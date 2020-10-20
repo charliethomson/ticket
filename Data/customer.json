@@ -2,10 +2,10 @@
     "ok": true,
     "message": [
         {
-            "id": 3,
-            "name": "Jack Johnson",
-            "phone_number": "7894561235",
-            "email": "decline@customer.com",
+            "id": 1,
+            "name": "Test customer",
+            "phone_number": "5551235555",
+            "email": "test@customer.com",
             "store_id": 1
         }
     ]
