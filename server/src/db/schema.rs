@@ -5,6 +5,7 @@ use crate::routes::users::UserNew;
 use mysql::{prelude::*, *};
 use schema_proc_macros::*;
 use serde::Deserialize;
+use std::convert::TryFrom;
 
 // TODO: Validation
 
@@ -158,7 +159,13 @@ impl Workorder {
                 }
             };
             let notes = match Note::all_for_wo(id)? {
-                Some(notes) => notes,
+                Some(notes) => notes
+                    .iter()
+                    .cloned()
+                    .map(NoteResponse::try_from)
+                    .filter(|res| res.is_ok())
+                    .map(|res| res.unwrap().clone())
+                    .collect(),
                 _ => return Ok(Some(Err(format!("Failed to get Notes from id {}", id)))),
             };
 
@@ -347,7 +354,7 @@ impl User {
         }
     }
 
-    pub fn find(filter: UserOptions) -> mysql::Result<Option<Vec<Self>>> {
+    pub fn find(filter: UserOptions) -> mysql::Result<Option<Vec<UserResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         let query = format!(
@@ -365,8 +372,8 @@ impl User {
             .iter()
             .map(|id| User::by_id(*id))
             .filter(|user| user.is_ok() && user.as_ref().unwrap().is_some())
-            .map(|user| user.unwrap().unwrap())
-            .collect::<Vec<User>>();
+            .map(|user| user.unwrap().unwrap().into())
+            .collect::<Vec<UserResponse>>();
         if !users.is_empty() {
             Ok(Some(users))
         } else {

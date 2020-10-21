@@ -27,14 +27,12 @@ values (
 insert into customers (
         customer_name,
         phone_number,
-        email_address,
-        store_id
+        email_address
     )
 values (
         "Test customer",
         "5551235555",
-        "test@customer.com",
-        1
+        "test@customer.com"
     );
 insert into devices (
         serial_no,

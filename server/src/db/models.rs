@@ -17,7 +17,7 @@ pub struct WorkorderResponse {
     pub customer: Customer,
     pub device: Device,
     pub brief: String,
-    pub notes: Vec<Note>,
+    pub notes: Vec<NoteResponse>,
 }
 
 #[build_tuple]
@@ -78,6 +78,33 @@ pub struct Note {
 }
 
 #[build_tuple]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+pub struct NoteResponse {
+    pub user: UserResponse,
+    pub contents: String,
+    pub created: i64,
+    pub next_update: Option<i64>,
+}
+impl std::convert::TryFrom<Note> for NoteResponse {
+    type Error = mysql::Error;
+    fn try_from(note: Note) -> Result<Self, Self::Error> {
+        Ok(NoteResponse {
+            // TODO
+            user: match User::find(crate::db::schema::UserOptions {
+                id: Some(note.user),
+                ..crate::db::schema::UserOptions::default()
+            })? {
+                Some(users) => users.get(0).expect("see below smile").clone().into(),
+                None => panic!("This should never happen, my db should work :)"),
+            },
+            contents: note.contents,
+            created: note.created,
+            next_update: note.next_update,
+        })
+    }
+}
+
+#[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Customer {
     pub id: i64,
@@ -86,7 +113,6 @@ pub struct Customer {
     pub phone_number: String,
     #[db_name("email_address")]
     pub email: String,
-    pub store_id: i64,
 }
 
 #[build_tuple]

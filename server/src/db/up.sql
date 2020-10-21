@@ -35,9 +35,7 @@ CREATE TABLE customers (
     CONSTRAINT `id_primary_key_customers` PRIMARY KEY (id),
     customer_name VARCHAR(40) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
-    email_address VARCHAR(50) NOT NULL,
-    store_id INT NOT NULL,
-    CONSTRAINT `fk_store_id` FOREIGN KEY (store_id) REFERENCES stores (id) ON DELETE CASCADE ON UPDATE RESTRICT
+    email_address VARCHAR(50) NOT NULL
 );
 CREATE TABLE devices (
     id INT NOT NULL AUTO_INCREMENT,

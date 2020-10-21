@@ -22,7 +22,6 @@ pub struct CustomerNew {
     phone_number: String,
     #[validate(email)]
     email_address: String,
-    store_id: i64,
 }
 
 #[post("/api/customers")]
@@ -33,7 +32,6 @@ pub async fn customers_post(Json(body): Json<CustomerNew>) -> HttpResponse {
             name: body.name,
             phone_number: body.phone_number,
             email: body.email_address,
-            store_id: body.store_id,
         }) {
             Ok(id) => HttpResponse::Ok().json(OkMessage {
                 ok: true,
