@@ -66,7 +66,6 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
     }).fold(TokenStream2::new(), |mut ret, cur_ts| {ret.extend(cur_ts.into_iter()); ret});
 
     let db_table: String = match format!("{}", struct_ident).as_str() {
-        "WorkorderOptions" => "workorders",
         "DeviceOptions" => "devices",
         "StoreOptions" => "stores",
         "CustomerOptions" => "customers",

@@ -3,7 +3,6 @@
 use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
 
-#[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct WorkorderResponse {
     pub workorder_id: i64,

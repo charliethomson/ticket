@@ -1,10 +1,6 @@
 use {
     crate::{db::*, routes::OkMessage, validate_ok},
-    actix_web::{
-        get, post, put,
-        web::{Json, Query},
-        HttpResponse,
-    },
+    actix_web::{get, post, put, web::Json, HttpRequest, HttpResponse},
     chrono::Utc,
     serde::{Deserialize, Serialize},
     webforms::validate::*,
@@ -102,8 +98,17 @@ pub async fn workorders_post(Json(body): Json<WorkorderNew>) -> HttpResponse {
 }
 
 #[get("/api/workorders")]
-pub async fn workorders_get(body: Option<Query<WorkorderOptions>>) -> HttpResponse {
-    let filter = body.map(|body| body.into_inner()).unwrap_or_default();
+pub async fn workorders_get(req: HttpRequest) -> HttpResponse {
+    // TODO
+    let filter = match serde_qs::from_str::<WorkorderOptions>(&req.query_string()) {
+        Ok(filter) => filter,
+        Err(e) => {
+            return HttpResponse::BadRequest().json(OkMessage {
+                ok: false,
+                message: Some(e.to_string()),
+            })
+        }
+    };
     let response = Workorder::find(filter);
 
     match response {

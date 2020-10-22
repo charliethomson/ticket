@@ -13,21 +13,102 @@ pub const FIELD_DELIM: &str = "#$++,";
 pub const ITEM_DELIM: &str = "$!@;";
 pub const TABLE_MARKER: &str = "$%^$#$!$@#";
 pub const PADDING_VALUE: &str = "$%&&#$*@@";
+pub const COLLECTION_MARKER: &str = "%$!$_!$()*&%#!@";
 
-#[derive(Default, Deserialize, Debug, Clone, Options)]
+#[derive(Default, Deserialize, Debug, Clone)]
 pub struct WorkorderOptions {
     pub id: Option<i64>,
     pub active: Option<bool>,
     pub origin: Option<i64>,
     pub travel_status: Option<i64>,
     pub created: Option<i64>,
-    #[db_name("quoted")]
+    // #[db_name("quoted")]
     pub quoted_time: Option<i64>,
-    #[db_name("workorder_status")]
-    pub status: Option<i64>,
+    // #[db_name("workorder_status")]
+    pub status: Option<Vec<i64>>,
     pub customer: Option<i64>,
     pub device: Option<i64>,
     pub brief: Option<String>,
+}
+// TODO: REAL BIG TODO
+impl Options for WorkorderOptions {
+    fn into_delimited(&self) -> String {
+        fn fmt_val<T: std::fmt::Display, S: ToString>(value: T, db_field: S) -> String {
+            format!(
+                "{}{}{}\"{}{}{}\"",
+                TABLE_MARKER,
+                db_field.to_string(),
+                FIELD_DELIM,
+                PADDING_VALUE,
+                value,
+                PADDING_VALUE,
+            )
+        }
+
+        let mut strs = Vec::new();
+
+        if let Some(val) = self.id.clone() {
+            strs.push(fmt_val(val, "id"));
+        }
+        if let Some(val) = self.active.clone() {
+            strs.push(fmt_val(val, "active"));
+        }
+        if let Some(val) = self.origin.clone() {
+            strs.push(fmt_val(val, "origin"));
+        }
+        if let Some(val) = self.travel_status.clone() {
+            strs.push(fmt_val(val, "travel_status"));
+        }
+        if let Some(val) = self.created.clone() {
+            strs.push(fmt_val(val, "created"));
+        }
+        if let Some(val) = self.quoted_time.clone() {
+            strs.push(fmt_val(val, "quoted"));
+        }
+        if let Some(val) = self.status.clone() {
+            strs.push(
+                val.iter()
+                    .map(|item| fmt_val(item, "workorder_status"))
+                    .collect::<Vec<String>>()
+                    .join(COLLECTION_MARKER),
+            )
+        }
+        if let Some(val) = self.customer.clone() {
+            strs.push(fmt_val(val, "customer"));
+        }
+        if let Some(val) = self.device.clone() {
+            strs.push(fmt_val(val, "device"));
+        }
+        if let Some(val) = self.brief.clone() {
+            strs.push(fmt_val(val, "brief"));
+        }
+
+        strs.join(ITEM_DELIM)
+    }
+
+    fn into_filter(&self) -> String {
+        self.into_delimited()
+            .replace(ITEM_DELIM, " and ")
+            .replace(FIELD_DELIM, " like ")
+            .replace(PADDING_VALUE, "%")
+            .replace(TABLE_MARKER, "workorders.")
+            .replace(COLLECTION_MARKER, " or ")
+    }
+
+    fn into_update(&self) -> String {
+        format!(
+            "update workorders {} where workorders.id={}",
+            format!(
+                "set {}",
+                self.into_delimited()
+                    .replace(ITEM_DELIM, ", ")
+                    .replace(FIELD_DELIM, "=")
+                    .replace(PADDING_VALUE, "")
+                    .replace(TABLE_MARKER, "")
+            ),
+            self.id.unwrap()
+        )
+    }
 }
 
 #[derive(Default, Deserialize, Debug, Clone, Options)]
@@ -88,6 +169,7 @@ impl Workorder {
     pub fn find(filter: WorkorderOptions) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
+        dbg!(filter.clone());
         let query = format!(
             "select id from workorders{};",
             if !filter.is_empty() {
@@ -191,6 +273,7 @@ impl Workorder {
     }
 }
 
+// TODO
 impl Update<WorkorderOptions> for WorkorderResponse {}
 impl Update<DeviceOptions> for Device {}
 impl Update<StoreOptions> for Store {}
@@ -238,6 +321,7 @@ impl Device {
 }
 
 impl Store {
+    // TODO: Make this proc macro
     pub fn find(filter: StoreOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
