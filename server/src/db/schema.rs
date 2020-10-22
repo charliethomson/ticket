@@ -59,7 +59,8 @@ pub struct StoreOptions {
 pub struct CustomerOptions {
     pub id: Option<i64>,
     #[db_name("customer_name")]
-    pub name: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
     pub store_id: Option<i64>,
@@ -69,7 +70,8 @@ pub struct CustomerOptions {
 pub struct UserOptions {
     pub id: Option<i64>,
     pub google_id: Option<i128>,
-    pub name: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
 }
@@ -321,16 +323,19 @@ impl User {
         match conn.exec_drop(
             "insert into users (
                 google_id,
-                name,
+                first_name,
+                last_name,
                 email
             ) values (
                 :google_id,
-                :name,
+                :first_name,
+                :last_name,
                 :email
             );",
             params! {
                 "google_id" => user.google_id,
-                "name" => user.name.clone(),
+                "first_name" => user.first_name.clone(),
+                "last_name" => user.last_name.clone(),
                 "email" => user.email.clone(),
             },
         ) {

@@ -20,6 +20,7 @@ pub struct UserInfo {
 }
 impl From<UserInfo> for crate::routes::UserNew {
     fn from(info: UserInfo) -> crate::routes::UserNew {
+        let mut name_parts = info.name.as_ref().unwrap().split_whitespace();
         crate::routes::UserNew {
             google_id: info
                 .id
@@ -27,7 +28,8 @@ impl From<UserInfo> for crate::routes::UserNew {
                 .unwrap()
                 .parse::<i128>()
                 .unwrap_or_else(|_| panic!("Failed to parse {} as i64", info.id.as_ref().unwrap())),
-            name: info.name.unwrap(),
+            first_name: name_parts.next().unwrap().into(),
+            last_name: name_parts.next().unwrap().into(),
 
             email: info.email.unwrap(),
         }

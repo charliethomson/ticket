@@ -1,7 +1,8 @@
-insert into users (google_id, name, email)
+insert into users (google_id, first_name, last_name, email)
 values (
         113960148803902249233,
-        "Charlie Thomson",
+        "Charlie",
+        "Thomson",
         "c.thomson@ubreakifix.com"
     );
 insert into stores (
@@ -25,12 +26,14 @@ values (
         "12345"
     );
 insert into customers (
-        customer_name,
+        first_name,
+        last_name,
         phone_number,
         email_address
     )
 values (
-        "Test customer",
+        "Test",
+        "customer",
         "5551235555",
         "test@customer.com"
     );

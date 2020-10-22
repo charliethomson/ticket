@@ -3,10 +3,10 @@
     "message": [
         {
             "id": 1,
-            "name": "Test customer",
+            "first_name": "Test",
+            "last_name": "customer",
             "phone_number": "5551235555",
-            "email": "test@customer.com",
-            "store_id": 1
+            "email": "test@customer.com"
         }
     ]
 }

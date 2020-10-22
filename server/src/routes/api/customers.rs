@@ -17,7 +17,8 @@ use {
 
 #[derive(Serialize, Deserialize, ValidateForm)]
 pub struct CustomerNew {
-    name: String,
+    first_name: String,
+    last_name: String,
     #[validate(phone)]
     phone_number: String,
     #[validate(email)]
@@ -29,7 +30,8 @@ pub async fn customers_post(Json(body): Json<CustomerNew>) -> HttpResponse {
     validate_ok!(body, {
         match Customer::insert(&Customer {
             id: 0,
-            name: body.name,
+            first_name: body.first_name,
+            last_name: body.last_name,
             phone_number: body.phone_number,
             email: body.email_address,
         }) {
