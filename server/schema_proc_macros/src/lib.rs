@@ -7,6 +7,60 @@ const FIELD_DELIM: &str = "#$++,";
 const ITEM_DELIM: &str = "$!@;";
 const TABLE_MARKER: &str = "$%^$#$!$@#";
 const PADDING_VALUE: &str = "$%&&#$*@@";
+const COLLECTION_MARKER: &str = "**#$*$*#(@$!@";
+
+fn get_types(data: &syn::Data) -> Vec<(proc_macro2::Ident, syn::Type)> {
+    let mut map = vec![];
+    if let syn::Data::Struct(syn::DataStruct {
+        fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
+        ..
+    }) = data.to_owned()
+    {
+        let mut iter = named.into_iter();
+        while let Some(syn::Field {
+            ident: Some(ident),
+            ty,
+            ..
+        }) = iter.next()
+        {
+            map.push((ident, ty));
+        }
+    }
+
+    map
+}
+
+fn is_vec(ty: &syn::Type) -> bool {
+    match ty.to_owned() {
+        syn::Type::Path(syn::TypePath {
+            path: syn::Path { segments, .. },
+            ..
+        }) => match segments.iter().next() {
+            Some(syn::PathSegment { ident, arguments })
+                if ident == &syn::Ident::new("Option", proc_macro2::Span::call_site()) =>
+            {
+                match arguments {
+                    syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
+                        args,
+                        ..
+                    }) => match args.iter().next() {
+                        Some(syn::GenericArgument::Type(ty2)) => is_vec(ty2),
+                        _ => false,
+                    },
+                    _ => unreachable!(),
+                }
+            }
+
+            Some(syn::PathSegment { ident, .. })
+                if ident == &syn::Ident::new("Vec", proc_macro2::Span::call_site()) =>
+            {
+                true
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
 
 fn get_db_name(attr: &syn::Attribute) -> String {
     format!(
@@ -21,7 +75,7 @@ fn get_db_name(attr: &syn::Attribute) -> String {
 
 fn get_map(
     named: syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
-) -> std::collections::HashMap<proc_macro2::Ident, String> {
+) -> im::hashmap::HashMap<proc_macro2::Ident, String> {
     let mut map = std::collections::HashMap::new();
     for field in named.into_iter() {
         let key = field.ident.unwrap();
@@ -33,7 +87,7 @@ fn get_map(
         };
         map.insert(key, value);
     }
-    map
+    map.into()
 }
 
 #[proc_macro_derive(Options, attributes(db_name))]
@@ -41,31 +95,49 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_ident = input.ident;
     let data = input.data;
-    let map = match data {
+    let map = match data.to_owned() {
         syn::Data::Struct(syn::DataStruct {
             fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
             ..
         }) => get_map(named),
         _ => unreachable!("Why did you try to derive on not a struct lol"),
     };
+
+    let combo_map: im::hashmap::HashMap<proc_macro2::Ident, (String, syn::Type)> =
+        map.intersection_with(get_types(&data).into(), |db_field, ty| (db_field, ty));
+
     let get_value = quote! {
-        match __value.to_string().as_str() {
+        match format!("{:?}", __value).as_str() {
             "true" => "1",
             "false" => "0",
             e => &e
         }
     };
 
-    let for_body = map.iter().map(|(struct_name, db_field)| quote!{
-        if let Some(__value) = self.#struct_name.clone() {
-            ____strs__.push(format!(
-                "{}{}{}\"{}{}{}\"",
-                #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
-            ));
+    let for_body = combo_map.iter().map(|(struct_name, (db_field, ty))| {
+        if is_vec(&ty) {
+            quote!{
+                if let Some(iterable) = self.#struct_name.clone() {
+                    ____strs__.push(iterable.iter().map(|__value| format!(
+                        "{}{}{}\"{}{}{}\"",
+                        #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
+                    )).collect::<Vec<String>>().join(#COLLECTION_MARKER));
+                }
+            }
+        } else {
+            quote!{
+                if let Some(__value) = self.#struct_name.clone() {
+                    ____strs__.push(format!(
+                        "{}{}{}\"{}{}{}\"",
+                        #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
+                    ));
+                }
+            }
         }
     }).fold(TokenStream2::new(), |mut ret, cur_ts| {ret.extend(cur_ts.into_iter()); ret});
 
     let db_table: String = match format!("{}", struct_ident).as_str() {
+        "WorkorderOptions" => "workorders",
         "DeviceOptions" => "devices",
         "StoreOptions" => "stores",
         "CustomerOptions" => "customers",
@@ -93,6 +165,7 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
                     .replace(#FIELD_DELIM, " like ")
                     .replace(#PADDING_VALUE, "%")
                     .replace(#TABLE_MARKER, &table_spec)
+                    .replace(#COLLECTION_MARKER, " or ")
             }
 
             fn into_update(&self) -> String {
@@ -102,10 +175,10 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
                     format!(
                         "set {}",
                         self.into_delimited()
-                            .replace(ITEM_DELIM, ", ")
-                            .replace(FIELD_DELIM, "=")
-                            .replace(PADDING_VALUE, "")
-                            .replace(TABLE_MARKER, "")
+                            .replace(#ITEM_DELIM, ", ")
+                            .replace(#FIELD_DELIM, "=")
+                            .replace(#PADDING_VALUE, "")
+                            .replace(#TABLE_MARKER, "")
                     ),
                     #db_table,
                     self.id.unwrap()
@@ -208,22 +281,7 @@ pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
         proc_macro2::Span::call_site(),
     );
 
-    let mut map = vec![];
-    if let syn::Data::Struct(syn::DataStruct {
-        fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
-        ..
-    }) = input.data
-    {
-        let mut iter = named.into_iter();
-        while let Some(syn::Field {
-            ident: Some(ident),
-            ty,
-            ..
-        }) = iter.next()
-        {
-            map.push((ident, ty));
-        }
-    }
+    let map = get_types(&input.data);
 
     let parts = map.iter().fold(TokenStream2::new(), |mut ret, (_, ty)| {
         ret.extend(quote! {
