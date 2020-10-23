@@ -147,6 +147,8 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
     }
     .to_owned();
 
+    // TODO: Implement some way of returning a bad request if we try to "update"
+    //       with a Vec type present
     let gen = quote! {
         impl Options for #struct_ident {
             fn into_delimited(&self) -> String {
