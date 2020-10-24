@@ -1,6 +1,7 @@
 <script>
     import Input from "./Input.svelte"
 
+    // TODO: Dropdown menu for finding things when search
 </script>
 
 <style>

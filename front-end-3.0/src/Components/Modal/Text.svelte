@@ -14,6 +14,7 @@
         color: white;
 
         width: 100%;
+        padding-bottom: 5px;
         border: 0;
         outline: 0;
         background: transparent;

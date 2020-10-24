@@ -53,6 +53,7 @@
         font-weight: lighter;
         color: white;
 
+        padding-bottom: 5px;
         width: 100%;
         border: 0;
         outline: 0;

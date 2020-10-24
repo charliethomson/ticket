@@ -1,17 +1,14 @@
 <script>
-    export let customer
-
     import Button from "./Button.svelte"
-
     import { workorderExpanded, seeModal } from "../stores"
+
+    export let workorder
 
     let deviceShown = false
     let customerShown = false
     let contentShown = false
 
-    $: console.log("device shown " + deviceShown)
-    $: console.log("customer shown " + customerShown)
-    $: console.log("content shown " + contentShown)
+    const dateExpected = new Date(workorder.quoted_time * 1000).toDateString()
 
     function goToCreate() {
         $seeModal = true
@@ -106,27 +103,35 @@
                 <div class="content">
                     {#if deviceShown && !customerShown}
                         <div class="device tooltip">
-                            <div class="serial">Serial: C12358ABC34</div>
-                            <div class="make">Device: Macbook Pro</div>
-                            <div class="password">Password: Cocks12</div>
-                            <div class="TAT">Expected by: 10/25/2020</div>
-                            <div class="description">
-                                aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                            <div class="serial">
+                                {'Serial: ' + workorder.device.serial}
                             </div>
+                            <div class="make">
+                                {'Device: ' + workorder.device.name}
+                            </div>
+                            <div class="password">
+                                {'Password: ' + workorder.device.password}
+                            </div>
+                            <div class="TAT">
+                                {'Expected by:  ' + dateExpected}
+                            </div>
+                            <div class="description">{workorder.brief}</div>
                         </div>
                     {/if}
                     {#if customerShown && !deviceShown}
                         <div class="customer tooltip">
-                            <div class="first">Colton</div>
-                            <div class="last">Hobbs</div>
-                            <div class="phone">540-371-3349</div>
-                            <div class="email">c.hobbs@ubreakifix.com</div>
+                            <div class="name">
+                                {'Name : ' + workorder.customer.first_name + ' ' + workorder.customer.last_name}
+                            </div>
+
+                            <div class="phone">
+                                {'Phone #: ' + workorder.customer.phone_number}
+                            </div>
+                            <div class="email">
+                                {'Email: ' + workorder.customer.email}
+                            </div>
                         </div>
                     {/if}
-                    <!-- <Text label={'First name'} />
-            <Text label={'Last name'} />
-            <Text label={'Phone #'} />
-            <Text label={'Email'} /> -->
                 </div>
             {/if}
         </div>
