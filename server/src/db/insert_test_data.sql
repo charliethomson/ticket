@@ -22,7 +22,7 @@ values (
         "test@store.com",
         "102 Road Rd",
         "Real City",
-        "Real State",
+        "ST",
         "12345"
     );
 insert into customers (

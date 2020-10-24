@@ -27,7 +27,7 @@ CREATE TABLE stores (
     email_address VARCHAR(50) NOT NULL,
     address VARCHAR(50) NOT NULL,
     city VARCHAR(50) NOT NULL,
-    state VARCHAR(50) NOT NULL,
+    state VARCHAR(2) NOT NULL,
     zip INT NOT NULL
 );
 CREATE TABLE customers (
