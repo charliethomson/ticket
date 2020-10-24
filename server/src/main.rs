@@ -29,6 +29,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             // Services
             // users
+            .service(users_post_internal)
             .service(users_post)
             .service(users_get)
             .service(users_put)

@@ -19,3 +19,14 @@ macro_rules! validate_ok {
         }
     };
 }
+
+#[macro_export]
+macro_rules! check_logged_in {
+    ($identity:expr, $if_ok:block) => {
+        if $identity.identity() == None {
+            HttpResponse::Unauthorized().finish()
+        } else {
+            $if_ok
+        }
+    };
+}

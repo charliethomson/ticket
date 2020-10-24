@@ -3,7 +3,6 @@ use crate::{
     routes::{AppState, OkMessage, UserNew},
 };
 use actix_identity::Identity;
-use actix_session::Session;
 use actix_web::{
     client::{Client, Connector},
     dev::HttpResponseBuilder,
@@ -13,25 +12,17 @@ use oauth2::{reqwest::http_client, AuthorizationCode, /*CsrfToken,*/ TokenRespon
 use openssl::ssl::{SslConnector, SslMethod};
 
 #[get("/api/auth/login")]
-pub async fn auth_login(session: Session, data: web::Data<AppState>) -> HttpResponse {
-    match session.get("authenticated") {
-        // User not logged in
-        Ok(Some(false)) | Ok(None) => HttpResponse::Found()
-            .header(actix_web::http::header::LOCATION, data.auth_url.to_string())
-            .finish(),
-        // User already logged in
-        // FIXME: Not redirecting
-        Ok(Some(true)) => HttpResponse::Ok()
+pub async fn auth_login(identity: Identity, data: web::Data<AppState>) -> HttpResponse {
+    match identity.identity() {
+        Some(_) => HttpResponse::Ok()
             .header(actix_web::http::header::LOCATION, "/")
             .json(OkMessage {
                 ok: true,
                 message: Some("User already logged in"),
             }),
-        // Session error
-        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-            ok: false,
-            message: Some(e.to_string()),
-        }),
+        _ => HttpResponse::Found()
+            .header(actix_web::http::header::LOCATION, data.auth_url.to_string())
+            .finish(),
     }
 }
 
@@ -112,7 +103,7 @@ pub async fn auth_response(
                     // Insert or request the user id associated with the user information
                     // we got from google
                     match client
-                        .post(format!("http://{}/api/users", crate::URL))
+                        .post(format!("http://{}/api/users/internal", crate::URL))
                         .send_json(&UserNew::from(response))
                         .await
                     {
@@ -133,12 +124,12 @@ pub async fn auth_response(
                             }
                             Err(e) => HttpResponseBuilder::new(res.status()).json(OkMessage {
                                 ok: false,
-                                message: Some(e.to_string()),
+                                message: Some(format!("1: {}", e.to_string())),
                             }),
                         },
                         Err(e) => HttpResponse::InternalServerError().json(OkMessage {
                             ok: false,
-                            message: Some(e.to_string()),
+                            message: Some(format!("2: {}", e.to_string())),
                         }),
                     }
                 }
@@ -153,23 +144,24 @@ pub async fn auth_response(
             // TODO Status Code
             HttpResponse::InternalServerError().json(OkMessage {
                 ok: false,
-                message: Some(e.to_string()),
+                message: Some(format!("3: {}", e.to_string())),
             })
         }
     }
 }
 
 // #[get("/api/auth/refresh")]
-// pub async fn auth_refresh(session: Session, data: web::Data<AppState>) -> HttpResponse {
+// pub async fn auth_refresh(identity: Identity, data: web::Data<AppState>) -> HttpResponse {
 //     HttpResponse::Ok().finish()
 // }
 
 #[get("/api/auth/me")]
-pub async fn auth_me(session: Session) -> HttpResponse {
+pub async fn auth_me(identity: Identity) -> HttpResponse {
     // get the user id from the session
-    match session.get("userId") {
+    match identity.identity() {
         // See if the user id is valid
-        Ok(Some(id)) => match User::by_id(id) {
+        // TODO: Unwrap should be safe
+        Some(id) => match User::by_id(id.parse::<i64>().unwrap()) {
             // if it is, return an ok response with the user
             Ok(Some(user)) => HttpResponse::Ok().json(OkMessage {
                 ok: true,
