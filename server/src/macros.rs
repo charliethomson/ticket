@@ -7,7 +7,7 @@ macro_rules! validate_ok {
                 ok: false,
                 message: Some(
                     e.iter()
-                        .fold(Vec::new(), |mut acc, cur| {
+                        .fold(vec!["Validation Errors: ".to_owned()], |mut acc, cur| {
                             acc.push(format!("{:?}", cur));
                             acc
                         })
