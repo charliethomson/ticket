@@ -124,6 +124,7 @@ pub async fn auth_response(
                                 // Get the ID returned from our api, add it to the session storage,
                                 // and build a response redirecting to the index with the body we were returned
                                 if let Some(id) = body.message {
+                                    println!("\n\n\nSetting user_id to {}\n\n\n", id);
                                     session.set("userId", id).unwrap();
                                     println!("Successfully authenticated user {}", id);
                                 } else {
