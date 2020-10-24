@@ -1,10 +1,12 @@
 mod db;
+mod handlers;
 mod macros;
 mod routes;
 
 use actix_cors::Cors;
 use actix_session::CookieSession;
 use actix_web::{middleware::Logger, App, HttpServer};
+use handlers::OffsiteHandler;
 const URL: &str = "localhost:8080";
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -14,36 +16,40 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(|| {
         App::new()
             .data(AppState::new())
+            // Middleware
             .wrap(CookieSession::signed(&[0; 32]).name("offsite").secure(true))
             .wrap(Cors::new().send_wildcard().finish())
+            .wrap(OffsiteHandler::new())
             .wrap(Logger::default())
+            // Services
+            // users
             .service(users_post)
             .service(users_get)
             .service(users_put)
-            //
+            // workorders
             .service(workorders_post)
             .service(workorders_get)
             .service(workorders_put)
-            //
+            // stores
             .service(stores_put)
             .service(stores_post)
             .service(stores_get)
-            //
+            // notes
             .service(notes_get)
             .service(notes_post)
-            //
+            // devices
             .service(devices_put)
             .service(devices_post)
             .service(devices_get)
-            //
+            // customers
             .service(customers_put)
             .service(customers_post)
             .service(customers_get)
-            //
+            // auth
             .service(auth_login)
             .service(auth_response)
             .service(auth_me)
-            //
+            // staticfiles
             .service(front_end)
             .service(actix_files::Files::new("/static", "./static").show_files_listing())
     })

@@ -15,7 +15,7 @@ pub use workorders::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct OkMessage<Message> {
+pub(in crate::routes) struct OkMessage<Message> {
     pub ok: bool,
     pub message: Option<Message>,
 }

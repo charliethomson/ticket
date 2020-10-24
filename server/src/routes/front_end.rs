@@ -9,7 +9,7 @@ pub async fn front_end(session: Session) -> HttpResponse {
         session.get::<i64>("userId")
     );
     let mut contents = String::new();
-    let mut file = File::open("./static/index.html").unwrap();
+    let mut file = File::open("./static/public/index.html").unwrap();
     file.read_to_string(&mut contents).unwrap();
 
     HttpResponse::Ok().body(contents)
