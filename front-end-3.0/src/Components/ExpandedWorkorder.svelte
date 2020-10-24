@@ -1,6 +1,8 @@
 <script>
     import Note from "./Note.svelte"
 
+    export let workorder
+
     function createNote() {
         alert("Note created")
     }
@@ -36,13 +38,10 @@
         <div class="button" on:click={createNote}>Create note</div>
     </div>
     <div class="notes">
-        <Note
-            name="Nicholas Belet"
-            date="May 30 @ 11:29AM"
-            notes="Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam" />
-        <Note
-            name="Nicholas Belet"
-            date="May 30 @ 11:29AM"
-            notes="Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam, Device is a MacBook Pro (A1706) that needs a screen replacement. Quoting 3-5 business days for the part, $549.99, and EOD when the part arrives. Fully functional otherwise. -Sam" />
+        {#each workorder.notes as note}
+            <Note name={note.user} date={note.created} notes={note.contents} />
+        {/each}
     </div>
 </div>
+
+<!-- TODO: Map the user id that I get from the API to an actual user in some kind of model -->

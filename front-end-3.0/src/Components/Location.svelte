@@ -1,23 +1,11 @@
 <script>
-    let activeIndex = 0
+    export let travelStatusList
+    export let workorder
+
+    let activeIndex = workorder.travel_status
     let statusesActive = false
 
     let newLocation = "C7"
-
-    const statuses = [
-        {
-            status: "Arrived",
-            color: "green",
-        },
-        {
-            status: "En-route",
-            color: "yellow",
-        },
-        {
-            status: "OG store",
-            color: "yellow",
-        },
-    ]
 
     function handleClick() {
         statusesActive = !statusesActive
@@ -81,7 +69,7 @@
 <div class="location">
     <div class="inactive-statuses">
         {#if statusesActive}
-            {#each statuses as { status, color }, i}
+            {#each travelStatusList as { status, color }, i}
                 <div
                     class={'status ' + color}
                     on:click={() => {
@@ -94,9 +82,9 @@
         {/if}
     </div>
     <div
-        class={'active-status ' + statuses[activeIndex].color}
+        class={'active-status ' + travelStatusList[activeIndex].color}
         on:click={handleClick}>
-        {statuses[activeIndex].status}
+        {travelStatusList[activeIndex].status}
     </div>
     <input
         type="text"

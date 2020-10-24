@@ -1,45 +1,48 @@
 <script>
-    let statusesShown = false
-    let indexShown = 0
+    export let workorder
+    export let statusList
 
-    const statuses = [
-        {
-            status: "Awaiting Repair",
-            color: "red",
-        },
-        {
-            status: "Quality Inspection",
-            color: "red",
-        },
-        {
-            status: "Need to Order Parts",
-            color: "red",
-        },
-        {
-            status: "Awaiting Callback",
-            color: "yellow",
-        },
-        {
-            status: "Awaiting Device",
-            color: "yellow",
-        },
-        {
-            status: "Awaiting Parts",
-            color: "yellow",
-        },
-        {
-            status: "Repair in Progress",
-            color: "blue",
-        },
-        {
-            status: "Repaired",
-            color: "green",
-        },
-        {
-            status: "Unrepairable",
-            color: "green",
-        },
-    ]
+    let statusesShown = false
+    let indexShown = workorder.status
+
+    // const statuses = [
+    //     {
+    //         status: "Awaiting Repair",
+    //         color: "red",
+    //     },
+    //     {
+    //         status: "Quality Inspection",
+    //         color: "red",
+    //     },
+    //     {
+    //         status: "Need to Order Parts",
+    //         color: "red",
+    //     },
+    //     {
+    //         status: "Awaiting Callback",
+    //         color: "yellow",
+    //     },
+    //     {
+    //         status: "Awaiting Device",
+    //         color: "yellow",
+    //     },
+    //     {
+    //         status: "Awaiting Parts",
+    //         color: "yellow",
+    //     },
+    //     {
+    //         status: "Repair in Progress",
+    //         color: "blue",
+    //     },
+    //     {
+    //         status: "Repaired",
+    //         color: "green",
+    //     },
+    //     {
+    //         status: "Unrepairable",
+    //         color: "green",
+    //     },
+    // ]
 
     function showStatuses() {
         statusesShown = !statusesShown
@@ -100,23 +103,26 @@
 
 <div class="statuses">
     <div
-        class={'active-status ' + statuses[indexShown].color}
+        class={'active-status ' + statusList[indexShown].color}
         on:click={showStatuses}>
-        {statuses[indexShown].status}
+        {statusList[indexShown].status}
     </div>
 
-    <div class="status-container">
-        {#each statuses as { status, color }, i}
-            {#if i != indexShown}
-                <div
-                    class={'status ' + color + '-hover' + (statusesShown ? ' shown' : '')}
-                    on:click={() => {
-                        indexShown = i
-                        showStatuses()
-                    }}>
-                    {status}
-                </div>
-            {/if}
-        {/each}
-    </div>
+    {#if statusesShown}
+        <div class="status-container">
+            {#each statusList as { status, color }, i}
+                {#if i != indexShown}
+                    <div
+                        class={'status ' + color + '-hover' + (statusesShown ? ' shown' : '')}
+                        on:click={() => {
+                            indexShown = i
+                            workorder.status = i
+                            showStatuses()
+                        }}>
+                        {status}
+                    </div>
+                {/if}
+            {/each}
+        </div>
+    {/if}
 </div>

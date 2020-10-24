@@ -1,16 +1,17 @@
 <script>
-    import { workorderExpanded } from "../stores"
+    import { workorderExpanded, activeWorkorder } from "../stores"
 
-    export let customer
-    export let device
-    export let description
-    export let status
-    export let location
+    export let workorder
+    export let index
+    export let statusList
+    export let travelStatusList
 
-    function handleClick() {
+    function handleExpand() {
         $workorderExpanded = !$workorderExpanded
-        alert("Expanding workorder to take up entire div")
+        $activeWorkorder = index
     }
+
+    $: console.log()
 </script>
 
 <style>
@@ -21,12 +22,18 @@
         padding: 10px;
         cursor: pointer;
     }
+    .container > div {
+        width: 200px;
+        text-align: center;
+    }
 </style>
 
-<div class="container" on:click={handleClick}>
-    <div>{customer}</div>
-    <div>{device}</div>
-    <div>{description}</div>
-    <div>{status}</div>
-    <div>{location}</div>
+<div class="container" on:click={handleExpand}>
+    <div>
+        {workorder.customer.first_name + ' ' + workorder.customer.last_name}
+    </div>
+    <div>{workorder.device.name}</div>
+    <div>{workorder.brief}</div>
+    <div>{statusList[workorder.status].status}</div>
+    <div>{travelStatusList[workorder.travel_status].status}</div>
 </div>

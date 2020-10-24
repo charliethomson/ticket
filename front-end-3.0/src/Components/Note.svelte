@@ -2,6 +2,8 @@
     export let name
     export let date
     export let notes
+
+    const posted = new Date(date * 1000).toLocaleString()
 </script>
 
 <style>
@@ -27,7 +29,7 @@
 <div class="container">
     <div class="top">
         <div class="name">{name}</div>
-        <div class="date">{date}</div>
+        <div class="date">{posted}</div>
     </div>
     <div class="notes">{notes}</div>
 </div>

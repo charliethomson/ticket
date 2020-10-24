@@ -1,7 +1,6 @@
 <script>
     export let content
     export let handleClick
-    export let handleHover
 </script>
 
 <style>
@@ -16,6 +15,4 @@
     }
 </style>
 
-<div class="button" on:click={handleClick} on:mouseover={handleHover}>
-    {content}
-</div>
+<div class="button" on:click={handleClick}>{content}</div>
