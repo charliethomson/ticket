@@ -4,20 +4,26 @@ mod macros;
 mod routes;
 
 use actix_cors::Cors;
-use actix_session::CookieSession;
+use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{middleware::Logger, App, HttpServer};
 use handlers::OffsiteHandler;
+use rand::prelude::Rng;
 const URL: &str = "localhost:8080";
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web");
     env_logger::init();
     use routes::*;
-    let server = HttpServer::new(|| {
+    let private_key = rand::thread_rng().gen::<[u8; 32]>();
+    let server = HttpServer::new(move || {
         App::new()
             .data(AppState::new())
             // Middleware
-            .wrap(CookieSession::signed(&[0; 32]).name("offsite").secure(true))
+            .wrap(IdentityService::new(
+                CookieIdentityPolicy::new(&private_key)
+                    .name("offsite")
+                    .secure(false),
+            ))
             .wrap(Cors::new().send_wildcard().finish())
             .wrap(OffsiteHandler::new())
             .wrap(Logger::default())

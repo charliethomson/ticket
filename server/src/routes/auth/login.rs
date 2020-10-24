@@ -2,6 +2,7 @@ use crate::{
     db::{User, UserResponse},
     routes::{AppState, OkMessage, UserNew},
 };
+use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::{
     client::{Client, Connector},
@@ -36,7 +37,7 @@ pub async fn auth_login(session: Session, data: web::Data<AppState>) -> HttpResp
 
 #[get("/api/auth/response")]
 pub async fn auth_response(
-    session: Session,
+    identity: Identity,
     data: web::Data<AppState>,
     params: web::Query<super::AuthRequest>,
 ) -> HttpResponse {
@@ -105,9 +106,6 @@ pub async fn auth_response(
         // If we got a valid response from the API
         Ok(response) => {
             // Set the authenticated flag in the session
-            session
-                .set("authenticated", true)
-                .expect("FAILED TO SET SESSION KEY authenticated");
             match response.hd.as_ref() {
                 // Require that the user signed in with a ubif email address
                 Some(hd) if hd == "ubreakifix.com" => {
@@ -124,8 +122,7 @@ pub async fn auth_response(
                                 // Get the ID returned from our api, add it to the session storage,
                                 // and build a response redirecting to the index with the body we were returned
                                 if let Some(id) = body.message {
-                                    session.set("userId", id).unwrap();
-                                    println!("Successfully authenticated user {}", id);
+                                    identity.remember(id.to_string());
                                 } else {
                                     // This should never happen
                                     unreachable!()
