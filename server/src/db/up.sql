@@ -3,7 +3,8 @@ CREATE TABLE users (
     CONSTRAINT `pk_user_id` PRIMARY KEY (id),
     google_id BINARY(32) NOT NULL,
     CONSTRAINT `unq_google_id` UNIQUE (google_id),
-    name VARCHAR(25) NOT NULL,
+    first_name VARCHAR(25) NOT NULL,
+    last_name VARCHAR(25) NOT NULL,
     email VARCHAR(50) NOT NULL
 );
 CREATE TABLE notes (
@@ -33,7 +34,8 @@ CREATE TABLE customers (
     id INT NOT NULL AUTO_INCREMENT,
     CONSTRAINT `id_unique_customers` UNIQUE (id),
     CONSTRAINT `id_primary_key_customers` PRIMARY KEY (id),
-    customer_name VARCHAR(40) NOT NULL,
+    first_name VARCHAR(20) NOT NULL,
+    last_name VARCHAR(20) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
     email_address VARCHAR(50) NOT NULL
 );

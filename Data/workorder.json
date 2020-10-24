@@ -15,17 +15,17 @@
                 "state": "Real State",
                 "zip": "12345"
             },
-            "created": 1603212828,
-            "quoted_time": 1603212828,
+            "created": 1603342409,
+            "quoted_time": 1603342409,
             "status": 0,
             "travel_status": 0,
             "location": null,
             "customer": {
                 "id": 1,
-                "name": "Test customer",
+                "first_name": "Test",
+                "last_name": "customer",
                 "phone_number": "5551235555",
-                "email": "test@customer.com",
-                "store_id": 1
+                "email": "test@customer.com"
             },
             "device": {
                 "id": 1,
@@ -37,9 +37,14 @@
             "brief": "Test brief",
             "notes": [
                 {
+                    "user": {
+                        "id": 1,
+                        "first_name": "Charlie",
+                        "last_name": "Thomson",
+                        "email": "c.thomson@ubreakifix.com"
+                    },
                     "contents": "Test note content",
-                    "user": 1,
-                    "created": 1603212828,
+                    "created": 1603342410,
                     "next_update": null
                 }
             ]

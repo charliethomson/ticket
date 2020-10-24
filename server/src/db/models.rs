@@ -3,7 +3,6 @@
 use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
 
-#[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct WorkorderResponse {
     pub workorder_id: i64,
@@ -108,8 +107,8 @@ impl std::convert::TryFrom<Note> for NoteResponse {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Customer {
     pub id: i64,
-    #[db_name("customer_name")]
-    pub name: String,
+    pub first_name: String,
+    pub last_name: String,
     pub phone_number: String,
     #[db_name("email_address")]
     pub email: String,
@@ -120,7 +119,8 @@ pub struct Customer {
 pub struct User {
     pub id: i64,
     pub google_id: String,
-    pub name: String,
+    pub first_name: String,
+    pub last_name: String,
     pub email: String,
 }
 
@@ -128,14 +128,16 @@ pub struct User {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct UserResponse {
     pub id: i64,
-    pub name: String,
+    pub first_name: String,
+    pub last_name: String,
     pub email: String,
 }
 impl From<User> for UserResponse {
     fn from(user: User) -> UserResponse {
         UserResponse {
             id: user.id,
-            name: user.name,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
         }
     }

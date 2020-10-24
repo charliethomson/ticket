@@ -15,7 +15,8 @@ use {
 #[derive(Serialize, Deserialize, ValidateForm)]
 pub struct UserNew {
     pub google_id: i128,
-    pub name: String,
+    pub first_name: String,
+    pub last_name: String,
     #[validate(email)]
     pub email: String,
 }

@@ -9,11 +9,6 @@ use std::convert::TryFrom;
 
 // TODO: Validation
 
-pub const FIELD_DELIM: &str = "#$++,";
-pub const ITEM_DELIM: &str = "$!@;";
-pub const TABLE_MARKER: &str = "$%^$#$!$@#";
-pub const PADDING_VALUE: &str = "$%&&#$*@@";
-
 #[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct WorkorderOptions {
     pub id: Option<i64>,
@@ -24,7 +19,7 @@ pub struct WorkorderOptions {
     #[db_name("quoted")]
     pub quoted_time: Option<i64>,
     #[db_name("workorder_status")]
-    pub status: Option<i64>,
+    pub status: Option<Vec<i64>>,
     pub customer: Option<i64>,
     pub device: Option<i64>,
     pub brief: Option<String>,
@@ -59,7 +54,8 @@ pub struct StoreOptions {
 pub struct CustomerOptions {
     pub id: Option<i64>,
     #[db_name("customer_name")]
-    pub name: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
     pub store_id: Option<i64>,
@@ -69,7 +65,8 @@ pub struct CustomerOptions {
 pub struct UserOptions {
     pub id: Option<i64>,
     pub google_id: Option<i128>,
-    pub name: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub phone_number: Option<String>,
     pub email: Option<String>,
 }
@@ -86,6 +83,7 @@ impl Workorder {
     pub fn find(filter: WorkorderOptions) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
+        dbg!(filter.clone());
         let query = format!(
             "select id from workorders{};",
             if !filter.is_empty() {
@@ -189,6 +187,7 @@ impl Workorder {
     }
 }
 
+// TODO
 impl Update<WorkorderOptions> for WorkorderResponse {}
 impl Update<DeviceOptions> for Device {}
 impl Update<StoreOptions> for Store {}
@@ -236,6 +235,7 @@ impl Device {
 }
 
 impl Store {
+    // TODO: Make this proc macro
     pub fn find(filter: StoreOptions) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
@@ -321,16 +321,19 @@ impl User {
         match conn.exec_drop(
             "insert into users (
                 google_id,
-                name,
+                first_name,
+                last_name,
                 email
             ) values (
                 :google_id,
-                :name,
+                :first_name,
+                :last_name,
                 :email
             );",
             params! {
                 "google_id" => user.google_id,
-                "name" => user.name.clone(),
+                "first_name" => user.first_name.clone(),
+                "last_name" => user.last_name.clone(),
                 "email" => user.email.clone(),
             },
         ) {
