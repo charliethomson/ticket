@@ -2,6 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{models::User, schema::UserOptions, Update},
+        not_ok, ok,
         routes::OkMessage,
         validate_ok,
     },
@@ -31,10 +32,7 @@ pub async fn users_post(identity: Identity, web::Json(body): web::Json<UserNew>)
                     ok: true,
                     message: Some(id),
                 }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
     })
@@ -51,17 +49,9 @@ pub async fn users_post_internal(
         // TODO REMOVE
         match User::insert(body) {
             // TODO REMOVE
-            Ok(id) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                // TODO REMOVE
-                message: Some(id),
-            }),
+            Ok(id) => HttpResponse::Ok().json(ok!(id)),
             // TODO REMOVE
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                // TODO REMOVE
-                message: Some(e.to_string()),
-            }),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
         // TODO REMOVE
     })
@@ -72,14 +62,8 @@ pub async fn users_get(identity: Identity, body: Option<web::Query<UserOptions>>
     check_logged_in!(identity, {
         let filter = body.map(|json| json.into_inner()).unwrap_or_default();
         match User::find(filter) {
-            Ok(user) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: user,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(user) => HttpResponse::Ok().json(ok!(user)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -90,37 +74,19 @@ pub async fn users_put(identity: Identity, body: web::Json<UserOptions>) -> Http
         let options = body.into_inner();
         let user_id = match options.id {
             Some(id) => id,
-            None => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some("Missing required field `id`"),
-                })
-            }
+            None => return HttpResponse::BadRequest().json(not_ok!("Missing required field `id`")),
         };
         let mut user = match User::by_id(user_id) {
             Ok(Some(user)) => user,
             Ok(None) => {
-                return HttpResponse::NotFound().json(OkMessage {
-                    ok: false,
-                    message: Some(format!("User with id {} not found", user_id)),
-                })
+                return HttpResponse::NotFound()
+                    .json(not_ok!(format!("User with id {} not found", user_id)))
             }
-            Err(e) => {
-                return HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                })
-            }
+            Err(e) => return HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         };
         match user.update(options) {
-            Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
-                ok: true,
-                message: None,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(()) => HttpResponse::Ok().json(ok!()),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }

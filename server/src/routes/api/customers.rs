@@ -2,6 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{models::Customer, schema::CustomerOptions, Insert, Update},
+        not_ok, ok,
         routes::OkMessage,
         validate_ok,
     },
@@ -38,14 +39,8 @@ pub async fn customers_post(identity: Identity, Json(body): Json<CustomerNew>) -
                 phone_number: body.phone_number,
                 email: body.email_address,
             }) {
-                Ok(id) => HttpResponse::Ok().json(OkMessage {
-                    ok: true,
-                    message: Some(id),
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Ok(id) => HttpResponse::Ok().json(ok!(id)),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
     })
@@ -56,14 +51,8 @@ pub async fn customers_post(identity: Identity, Json(body): Json<CustomerNew>) -
 pub async fn customers_get(identity: Identity, filter: Query<CustomerOptions>) -> HttpResponse {
     check_logged_in!(identity, {
         match Customer::find(filter.into_inner()) {
-            Ok(customer) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: customer,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(customer) => HttpResponse::Ok().json(ok!(customer)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -74,33 +63,18 @@ pub async fn customers_put(identity: Identity, Json(body): Json<CustomerOptions>
     check_logged_in!(identity, {
         let id = match body.id {
             Some(id) => id,
-            None => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some("Missing required field `id`"),
-                })
-            }
+            None => return HttpResponse::BadRequest().json(not_ok!("Missing required field `id`")),
         };
 
         match Customer::by_id(id) {
             Ok(Some(mut customer)) => match customer.update(body) {
-                Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
-                    ok: true,
-                    message: None,
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Ok(()) => HttpResponse::Ok().json(ok!(())),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             },
-            Ok(None) => HttpResponse::NotFound().json(OkMessage {
-                ok: false,
-                message: Some(format!("No customer found for id {}", id)),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(None) => {
+                HttpResponse::NotFound().json(ok!(format!("No customer found for id {}", id)))
+            }
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }

@@ -2,6 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{models::Store, schema::StoreOptions, Insert, Update},
+        ok,
         routes::OkMessage,
         validate_ok,
     },
@@ -48,10 +49,7 @@ pub async fn stores_post(identity: Identity, Json(body): Json<StoreNew>) -> Http
                 state: body.state,
                 zip: body.zip,
             }) {
-                Ok(id) => HttpResponse::Ok().json(OkMessage {
-                    ok: true,
-                    message: Some(id),
-                }),
+                Ok(id) => HttpResponse::Ok().json(ok!(id)),
                 Err(e) => HttpResponse::InternalServerError().json(OkMessage {
                     ok: false,
                     message: Some(e.to_string()),

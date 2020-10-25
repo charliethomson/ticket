@@ -2,6 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{models::Note, schema::NotesOptions},
+        not_ok, ok,
         routes::OkMessage,
     },
     actix_identity::Identity,
@@ -33,14 +34,8 @@ pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpR
         };
 
         match note.insert(body.workorder_id) {
-            Ok(id) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: Some(id),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(id) => HttpResponse::Ok().json(ok!(id)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -50,14 +45,8 @@ pub async fn notes_get(identity: Identity, body: Option<Query<NotesOptions>>) ->
     check_logged_in!(identity, {
         let filter = body.map(|json| json.into_inner()).unwrap_or_default();
         match Note::find(filter) {
-            Ok(notes) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: notes,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(notes) => HttpResponse::Ok().json(ok!(notes)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }

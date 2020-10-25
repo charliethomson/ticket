@@ -1,5 +1,5 @@
 use {
-    crate::{check_logged_in, db::*, routes::OkMessage, validate_ok},
+    crate::{check_logged_in, db::*, not_ok, ok, routes::OkMessage, validate_ok},
     actix_identity::Identity,
     actix_web::{get, post, put, web::Json, HttpRequest, HttpResponse},
     chrono::Utc,
@@ -42,12 +42,7 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
 
             let mut conn = match crate::db::get_connection() {
                 Ok(conn) => conn,
-                Err(e) => {
-                    return HttpResponse::InternalServerError().json(OkMessage {
-                        ok: false,
-                        message: Some(e.to_string()),
-                    })
-                }
+                Err(e) => return HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             };
 
             // this is a solid enough approximation of the workorder id, leaving a FIXME JIC
@@ -58,19 +53,11 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
             ) {
                 Ok(Some(Some(prev_max))) => prev_max + 1,
                 Ok(_) => 1,
-                Err(e) => {
-                    return HttpResponse::InternalServerError().json(OkMessage {
-                        ok: false,
-                        message: Some(e.to_string()),
-                    })
-                }
+                Err(e) => return HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             };
 
             if let Err(e) = note.insert(wo_id) {
-                return HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                });
+                return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
             }
             let wo = Workorder {
                 workorder_id: 0,
@@ -87,14 +74,8 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
             };
 
             match wo.insert() {
-                Ok(id) => HttpResponse::Ok().json(OkMessage {
-                    ok: true,
-                    message: id,
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Ok(id) => HttpResponse::Ok().json(ok!(id)),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
     })
@@ -106,24 +87,13 @@ pub async fn workorders_get(identity: Identity, req: HttpRequest) -> HttpRespons
     check_logged_in!(identity, {
         let filter = match serde_qs::from_str::<WorkorderOptions>(&req.query_string()) {
             Ok(filter) => filter,
-            Err(e) => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                })
-            }
+            Err(e) => return HttpResponse::BadRequest().json(not_ok!(e.to_string())),
         };
         let response = Workorder::find(filter);
 
         match response {
-            Ok(res) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: res,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(res) => HttpResponse::Ok().json(ok!(res)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -137,35 +107,19 @@ pub async fn workorders_put(
         let id = match body.id {
             Some(id) => id,
             None => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some("Required option `id` not found"),
-                })
+                return HttpResponse::BadRequest().json(not_ok!("Required option `id` not found"))
             }
         };
         match Workorder::by_id(id) {
             Ok(Some(Ok(mut workorder))) => match workorder.update(body) {
-                Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
-                    ok: true,
-                    message: None,
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Ok(_) => HttpResponse::Ok().json(ok!()),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             },
-            Ok(None) => HttpResponse::NotFound().json(OkMessage {
-                ok: false,
-                message: Some(format!("No workorder found for id {}", id)),
-            }),
-            Ok(Some(Err(e))) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(None) => {
+                HttpResponse::NotFound().json(not_ok!(format!("No workorder found for id {}", id)))
+            }
+            Ok(Some(Err(e))) => HttpResponse::InternalServerError().json(not_ok!(e)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }

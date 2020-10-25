@@ -30,3 +30,29 @@ macro_rules! check_logged_in {
         }
     };
 }
+
+#[macro_export]
+macro_rules! ok {
+    ($message:expr) => {
+        OkMessage {
+            ok: true,
+            message: Some($message),
+        }
+    };
+    () => {
+        OkMessage::<()> {
+            ok: true,
+            message: None,
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! not_ok {
+    ($message:expr) => {
+        OkMessage {
+            ok: false,
+            message: Some($message),
+        }
+    };
+}

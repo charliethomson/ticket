@@ -2,6 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{models::Device, schema::DeviceOptions, Insert, Update},
+        not_ok, ok,
         routes::OkMessage,
     },
     actix_identity::Identity,
@@ -30,14 +31,8 @@ pub async fn devices_post(identity: Identity, Json(body): Json<DeviceNew>) -> Ht
             customer_id: body.customer_id,
             password: body.password,
         }) {
-            Ok(id) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: Some(id),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(id) => HttpResponse::Ok().json(ok!(id)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -46,14 +41,8 @@ pub async fn devices_post(identity: Identity, Json(body): Json<DeviceNew>) -> Ht
 pub async fn devices_get(identity: Identity, filter: Query<DeviceOptions>) -> HttpResponse {
     check_logged_in!(identity, {
         match Device::find(filter.into_inner()) {
-            Ok(devices) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: devices,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(devices) => HttpResponse::Ok().json(ok!(devices)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
@@ -63,33 +52,18 @@ pub async fn devices_put(identity: Identity, Json(body): Json<DeviceOptions>) ->
     check_logged_in!(identity, {
         let id = match body.id {
             Some(id) => id,
-            None => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some("Missing required field `id`"),
-                })
-            }
+            None => return HttpResponse::BadRequest().json(not_ok!("Missing required field `id`")),
         };
 
         match Device::by_id(id) {
             Ok(Some(mut device)) => match device.update(body) {
-                Ok(()) => HttpResponse::Ok().json(OkMessage::<()> {
-                    ok: true,
-                    message: None,
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
+                Ok(()) => HttpResponse::Ok().json(ok!(())),
+                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             },
-            Ok(None) => HttpResponse::NotFound().json(OkMessage {
-                ok: false,
-                message: Some(format!("No device found for id {}", id)),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+            Ok(None) => {
+                HttpResponse::NotFound().json(not_ok!(format!("No device found for id {}", id)))
+            }
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
