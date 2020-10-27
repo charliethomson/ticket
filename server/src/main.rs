@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()> {
                     .secure(false),
             ))
             .wrap(Cors::new().send_wildcard().finish())
-            .wrap(OffsiteHandler::new())
+            // .wrap(OffsiteHandler::new())
             .wrap(Logger::default())
             // Services
             // users

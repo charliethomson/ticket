@@ -55,9 +55,8 @@ pub struct Device {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Store {
     pub id: i64,
-    #[db_name("store_name")]
+    #[db_name("contact_name")]
     pub name: String,
-    pub contact_name: String,
     pub phone_number: String,
     #[db_name("email_address")]
     pub email: String,

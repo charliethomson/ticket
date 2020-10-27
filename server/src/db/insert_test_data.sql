@@ -6,7 +6,6 @@ values (
         "c.thomson@ubreakifix.com"
     );
 insert into stores (
-        store_name,
         contact_name,
         phone_number,
         email_address,
@@ -16,7 +15,6 @@ insert into stores (
         zip
     )
 values (
-        "Test store",
         "Test Contact",
         "5555551234",
         "test@store.com",

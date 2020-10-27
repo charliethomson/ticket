@@ -179,8 +179,8 @@ pub async fn auth_me(identity: Identity) -> HttpResponse {
             }),
         },
         // self explanatory
-        _ => HttpResponse::Unauthorized().json(OkMessage {
-            ok: false,
+        _ => HttpResponse::Ok().json(OkMessage {
+            ok: true,
             message: Some("No user logged in"),
         }),
     }
