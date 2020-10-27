@@ -38,9 +38,8 @@ pub struct DeviceOptions {
 #[derive(Default, Deserialize, Debug, Clone, Options)]
 pub struct StoreOptions {
     pub id: Option<i64>,
-    #[db_name("store_name")]
+    #[db_name("contact_name")]
     pub name: Option<String>,
-    pub contact_name: Option<String>,
     pub phone_number: Option<String>,
     #[db_name("email_address")]
     pub email: Option<String>,

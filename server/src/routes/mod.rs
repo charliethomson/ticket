@@ -47,7 +47,7 @@ impl AppState {
             Some(token_url),
         )
         .set_redirect_url(
-            RedirectUrl::new("http://localhost:8080/api/auth/response".to_string())
+            RedirectUrl::new("http://offsite.repair/api/auth/response".to_string())
                 .expect("Invalid redirect URL"),
         );
 

@@ -20,8 +20,7 @@ use {
 #[derive(Serialize, Deserialize, ValidateForm)]
 pub struct StoreNew {
     name: String,
-    contact_name: String,
-    #[validate(phone)]
+    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
     phone_number: String,
     #[validate(email)]
     email: String,
@@ -41,7 +40,6 @@ pub async fn stores_post(identity: Identity, Json(body): Json<StoreNew>) -> Http
             match Store::insert(&Store {
                 id: 0,
                 name: body.name,
-                contact_name: body.contact_name,
                 phone_number: body.phone_number,
                 email: body.email,
                 address: body.address,
