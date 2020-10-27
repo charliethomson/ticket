@@ -155,7 +155,6 @@
             },
         ],
     }
-    console.log(workorder.message)
 </script>
 
 <style>
