@@ -79,7 +79,7 @@ pub struct NotesOptions {
 }
 
 impl Workorder {
-    pub fn find(filter: WorkorderOptions) -> mysql::Result<Option<Vec<WorkorderResponse>>> {
+    pub fn find(filter: WorkorderOptions) -> mysql::Result<Vec<WorkorderResponse>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         dbg!(filter.clone());
@@ -104,9 +104,9 @@ impl Workorder {
             .map(|wo| wo.unwrap().unwrap().unwrap())
             .collect::<Vec<WorkorderResponse>>();
         if !wos.is_empty() {
-            Ok(Some(wos))
+            Ok(wos)
         } else {
-            Ok(None)
+            Ok(vec![])
         }
     }
 
