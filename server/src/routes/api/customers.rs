@@ -22,7 +22,7 @@ use {
 pub struct CustomerNew {
     first_name: String,
     last_name: String,
-    #[validate(regex = r"^(+\d{1,2}\s)?(?\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
+    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
     phone_number: String,
     #[validate(email)]
     email_address: String,
