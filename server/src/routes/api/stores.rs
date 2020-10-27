@@ -20,7 +20,7 @@ use {
 #[derive(Serialize, Deserialize, ValidateForm)]
 pub struct StoreNew {
     name: String,
-    #[validate(phone)]
+    #[validate(regex = r"^(+\d{1,2}\s)?(?\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
     phone_number: String,
     #[validate(email)]
     email: String,
