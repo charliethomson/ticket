@@ -1,4 +1,6 @@
 <script>
+    import { isFormValid } from "../../../stores"
+
     export let handleEnd
     export let handleClick
 
@@ -6,21 +8,22 @@
     const stateRegex = /^[a-z]+$/i
     const phoneRegex = /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    const addressRegex = /^\d+\s[A-z]+\s[A-z]+/g
+    const addressRegex = /^\d+\w*\s*(?:(?:[\-\/]?\s*)?\d*(?:\s*\d+\/\s*)?\d+)?\s+/
     const zipRegex = /^\d{5}$/
 
+    let response
     let store = {
-        name: "",
-        phone: "",
-        email: "",
-        address: "",
-        city: "",
-        state: "",
-        zip: null,
+        name: "Justin",
+        phone_number: "540-308-3687",
+        email: "vexedrecks@gmail.com",
+        address: "5603 hickory tree lane",
+        city: "mineral",
+        state: "va",
+        zip: "23117",
     }
 
     $: isNameValid = letterRegex.exec(store.name) ? true : false
-    $: isPhoneValid = phoneRegex.exec(store.phone) ? true : false
+    $: isPhoneValid = phoneRegex.exec(store.phone_number) ? true : false
     $: isEmailValid = emailRegex.exec(store.email) ? true : false
     $: isAddressValid = addressRegex.exec(store.address) ? true : false
     $: isCityValid = letterRegex.exec(store.city) ? true : false
@@ -39,16 +42,34 @@
         ) {
             return true
         } else {
+            $isFormValid = false
             return false
         }
     }
 
     function handleFunctions() {
         if (validation() == false) {
-            alert("Check your inputs on the form")
+            return
         } else {
             handleClick()
+            response = postData("http://offsite.repair/api/stores", store)
         }
+    }
+
+    async function postData(url = "", data = {}) {
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(data),
+        })
+        return response.json()
     }
 </script>
 
@@ -166,7 +187,7 @@
         <label for="phone">Phone #: </label>
         <input
             type="text"
-            bind:value={store.phone}
+            bind:value={store.phone_number}
             class="{isPhoneValid ? '' : 'invalid '}}required" />
 
         <label for="email">Email: </label>
@@ -189,7 +210,8 @@
                 <input
                     type="text"
                     bind:value={store.city}
-                    class="{isCityValid ? '' : 'invalid '}required" />
+                    class={isCityValid ? '' : 'invalid '}
+                    required />
             </div>
             <div class="state">
                 <label for="state">State: </label>

@@ -5,8 +5,15 @@
     import Nav from "./Components/Nav.svelte"
     import Statuses from "./Components/Statuses.svelte"
     import Location from "./Components/Location.svelte"
+    import Alert from "./components/Alert.svelte"
 
-    import { workorderExpanded, seeModal, activeWorkorder } from "./stores"
+    import {
+        workorderExpanded,
+        seeModal,
+        activeWorkorder,
+        isNoteValid,
+        isFormValid,
+    } from "./stores"
 
     const travelStatuses = [
         {
@@ -62,99 +69,14 @@
         },
     ]
 
-    let workorder = {
-        ok: true,
-        message: [
-            {
-                workorder_id: 1,
-                active: true,
-                origin: {
-                    id: 1,
-                    name: "Test store",
-                    contact_name: "Test Contact",
-                    phone_number: "5555551234",
-                    email: "test@store.com",
-                    address: "102 Road Rd",
-                    city: "Real City",
-                    state: "Real State",
-                    zip: "12345",
-                },
-                created: 1603212828,
-                quoted_time: 1603212828,
-                status: 0,
-                travel_status: 1,
-                location: null,
-                customer: {
-                    id: 1,
-                    first_name: "Bob",
-                    last_name: "Sagett",
-                    phone_number: "5551235555",
-                    email: "test@customer.com",
-                    store_id: 1,
-                },
-                device: {
-                    id: 1,
-                    serial: "0123456789",
-                    name: "Test device",
-                    customer_id: 1,
-                    password: "password1",
-                },
-                brief: "Test brief",
-                notes: [
-                    {
-                        contents: "Test note content",
-                        user: 1,
-                        created: 1603212828,
-                        next_update: null,
-                    },
-                ],
-            },
-            {
-                workorder_id: 2,
-                active: true,
-                origin: {
-                    id: 1,
-                    name: "Test store",
-                    contact_name: "Test Contact",
-                    phone_number: "5555551234",
-                    email: "test@store.com",
-                    address: "102 Road Rd",
-                    city: "Real City",
-                    state: "Real State",
-                    zip: "12345",
-                },
-                created: 1603212828,
-                quoted_time: 1603212828,
-                status: 0,
-                travel_status: 1,
-                location: null,
-                customer: {
-                    id: 1,
-                    first_name: "Jeff",
-                    last_name: "Sagett",
-                    phone_number: "5551235555",
-                    email: "test@customer.com",
-                    store_id: 1,
-                },
-                device: {
-                    id: 1,
-                    serial: "0123456789",
-                    name: "Test device",
-                    customer_id: 1,
-                    password: "password1",
-                },
-                brief: "Test brief",
-                notes: [
-                    {
-                        contents: "Dicks",
-                        user: 1,
-                        created: 1603212828,
-                        next_update: null,
-                    },
-                ],
-            },
-        ],
+    async function API(url) {
+        const baseUrl = "http://offsite.repair/api/"
+        const response = await fetch(baseUrl + url)
+        const data = await response.json()
+        return data
     }
+
+    let workordersPromise = API("workorders?active=true")
 </script>
 
 <style>
@@ -203,41 +125,55 @@
 </style>
 
 <main>
-    <Nav workorder={workorder.message[$activeWorkorder]} />
-    {#if !$workorderExpanded}
-        <div class="workorders">
-            <div class="titles">
-                <div>Customer</div>
-                <div>Device</div>
-                <div>Description</div>
-                <div>Status</div>
-                <div>Location</div>
+    {#await workordersPromise}
+        <div class="waiting">We are waiting on workorders to load...</div>
+    {:then workorders}
+        <Nav workorder={workorders.message[$activeWorkorder]} />
+        {#if !$workorderExpanded}
+            <div class="workorders">
+                <div class="titles">
+                    <div>Customer</div>
+                    <div>Device</div>
+                    <div>Description</div>
+                    <div>Status</div>
+                    <div>Location</div>
+                </div>
+                {#each workorders.message as workorder, i}
+                    <CollapsedWorkorder
+                        {workorder}
+                        index={i}
+                        statusList={statuses}
+                        travelStatusList={travelStatuses} />
+                {/each}
             </div>
-            {#each workorder.message as workorder, i}
-                <CollapsedWorkorder
-                    {workorder}
-                    index={i}
-                    statusList={statuses}
-                    travelStatusList={travelStatuses} />
-            {/each}
-        </div>
-    {:else}
-        <div class="container">
-            <Statuses
-                workorder={workorder.message[$activeWorkorder]}
-                statusList={statuses} />
-            <Location
-                travelStatusList={travelStatuses}
-                workorder={workorder.message[$activeWorkorder]} />
-        </div>
-        <div class="workorders">
-            <ExpandedWorkorder
-                workorder={workorder.message[$activeWorkorder]} />
-        </div>
-    {/if}
+        {:else}
+            <div class="container">
+                <Statuses
+                    workorder={workorders.message[$activeWorkorder]}
+                    statusList={statuses} />
+                <Location
+                    travelStatusList={travelStatuses}
+                    workorder={workorders.message[$activeWorkorder]} />
+            </div>
+            <div class="workorders">
+                <ExpandedWorkorder
+                    workorder={workorders.message[$activeWorkorder]} />
+            </div>
+        {/if}
+    {:catch error}
+        <div class="error">We weren't able to get the workorders</div>
+    {/await}
 </main>
 {#if $seeModal}
     <Modal />
+{/if}
+
+{#if !$isFormValid}
+    <Alert content={'Please check your form input!'} />
+{/if}
+
+{#if !$isNoteValid}
+    <Alert content={'Please enter valid notes!'} />
 {/if}
 
 <!-- TODO: How do I route to each workorder? Let's say for example we try to access offsite.repair/workorders/123589 to get a specific workorder. With the way the application is built, I could change the url to a certain workorder ID when it is clicked on but that's it.  -->

@@ -1,26 +1,61 @@
 <script>
+    import { isFormValid } from "../../../stores"
     export let handleEnd
     export let handleClick
 
-    let customer = {
-        first_name: "",
-        last_name: "",
-        phone: "",
-        email: "",
-    }
-
-    const nameRegex = /^[a-z]+$/i
+    const letterRegex = /^[a-z ,.'-]+$/i
     const phoneRegex = /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-    function checkInput() {
-        console.log(customer.email)
-        console.log(emailRegex.exec(customer.email))
+    let response
+    let customer = {
+        first_name: "",
+        last_name: "",
+        phone_number: "",
+        email_address: "",
+    }
+
+    $: isFirstNameValid = letterRegex.exec(customer.first_name) ? true : false
+    $: isLastNameValid = letterRegex.exec(customer.last_name) ? true : false
+    $: isPhoneValid = phoneRegex.exec(customer.phone_number) ? true : false
+    $: isEmailValid = emailRegex.exec(customer.email_address) ? true : false
+
+    function validation() {
+        if (
+            isFirstNameValid &&
+            isLastNameValid &&
+            isPhoneValid &&
+            isEmailValid
+        ) {
+            return true
+        } else {
+            $isFormValid = false
+            return false
+        }
+    }
+    async function postData(url = "", data = {}) {
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(data),
+        })
+        return response.json()
     }
 
     function handleFunctions() {
-        handleClick()
-        checkInput()
+        if (validation() == false) {
+            return
+        } else {
+            handleClick()
+            response = postData("http://offsite.repair/api/customers", customer)
+        }
     }
 </script>
 
@@ -46,6 +81,9 @@
         font-weight: bold;
         margin-bottom: 20px;
         text-align: center;
+    }
+    .invalid {
+        border-bottom: 2px solid #f44336;
     }
 
     .box {
@@ -109,19 +147,33 @@
         <div class="name">Create</div>
 
         <label for="name">First Name: </label>
-        <input type="text" bind:value={customer.first_name} required />
+        <input
+            type="text"
+            bind:value={customer.first_name}
+            class={isFirstNameValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Last Name: </label>
-        <input type="text" bind:value={customer.last_name} required />
+        <input
+            type="text"
+            bind:value={customer.last_name}
+            class={isLastNameValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Phone #: </label>
-        <input type="text" bind:value={customer.phone} required />
+        <input
+            type="text"
+            bind:value={customer.phone_number}
+            class={isPhoneValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Email: </label>
-        <input type="text" bind:value={customer.email} required />
+        <input
+            type="text"
+            bind:value={customer.email_address}
+            class={isEmailValid ? '' : 'invalid '}
+            required />
     </div>
 </div>
 
-<div class="button" on:click={handleFunctions} on:click={checkInput}>
-    Submit
-</div>
+<div class="button" on:click={handleFunctions}>Submit</div>

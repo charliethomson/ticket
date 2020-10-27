@@ -1,6 +1,11 @@
 <script>
     import Button from "./Button.svelte"
-    import { workorderExpanded, seeModal } from "../stores"
+    import {
+        workorderExpanded,
+        seeModal,
+        isNoteValid,
+        isFormValid,
+    } from "../stores"
 
     export let workorder
 
@@ -12,6 +17,7 @@
 
     function goToCreate() {
         $seeModal = true
+        $isNoteValid = true
     }
     function goToRepairQ() {
         alert("Switching the queue to repairs that need to completed")
@@ -21,6 +27,9 @@
     }
     function viewWorkorders() {
         $workorderExpanded = !$workorderExpanded
+        $seeModal = false
+        $isFormValid = true
+        $isNoteValid = true
         if (contentShown === true) {
             contentShown = false
             if (customerShown === true) customerShown = false

@@ -1,13 +1,66 @@
 <script>
+    import { isFormValid } from "../../../stores"
+
     export let handleEnd
     export let handleClick
 
+    const notWhitespaceRegex = /^(?!\s*$).+/
+
+    let response
     let device = {
         serial: "",
         model: "",
         time_quote: "",
         brief: "",
         password: "",
+    }
+
+    $: isSerialValid = notWhitespaceRegex.exec(device.serial) ? true : false
+    $: isModelValid = notWhitespaceRegex.exec(device.model) ? true : false
+    $: isTimeValid = notWhitespaceRegex.exec(device.time_quote) ? true : false
+    $: isBriefValid = notWhitespaceRegex.exec(device.brief) ? true : false
+    $: isPasswordValid = notWhitespaceRegex.exec(device.password) ? true : false
+
+    function validation() {
+        if (
+            isSerialValid &&
+            isModelValid &&
+            isTimeValid &&
+            isBriefValid &&
+            isPasswordValid
+        ) {
+            return true
+        } else {
+            $isFormValid = false
+            return false
+        }
+    }
+    async function postData(url = "", data = {}) {
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            body: JSON.stringify(data),
+        })
+        return response.json()
+    }
+
+    function handleFunctions() {
+        if (validation() == false) {
+            return
+        } else {
+            handleClick()
+            handleEnd()
+            // TODO: Talk to charlie about this shit lmfao
+            // We are on completely different pages ab devices >:-)
+            response = postData("http://offsite.repair/api/devices", device)
+        }
     }
 </script>
 
@@ -33,6 +86,10 @@
         font-weight: bold;
         margin-bottom: 20px;
         text-align: center;
+    }
+
+    .invalid {
+        border-bottom: 2px solid #f44336;
     }
 
     .box {
@@ -95,19 +152,40 @@
         <div class="name">Create</div>
 
         <label for="name">Serial/IMEI: </label>
-        <input type="text" bind:value={device.serial} required />
+        <input
+            type="text"
+            bind:value={device.serial}
+            class={isSerialValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Make/Model: </label>
-        <input type="text" bind:value={device.model} required />
+        <input
+            type="text"
+            bind:value={device.model}
+            class={isModelValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Time quote: </label>
-        <input type="text" bind:value={device.time_quote} required />
+        <input
+            type="text"
+            bind:value={device.time_quote}
+            class={isTimeValid ? '' : 'invalid '}
+            required />
+        <!-- TODO: Need to do a calender thing for this -->
 
         <label for="name">Brief Description: </label>
-        <input type="text" bind:value={device.brief} required />
+        <input
+            type="text"
+            bind:value={device.brief}
+            class={isBriefValid ? '' : 'invalid '}
+            required />
 
         <label for="name">Password: </label>
-        <input type="text" bind:value={device.password} required />
+        <input
+            type="text"
+            bind:value={device.password}
+            class={isPasswordValid ? '' : 'invalid '}
+            required />
     </div>
 </div>
-<div class="button" on:click={handleEnd}>Submit</div>
+<div class="button" on:click={handleFunctions}>Submit</div>

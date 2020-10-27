@@ -3,15 +3,17 @@
     import Customer from "./Forms/Customer.svelte"
     import Device from "./Forms/Device.svelte"
 
-    import { seeModal } from "../../stores"
+    import { seeModal, isFormValid } from "../../stores"
 
     let activeIndex = 1
 
     function handleClick() {
         activeIndex++
+        $isFormValid = true
     }
 
     function handleEnd() {
+        $isFormValid = true
         $seeModal = false
     }
 </script>
@@ -25,3 +27,5 @@
 {:else}
     <Device {handleEnd} {handleClick} />
 {/if}
+
+<!-- TODO: Do I even need this component? -->
