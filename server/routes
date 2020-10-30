@@ -163,7 +163,6 @@
             name: string | null,
             phone_number: string | null,
             email: string | null,
-            store_id: number | null,
         }
         MessageT = Customer[];
 

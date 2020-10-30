@@ -3,6 +3,7 @@
 macro_rules! validate_ok {
     ($body:expr, $if_ok:block) => {
         if let Err(e) = $body.validate() {
+            println!("{:?}", e);
             HttpResponse::BadRequest().json(OkMessage {
                 ok: false,
                 message: Some(

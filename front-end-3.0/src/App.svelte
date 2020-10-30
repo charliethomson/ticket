@@ -1,4 +1,5 @@
 <script>
+<<<<<<< HEAD
     import CollapsedWorkorder from "./Components/CollapsedWorkorder.svelte"
     import ExpandedWorkorder from "./Components/ExpandedWorkorder.svelte"
     import Modal from "./Components/Modal/Modal.svelte"
@@ -6,6 +7,15 @@
     import Statuses from "./Components/Statuses.svelte"
     import Location from "./Components/Location.svelte"
     import Alert from "./Components/Alert.svelte"
+=======
+    import CollapsedWorkorder from "./Components/CollapsedWorkorder.svelte";
+    import ExpandedWorkorder from "./Components/ExpandedWorkorder.svelte";
+    import Modal from "./Components/Modal/Modal.svelte";
+    import Nav from "./Components/Nav.svelte";
+    import Statuses from "./Components/Statuses.svelte";
+    import Location from "./Components/Location.svelte";
+    import Alert from "./Components/Alert.svelte";
+>>>>>>> 2fdab072a812063af80149bd61d03af7b795f029
 
     import {
         workorderExpanded,
@@ -13,7 +23,7 @@
         activeWorkorder,
         isNoteValid,
         isFormValid,
-    } from "./stores"
+    } from "./stores";
 
     const travelStatuses = [
         {
@@ -28,7 +38,7 @@
             status: "OG store",
             color: "yellow",
         },
-    ]
+    ];
 
     const statuses = [
         {
@@ -67,16 +77,16 @@
             status: "Unrepairable",
             color: "green",
         },
-    ]
+    ];
 
     async function API(url) {
-        const baseUrl = "http://offsite.repair/api/"
-        const response = await fetch(baseUrl + url)
-        const data = await response.json()
-        return data
+        const baseUrl = "http://offsite.repair/api/";
+        const response = await fetch(baseUrl + url);
+        const data = await response.json();
+        return data;
     }
 
-    let workordersPromise = API("workorders?active=true")
+    let workordersPromise = API("workorders?active=true");
 </script>
 
 <style>
@@ -169,11 +179,11 @@
 {/if}
 
 {#if !$isFormValid}
-    <Alert content={'Please check your form input!'} />
+    <Alert content="Please check your form input!" />
 {/if}
 
 {#if !$isNoteValid}
-    <Alert content={'Please enter valid notes!'} />
+    <Alert content="Please enter valid notes!" />
 {/if}
 
 <!-- TODO: How do I route to each workorder? Let's say for example we try to access offsite.repair/workorders/123589 to get a specific workorder. With the way the application is built, I could change the url to a certain workorder ID when it is clicked on but that's it.  -->
