@@ -5,7 +5,7 @@
     import Nav from "./Components/Nav.svelte"
     import Statuses from "./Components/Statuses.svelte"
     import Location from "./Components/Location.svelte"
-    import Alert from "./components/Alert.svelte"
+    import Alert from "./Components/Alert.svelte"
 
     import {
         workorderExpanded,
