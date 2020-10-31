@@ -1,13 +1,4 @@
 <script>
-<<<<<<< HEAD
-    import CollapsedWorkorder from "./Components/CollapsedWorkorder.svelte"
-    import ExpandedWorkorder from "./Components/ExpandedWorkorder.svelte"
-    import Modal from "./Components/Modal/Modal.svelte"
-    import Nav from "./Components/Nav.svelte"
-    import Statuses from "./Components/Statuses.svelte"
-    import Location from "./Components/Location.svelte"
-    import Alert from "./Components/Alert.svelte"
-=======
     import CollapsedWorkorder from "./Components/CollapsedWorkorder.svelte";
     import ExpandedWorkorder from "./Components/ExpandedWorkorder.svelte";
     import Modal from "./Components/Modal/Modal.svelte";
@@ -15,7 +6,6 @@
     import Statuses from "./Components/Statuses.svelte";
     import Location from "./Components/Location.svelte";
     import Alert from "./Components/Alert.svelte";
->>>>>>> 2fdab072a812063af80149bd61d03af7b795f029
 
     import {
         workorderExpanded,
