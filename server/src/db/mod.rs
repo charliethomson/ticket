@@ -1,8 +1,8 @@
-pub mod models;
 pub mod schema;
-pub use models::*;
+pub mod types;
 use mysql::{prelude::*, *};
 pub use schema::*;
+pub use types::*;
 
 const DB_URI: &str = "mysql://manager:SuperSecureManagerPassword1@localhost:3306/offsite";
 
@@ -28,3 +28,9 @@ pub trait Update<Changes: Options + Clone> {
 pub trait Insert {
     fn insert(&self) -> mysql::Result<Option<i64>>;
 }
+
+impl Update<WorkorderOptions> for WorkorderResponse {}
+impl Update<DeviceOptions> for Device {}
+impl Update<StoreOptions> for Store {}
+impl Update<CustomerOptions> for Customer {}
+impl Update<UserOptions> for User {}

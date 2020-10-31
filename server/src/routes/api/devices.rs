@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{models::Device, schema::DeviceOptions, Insert, Update},
+        db::{Device, DeviceOptions, Insert, Update},
         not_ok, ok,
         routes::OkMessage,
     },
