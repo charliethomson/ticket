@@ -24,7 +24,13 @@ async fn main() -> std::io::Result<()> {
                     .name("offsite")
                     .secure(false),
             ))
-            .wrap(Cors::new().send_wildcard().finish())
+            .wrap(
+                Cors::default()
+                    .allowed_origin("https://portal.ubif.net")
+                    .allowed_methods(vec!["POST", "GET"])
+                    .allowed_header(actix_web::http::header::CONTENT_TYPE)
+                    .max_age(3600),
+            )
             // .wrap(OffsiteHandler::new())
             .wrap(Logger::default())
             // Services
