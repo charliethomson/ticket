@@ -16,7 +16,7 @@ pub trait Options {
     fn into_update(&self) -> String;
 }
 
-pub trait Update<Changes: Options + Clone> {
+pub trait Update<Changes: Options> {
     fn update(&mut self, changes: Changes) -> mysql::Result<()> {
         let mut conn = crate::db::get_connection()?;
         let query = changes.into_update();

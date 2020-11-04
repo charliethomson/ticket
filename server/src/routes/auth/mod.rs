@@ -1,6 +1,15 @@
 mod login;
 pub use login::*;
 
+use {
+    crate::{
+        db::types::User,
+        not_ok, ok,
+        routes::{api::users::UserNew, OkMessage},
+    },
+    webforms::validate::ValidateForm,
+};
+
 #[derive(serde::Deserialize, Debug)]
 pub struct AuthRequest {
     code: String,
@@ -39,4 +48,21 @@ impl From<UserInfo> for crate::routes::UserNew {
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct UserPhoneNumber {
     value: String,
+}
+
+pub(in crate::routes::auth) async fn create_new_user_internal(body: UserNew) -> OkMessage<String> {
+    if let Err(errors) = body.validate() {
+        not_ok!(errors
+            .iter()
+            .fold(vec!["Validation Errors: ".to_owned()], |mut acc, cur| {
+                acc.push(format!("{:?}", cur));
+                acc
+            })
+            .join(", "))
+    } else {
+        match User::insert(body) {
+            Ok(id) => ok!(id.to_string()),
+            Err(e) => not_ok!(e.to_string()),
+        }
+    }
 }

@@ -57,6 +57,7 @@ pub struct CustomerOptions {
 pub struct UserOptions {
     pub id: Option<i64>,
     pub google_id: Option<i128>,
+    pub portal_id: Option<i64>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub phone_number: Option<String>,

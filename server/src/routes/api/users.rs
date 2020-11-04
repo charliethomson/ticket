@@ -38,25 +38,6 @@ pub async fn users_post(identity: Identity, web::Json(body): web::Json<UserNew>)
     })
 }
 
-// TODO REMOVE
-#[post("/api/users/internal")]
-pub async fn users_post_internal(
-    // TODO REMOVE
-    web::Json(body): web::Json<UserNew>,
-    // TODO REMOVE
-) -> HttpResponse {
-    validate_ok!(body, {
-        // TODO REMOVE
-        match User::insert(body) {
-            // TODO REMOVE
-            Ok(id) => HttpResponse::Ok().json(ok!(id)),
-            // TODO REMOVE
-            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-        }
-        // TODO REMOVE
-    })
-}
-
 #[get("/api/users")]
 pub async fn users_get(identity: Identity, body: Option<web::Query<UserOptions>>) -> HttpResponse {
     check_logged_in!(identity, {

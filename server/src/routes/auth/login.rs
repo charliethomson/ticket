@@ -5,7 +5,6 @@ use crate::{
 use actix_identity::Identity;
 use actix_web::{
     client::{Client, Connector},
-    dev::HttpResponseBuilder,
     get, web, HttpResponse,
 };
 use oauth2::{reqwest::http_client, AuthorizationCode, /*CsrfToken,*/ TokenResponse};
@@ -96,41 +95,29 @@ pub async fn auth_response(
     {
         // If we got a valid response from the API
         Ok(response) => {
-            // Set the authenticated flag in the session
             match response.hd.as_ref() {
                 // Require that the user signed in with a ubif email address
                 Some(hd) if hd == "ubreakifix.com" => {
                     // Insert or request the user id associated with the user information
                     // we got from google
-                    match client
-                        .post(format!("http://{}/api/users/internal", crate::URL))
-                        .send_json(&UserNew::from(response))
-                        .await
-                    {
-                        // If we got a good response from our api, attempt to parse the response as an OkMessage
-                        Ok(mut res) => match res.json::<OkMessage<i64>>().await {
-                            Ok(body) => {
-                                // Get the ID returned from our api, add it to the session storage,
-                                // and build a response redirecting to the index with the body we were returned
-                                if let Some(id) = body.message {
-                                    identity.remember(id.to_string());
-                                } else {
-                                    // This should never happen
-                                    unreachable!()
-                                }
-                                HttpResponse::Found()
-                                    .header(actix_web::http::header::LOCATION, "/")
-                                    .json(body)
-                            }
-                            Err(e) => HttpResponseBuilder::new(res.status()).json(OkMessage {
-                                ok: false,
-                                message: Some(format!("1: {}", e.to_string())),
-                            }),
-                        },
-                        Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                            ok: false,
-                            message: Some(format!("2: {}", e.to_string())),
-                        }),
+                    let response =
+                        crate::routes::auth::create_new_user_internal(UserNew::from(response))
+                            .await;
+
+                    if response.ok {
+                        // Get the ID returned from our api, add it to the session storage,
+                        // and build a response redirecting to the index with the body we were returned
+                        if let Some(id) = &response.message {
+                            identity.remember(id.to_string());
+                        } else {
+                            // This should never happen
+                            unreachable!()
+                        }
+                        HttpResponse::Found()
+                            .header(actix_web::http::header::LOCATION, "/")
+                            .json(response)
+                    } else {
+                        HttpResponse::InternalServerError().json(response)
                     }
                 }
                 _ => {

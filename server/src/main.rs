@@ -1,12 +1,12 @@
 mod db;
-mod handlers;
+// mod handlers;
 mod macros;
 mod routes;
 
 use actix_cors::Cors;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{middleware::Logger, App, HttpServer};
-use handlers::OffsiteHandler;
+// use handlers::OffsiteHandler;
 use rand::prelude::Rng;
 const URL: &str = "localhost:8080";
 #[actix_web::main]
@@ -29,7 +29,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             // Services
             // users
-            .service(users_post_internal)
             .service(users_post)
             .service(users_get)
             .service(users_put)

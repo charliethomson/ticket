@@ -1,5 +1,3 @@
-// TODO: Input validation for important fields
-
 use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
 
@@ -74,7 +72,8 @@ pub struct Customer {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
-    pub google_id: String,
+    pub google_id: Option<String>,
+    pub portal_id: Option<i64>,
     pub first_name: String,
     pub last_name: String,
     pub email: String,

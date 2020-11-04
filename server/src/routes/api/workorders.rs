@@ -89,6 +89,7 @@ pub async fn workorders_get(identity: Identity, req: HttpRequest) -> HttpRespons
             Ok(filter) => filter,
             Err(e) => return HttpResponse::BadRequest().json(not_ok!(e.to_string())),
         };
+        println!("{:?} -> {}", filter, filter.into_filter());
         let response = Workorder::find(filter);
 
         match response {
