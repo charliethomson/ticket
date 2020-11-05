@@ -1,7 +1,8 @@
 use crate::db::types::{Customer, Device, Note, Store, User, UserOptions};
-use schema_proc_macros::build_tuple;
+use schema_proc_macros::{build_tuple, table_name};
 use serde::{Deserialize, Serialize};
 
+#[table_name(workorders)]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct WorkorderResponse {
     pub workorder_id: i64,
@@ -18,6 +19,7 @@ pub struct WorkorderResponse {
     pub notes: Vec<NoteResponse>,
 }
 
+#[table_name(notes)]
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct NoteResponse {
@@ -44,6 +46,7 @@ impl std::convert::TryFrom<Note> for NoteResponse {
         })
     }
 }
+#[table_name(users)]
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct UserResponse {

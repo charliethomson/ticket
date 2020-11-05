@@ -1,8 +1,9 @@
 use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
 
+#[table_name(workorders)]
 #[build_tuple]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, OptionsJunior)]
 pub struct Workorder {
     #[db_name("id")]
     pub workorder_id: i64,
@@ -20,8 +21,9 @@ pub struct Workorder {
     pub brief: String,
 }
 
+#[table_name(devices)]
 #[build_tuple]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, OptionsJunior)]
 pub struct Device {
     pub id: i64,
     #[db_name("serial_no")]
@@ -33,8 +35,9 @@ pub struct Device {
     pub password: String,
 }
 
+#[table_name(stores)]
 #[build_tuple]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, OptionsJunior)]
 pub struct Store {
     pub id: i64,
     #[db_name("contact_name")]
@@ -48,6 +51,7 @@ pub struct Store {
     pub zip: String,
 }
 
+#[table_name(notes)]
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Note {
@@ -57,8 +61,9 @@ pub struct Note {
     pub next_update: Option<i64>,
 }
 
+#[table_name(customers)]
 #[build_tuple]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, OptionsJunior)]
 pub struct Customer {
     pub id: i64,
     pub first_name: String,
@@ -68,6 +73,7 @@ pub struct Customer {
     pub email: String,
 }
 
+#[table_name(users)]
 #[build_tuple]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct User {

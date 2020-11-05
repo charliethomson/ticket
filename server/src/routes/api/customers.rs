@@ -46,7 +46,6 @@ pub async fn customers_post(identity: Identity, Json(body): Json<CustomerNew>) -
     })
 }
 
-// TODO
 #[get("/api/customers")]
 pub async fn customers_get(identity: Identity, filter: Query<CustomerOptions>) -> HttpResponse {
     check_logged_in!(identity, {
@@ -57,7 +56,6 @@ pub async fn customers_get(identity: Identity, filter: Query<CustomerOptions>) -
     })
 }
 
-// TODO
 #[put("/api/customers")]
 pub async fn customers_put(identity: Identity, Json(body): Json<CustomerOptions>) -> HttpResponse {
     check_logged_in!(identity, {

@@ -1,6 +1,6 @@
 use crate::db::{
     types::{Customer, CustomerOptions, CustomerTuple},
-    Options,
+    Filter,
 };
 use mysql::prelude::Queryable;
 
