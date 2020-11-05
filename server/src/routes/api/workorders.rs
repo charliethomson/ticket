@@ -60,7 +60,7 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
                 return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
             }
             let wo = Workorder {
-                workorder_id: 0,
+                id: 0,
                 active: true,
                 origin: body.origin,
                 travel_status: body.travel_status,
@@ -89,7 +89,6 @@ pub async fn workorders_get(identity: Identity, req: HttpRequest) -> HttpRespons
             Ok(filter) => filter,
             Err(e) => return HttpResponse::BadRequest().json(not_ok!(e.to_string())),
         };
-        println!("{:?} -> {}", filter, filter.into_filter());
         let response = Workorder::find(filter);
 
         match response {

@@ -32,9 +32,7 @@ impl Note {
         )?;
 
         Ok(conn
-            .query_first::<i64, String>(
-                "SELECT max(LAST_INSERT_ID(note_id)) FROM notes".to_owned(),
-            )?
+            .query_first::<i64, String>("SELECT max(LAST_INSERT_ID(id)) FROM notes".to_owned())?
             .unwrap())
     }
 
@@ -42,7 +40,7 @@ impl Note {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
         let query = format!(
-            "select note_id from notes{};",
+            "select id from notes{};",
             if !filter.is_empty() {
                 format!(" where {}", filter)
             } else {
@@ -68,7 +66,7 @@ impl Note {
     pub fn by_id(id: i64) -> mysql::Result<Option<Self>> {
         let mut conn = crate::db::get_connection()?;
         if let Some(note_tuple) = conn.query_first::<NoteTuple, String>(format!(
-            "select contents, user, posted, next_update from notes where note_id={}",
+            "select contents, user, posted, next_update from notes where id={}",
             id
         ))? {
             Ok(Some(Note::from(note_tuple)))
@@ -80,7 +78,7 @@ impl Note {
     pub fn all_for_wo(wo_id: i64) -> mysql::Result<Option<Vec<Self>>> {
         let mut conn = crate::db::get_connection()?;
         let ids: Vec<i64> =
-            conn.query::<i64, String>(format!("select note_id from notes where wo_key={}", wo_id))?;
+            conn.query::<i64, String>(format!("select id from notes where wo_key={}", wo_id))?;
 
         Ok(Some(
             ids.iter()

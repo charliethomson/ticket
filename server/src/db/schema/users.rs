@@ -11,6 +11,9 @@ use {
 
 impl User {
     pub fn insert(user: UserNew) -> mysql::Result<i64> {
+        if let Ok(Some(id)) = crate::db::exists("users".into(), UserOptions::from(user.clone())) {
+            return Ok(id);
+        }
         let mut conn = crate::db::get_connection()?;
         match conn.exec_drop(
             "insert into users (
@@ -37,7 +40,7 @@ impl User {
             // Duplicate user
             Err(mysql::Error::MySqlError(mysql::error::MySqlError { code: 1062, .. })) => {
                 Ok(User::find(UserOptions {
-                    google_id: Some(user.google_id),
+                    google_id: Some(user.google_id.to_string()),
                     ..UserOptions::default()
                 })?
                 // Unwraps are safe because of the error type, we _will_ find something

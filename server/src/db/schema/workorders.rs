@@ -12,7 +12,6 @@ impl Workorder {
     pub fn find(filter: WorkorderOptions) -> mysql::Result<Vec<WorkorderResponse>> {
         let mut conn = crate::db::get_connection()?;
         let filter = filter.into_filter();
-        dbg!(filter.clone());
         let query = format!(
             "select id from workorders{};",
             if !filter.is_empty() {

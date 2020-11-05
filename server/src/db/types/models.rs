@@ -2,10 +2,10 @@ use schema_proc_macros::*;
 use serde::{Deserialize, Serialize};
 
 #[build_tuple]
+#[into_options]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Workorder {
-    #[db_name("id")]
-    pub workorder_id: i64,
+    pub id: i64,
     pub active: bool,
     pub origin: i64,
     pub created: i64,
@@ -21,6 +21,7 @@ pub struct Workorder {
 }
 
 #[build_tuple]
+#[into_options]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Device {
     pub id: i64,
@@ -34,6 +35,7 @@ pub struct Device {
 }
 
 #[build_tuple]
+#[into_options]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Store {
     pub id: i64,
@@ -58,6 +60,7 @@ pub struct Note {
 }
 
 #[build_tuple]
+#[into_options]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
 pub struct Customer {
     pub id: i64,
@@ -69,6 +72,7 @@ pub struct Customer {
 }
 
 #[build_tuple]
+#[into_options]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,

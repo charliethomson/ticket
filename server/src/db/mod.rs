@@ -17,7 +17,7 @@ pub trait Options {
 }
 
 pub trait Update<Changes: Options> {
-    fn update(&mut self, changes: Changes) -> mysql::Result<()> {
+    fn update(&mut self, changes: Changes) -> Result<()> {
         let mut conn = crate::db::get_connection()?;
         let query = changes.into_update();
         conn.query::<Vec<_>, String>(query)?;
@@ -26,7 +26,7 @@ pub trait Update<Changes: Options> {
 }
 
 pub trait Insert {
-    fn insert(&self) -> mysql::Result<Option<i64>>;
+    fn insert(&self) -> Result<Option<i64>>;
 }
 
 impl Update<WorkorderOptions> for WorkorderResponse {}
@@ -34,3 +34,13 @@ impl Update<DeviceOptions> for Device {}
 impl Update<StoreOptions> for Store {}
 impl Update<CustomerOptions> for Customer {}
 impl Update<UserOptions> for User {}
+
+// TODO: Proc-macroize
+pub fn exists<Filter: Options>(table: String, filter: Filter) -> Result<Option<i64>> {
+    let mut conn = get_connection()?;
+    conn.query_first(format!(
+        "select id from {} where {} limit 1;",
+        table,
+        filter.into_filter()
+    ))
+}

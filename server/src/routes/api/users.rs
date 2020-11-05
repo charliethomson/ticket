@@ -14,13 +14,25 @@ use {
     webforms::validate::*,
 };
 
-#[derive(Serialize, Deserialize, ValidateForm)]
+#[derive(Serialize, Deserialize, ValidateForm, Clone)]
 pub struct UserNew {
     pub google_id: i128,
     pub first_name: String,
     pub last_name: String,
     #[validate(email)]
     pub email: String,
+} //TODO: REMOVE
+impl From<UserNew> for UserOptions {
+    fn from(new: UserNew) -> UserOptions {
+        UserOptions {
+            id: None,
+            google_id: Some(new.google_id.to_string()),
+            portal_id: None,
+            first_name: Some(new.first_name),
+            last_name: Some(new.last_name),
+            email: Some(new.email),
+        }
+    }
 }
 
 #[post("/api/users")]
