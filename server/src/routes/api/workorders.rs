@@ -10,22 +10,14 @@ use {
 #[derive(Serialize, Deserialize, ValidateForm)]
 pub struct WorkorderNew {
     pub origin: i64,
-    pub travel_status: i64,
+    pub travel_status: Option<i64>,
     pub quoted_time: Option<i64>,
-    pub status: i64,
+    pub status: Option<i64>,
     pub location: Option<String>,
     pub customer: i64, // Customer ID
     pub device: i64,   // Device ID
     #[validate(max_length = 144)]
     pub brief: String,
-    pub initial_note: InitialNote,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct InitialNote {
-    pub user: i64,
-    pub contents: String,
-    pub next_update: Option<i64>,
 }
 
 // API call to create and handle making a new workorder
@@ -34,10 +26,11 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
     check_logged_in!(identity, {
         validate_ok!(body, {
             let note = Note {
-                user: body.initial_note.user,
+                // TODO;
+                user: identity.identity().unwrap().parse().unwrap(),
                 created: Utc::now().timestamp(),
-                next_update: body.initial_note.next_update,
-                contents: body.initial_note.contents.clone(),
+                next_update: None,
+                contents: body.brief.clone(),
             };
 
             let mut conn = match crate::db::get_connection() {
@@ -63,10 +56,12 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
                 id: 0,
                 active: true,
                 origin: body.origin,
-                travel_status: body.travel_status,
+                // TODO: Get default value from justin
+                travel_status: body.travel_status.unwrap_or(0),
                 created: Utc::now().timestamp(),
                 quoted_time: body.quoted_time,
-                status: body.status,
+                // TODO: Get default value from justin
+                status: body.status.unwrap_or(0),
                 location: body.location.clone(),
                 customer: body.customer,
                 device: body.device,
