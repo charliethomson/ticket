@@ -1,21 +1,18 @@
 CREATE TABLE users (
     id BIGINT NOT NULL AUTO_INCREMENT,
     CONSTRAINT `pk_user_id` PRIMARY KEY (id),
-    google_id BINARY(32) NOT NULL,
+    google_id BINARY(32),
     CONSTRAINT `unq_google_id` UNIQUE (google_id),
+    portal_id BIGINT,
+    CONSTRAINT `unq_portal_id` UNIQUE (portal_id),
+    CONSTRAINT `or_google_portal` CHECK (
+        portal_id IS NOT NULL
+        OR google_id IS NOT NULL
+    ),
     first_name VARCHAR(25) NOT NULL,
     last_name VARCHAR(25) NOT NULL,
-    email VARCHAR(50) NOT NULL
-);
-CREATE TABLE notes (
-    note_id BIGINT NOT NULL AUTO_INCREMENT,
-    CONSTRAINT `pk_note_id` PRIMARY KEY (note_id),
-    wo_key INT NOT NULL,
-    contents TEXT NOT NULL,
-    user BIGINT NOT NULL,
-    CONSTRAINT `fk_user_id` FOREIGN KEY (user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT,
-    posted int NOT NULL,
-    next_update int
+    email VARCHAR(50) NOT NULL,
+    CONSTRAINT `unq_user_email` UNIQUE (email)
 );
 CREATE TABLE stores (
     id BIGINT NOT NULL AUTO_INCREMENT,
@@ -65,4 +62,15 @@ CREATE TABLE workorders (
     device BIGINT NOT NULL,
     CONSTRAINT `fk_device_id` FOREIGN KEY (device) REFERENCES devices (id) ON DELETE CASCADE ON UPDATE RESTRICT,
     brief VARCHAR(144) NOT NULL
+);
+CREATE TABLE notes (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    CONSTRAINT `pk_note_id` PRIMARY KEY (id),
+    wo_key BIGINT NOT NULL,
+    CONSTRAINT `fk_wo_key` FOREIGN KEY (wo_key) REFERENCES workorders (id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    contents TEXT NOT NULL,
+    user BIGINT NOT NULL,
+    CONSTRAINT `fk_user_id` FOREIGN KEY (user) REFERENCES users (id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    posted int NOT NULL,
+    next_update int
 );

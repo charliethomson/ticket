@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{models::Store, schema::StoreOptions, Insert, Update},
+        db::{Insert, Store, StoreOptions, Update},
         ok,
         routes::OkMessage,
         validate_ok,

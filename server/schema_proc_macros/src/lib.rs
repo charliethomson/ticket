@@ -30,6 +30,23 @@ fn get_types(data: &syn::Data) -> Vec<(proc_macro2::Ident, syn::Type)> {
     map
 }
 
+fn is_option(ty: &syn::Type) -> bool {
+    match ty.to_owned() {
+        syn::Type::Path(syn::TypePath {
+            path: syn::Path { segments, .. },
+            ..
+        }) => match segments.iter().next() {
+            Some(syn::PathSegment { ident, .. })
+                if ident == &syn::Ident::new("Option", proc_macro2::Span::call_site()) =>
+            {
+                true
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
 fn is_vec(ty: &syn::Type) -> bool {
     match ty.to_owned() {
         syn::Type::Path(syn::TypePath {
@@ -107,7 +124,7 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
         map.intersection_with(get_types(&data).into(), |db_field, ty| (db_field, ty));
 
     let get_value = quote! {
-        match format!("{:?}", __value).as_str() {
+        match format!("{}", __value).as_str() {
             "true" => "1",
             "false" => "0",
             e => &e
@@ -128,7 +145,7 @@ pub fn derive_options(input: TokenStream) -> TokenStream {
             quote!{
                 if let Some(__value) = self.#struct_name.clone() {
                     ____strs__.push(format!(
-                        "{}{}{}\"{}{}{}\"",
+                        "{}{}{}'{}{}{}'",
                         #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
                     ));
                 }
@@ -207,6 +224,11 @@ pub fn derive_insert(input: TokenStream) -> TokenStream {
         _ => unreachable!("Why did you try to derive on not a struct lol"),
     };
 
+    let options_ident = syn::Ident::new(
+        &format!("{}Options", struct_ident.to_string()),
+        proc_macro2::Span::call_site(),
+    );
+
     // Get the database table name based on the struct name
     let db_table: String = match format!("{}", struct_ident).as_str() {
         "Workorder" | "WorkorderResponse" => "workorders",
@@ -246,6 +268,9 @@ pub fn derive_insert(input: TokenStream) -> TokenStream {
     let gen = quote! {
         impl crate::db::Insert for #struct_ident {
             fn insert(&self) -> ::mysql::Result<Option<i64>> {
+                if let Ok(Some(id)) = crate::db::exists(#db_table.to_owned(), crate::db::#options_ident::from(self.clone())) {
+                    return Ok(Some(id))
+                }
                 use ::mysql::{params, prelude::Queryable};
                 let mut ___conn = crate::db::get_connection()?;
                 ___conn.exec_drop(
@@ -308,6 +333,50 @@ pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
                 let (#names) = tuple;
                 #struct_ident {
                     #names
+                }
+            }
+        }
+    };
+    gen.into()
+}
+
+#[proc_macro_attribute]
+pub fn into_options(_: TokenStream, input: TokenStream) -> TokenStream {
+    let original_input = TokenStream2::from(input.clone());
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+    let struct_ident = input.ident;
+    let options_ident = syn::Ident::new(
+        &format!("{}Options", struct_ident),
+        proc_macro2::Span::call_site(),
+    );
+
+    let idents = get_types(&input.data);
+
+    let mapping = idents
+        .iter()
+        .map(|(ident, ty)| {
+            if is_option(ty) {
+                quote! {
+                    #ident: ___struct.#ident,
+                }
+            } else {
+                quote! {
+                    #ident: Some(___struct.#ident),
+                }
+            }
+        })
+        .fold(TokenStream2::new(), |mut acc, cur| {
+            acc.extend(cur);
+            acc
+        });
+
+    let gen = quote! {
+        #original_input
+
+        impl From<#struct_ident> for crate::db::#options_ident {
+            fn from(___struct: #struct_ident) -> crate::db::#options_ident {
+                crate::db::#options_ident {
+                    #mapping
                 }
             }
         }

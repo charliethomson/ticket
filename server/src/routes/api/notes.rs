@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{models::Note, schema::NotesOptions},
+        db::{Note, NotesOptions},
         not_ok, ok,
         routes::OkMessage,
     },

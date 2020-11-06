@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{models::User, schema::UserOptions, Update},
+        db::{Update, User, UserOptions},
         not_ok, ok,
         routes::OkMessage,
         validate_ok,
@@ -14,13 +14,25 @@ use {
     webforms::validate::*,
 };
 
-#[derive(Serialize, Deserialize, ValidateForm)]
+#[derive(Serialize, Deserialize, ValidateForm, Clone)]
 pub struct UserNew {
     pub google_id: i128,
     pub first_name: String,
     pub last_name: String,
     #[validate(email)]
     pub email: String,
+} //TODO: REMOVE
+impl From<UserNew> for UserOptions {
+    fn from(new: UserNew) -> UserOptions {
+        UserOptions {
+            id: None,
+            google_id: Some(new.google_id.to_string()),
+            portal_id: None,
+            first_name: Some(new.first_name),
+            last_name: Some(new.last_name),
+            email: Some(new.email),
+        }
+    }
 }
 
 #[post("/api/users")]
@@ -35,25 +47,6 @@ pub async fn users_post(identity: Identity, web::Json(body): web::Json<UserNew>)
                 Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
-    })
-}
-
-// TODO REMOVE
-#[post("/api/users/internal")]
-pub async fn users_post_internal(
-    // TODO REMOVE
-    web::Json(body): web::Json<UserNew>,
-    // TODO REMOVE
-) -> HttpResponse {
-    validate_ok!(body, {
-        // TODO REMOVE
-        match User::insert(body) {
-            // TODO REMOVE
-            Ok(id) => HttpResponse::Ok().json(ok!(id)),
-            // TODO REMOVE
-            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-        }
-        // TODO REMOVE
     })
 }
 

@@ -1,4 +1,7 @@
 
+GET requests are shown here as json objects, but they are requested as 
+query strings
+
 /api:
     :: yields {
         ok: boolean,
@@ -8,72 +11,83 @@
     /workorders:
         POST : {
             origin: number,
-            travel_status: string,
-            quoted_time: number | null, // (unix timestamp)
-            status: string,
-            customer: number, // (customer id)
-            device: number, // (device id)
-            brief: string, 
+            travel_status: number,
+            quoted_time: number | null,
+            status: number,
+            location: string | null,
+            customer: number, // Customer ID
+            device: number,   // Device ID
+            // max_length = 144
+            brief: string,
             initial_note: {
-                user: number, // user id for the user creating the workorder
+                user: number,
                 contents: string,
-                next_update: number | null // (unix timestamp)
-            }
+                next_update: number | null,
+            },
         }
         MessageT = number; // Id of inserted workorder
         
         GET : null | {
             id: number | null,
+            active: boolean | null,
             origin: number | null,
-            travel_status: string | null,
+            travel_status: number | null,
             created: number | null,
             quoted_time: number | null,
-            status: string | null,
+            status: number[] | null,
             customer: number | null,
             device: number | null,
-            brief: string | null
+            brief: string | null,
         }
         MessageT = Workorder[]; // Workorders matching the filter
 
         PUT : {
             id: number,
+            active: boolean | null,
             origin: number | null,
-            travel_status: string | null,
+            travel_status: number | null,
             created: number | null,
             quoted_time: number | null,
-            status: string | null,
+            status: number[] | null,
             customer: number | null,
             device: number | null,
-            brief: string | null
+            brief: string | null,
         }
         MessageT = ok ? null : string;
 
     /users:
         POST : {
-            name: string,
-            phone_number: string,
-            // TODO More attrs for the user lol
+            // TODO: remove
+            google_id: BigInt,
+            first_name: string,
+            last_name: string,
+            email: string,
         },
         MessageT = number; // Id of the inserted user
 
         GET : {
             id: number | null,
-            name: string | null,
+            google_id: BigInt | null,
+            first_name: string | null,
+            last_name: string | null,
             phone_number: string | null,
+            email: string | null,
         }
         MessageT = User[]; // Users matching the filter
 
         PUT : {
             id: number,
-            name: string | null,
+            google_id: BigInt | null,
+            first_name: string | null,
+            last_name: string | null,
             phone_number: string | null,
+            email: string | null,
         }
         MessageT = ok ? null : string;
         
     /stores:
         POST : {
             name: string,
-            contact_name: string,
             phone_number: string,
             email: string,
             address: string,
@@ -86,7 +100,6 @@
         GET : {
             id: number | null,
             name: string | null,
-            contact_name: string | null,
             phone_number: string | null,
             email: string | null,
             address: string | null,
@@ -94,12 +107,11 @@
             state: string | null,
             zip: string | null,
         }
-        MessageT = User[]; // Stores matching the filter
+        MessageT = Store[]; // Stores matching the filter
 
         PUT : {
             id: number,
             name: string | null,
-            contact_name: string | null,
             phone_number: string | null,
             email: string | null,
             address: string | null,
@@ -142,7 +154,7 @@
         MessageT = Device[];
 
         PUT : {
-            id: number | null,
+            id: number,
             serial: string | null,
             name: string | null,
             password: string | null,
@@ -151,24 +163,27 @@
 
     /customers:
         POST : {
-            name: string,
+            first_name: string,
+            last_name: string,
             phone_number: string,
             email_address: string,
-            store_id: number,
         }
         MessageT = number;
 
         GET : {
             id: number | null,
-            name: string | null,
+            first_name: string | null,
+            last_name: string | null,
             phone_number: string | null,
             email: string | null,
+            store_id: number | null,
         }
         MessageT = Customer[];
 
         PUT : {
             id: number,
-            name: string | null,
+            first_name: string | null,
+            last_name: string | null,
             phone_number: string | null,
             email: string | null,
             store_id: number | null,
