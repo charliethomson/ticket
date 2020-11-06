@@ -1,5 +1,5 @@
 <script>
-    export let travelStatusList
+    export let travelStatuses
     export let workorder
 
     let activeIndex = workorder.travel_status
@@ -69,7 +69,7 @@
 <div class="location">
     <div class="inactive-statuses">
         {#if statusesActive}
-            {#each travelStatusList as { status, color }, i}
+            {#each travelStatuses as { status, color }, i}
                 <div
                     class={'status ' + color}
                     on:click={() => {
@@ -82,9 +82,9 @@
         {/if}
     </div>
     <div
-        class={'active-status ' + travelStatusList[activeIndex].color}
+        class={'active-status ' + travelStatuses[activeIndex].color}
         on:click={handleClick}>
-        {travelStatusList[activeIndex].status}
+        {travelStatuses[activeIndex].status}
     </div>
     <input
         type="text"

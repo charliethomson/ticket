@@ -1,6 +1,6 @@
 <script>
     export let workorder
-    export let statusList
+    export let statuses
 
     let statusesShown = false
     let indexShown = workorder.status
@@ -103,14 +103,14 @@
 
 <div class="statuses">
     <div
-        class={'active-status ' + statusList[indexShown].color}
+        class={'active-status ' + statuses[indexShown].color}
         on:click={showStatuses}>
-        {statusList[indexShown].status}
+        {statuses[indexShown].status}
     </div>
 
     {#if statusesShown}
         <div class="status-container">
-            {#each statusList as { status, color }, i}
+            {#each statuses as { status, color }, i}
                 {#if i != indexShown}
                     <div
                         class={'status ' + color + '-hover' + (statusesShown ? ' shown' : '')}

@@ -1,8 +1,12 @@
 <script>
-    import Note from "./Note.svelte"
-    import { isNoteValid } from "../stores"
+    import Container from "../Container.svelte"
+    import Note from "./Expanded/Note.svelte"
+    import Location from "../Statuses/Location.svelte"
+    import Statuses from "../Statuses/Statuses.svelte"
 
     export let workorder
+    export let statuses
+    export let travelStatuses
 
     const notWhiteSpaceRegex = /^(?!\s*$).+/
 
@@ -11,16 +15,23 @@
     $: currentNoteValid = notWhiteSpaceRegex.exec(currentNote)
 
     function createNote() {
-        if (currentNoteValid) {
-            alert("Note created")
-            $isNoteValid = true
-        } else {
-            $isNoteValid = false
-        }
+        alert("Note created")
+        // if (currentNoteValid) {
+        //     alert("Note created")
+        //     $isNoteValid = true
+        // } else {
+        //     $isNoteValid = false
+        // }
     }
 </script>
 
 <style>
+    .statuses {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
     .create-note {
         display: flex;
         align-items: center;
@@ -40,6 +51,11 @@
     input:focus {
         border: 2px solid #e3e3e3;
     }
+
+    .valid:focus {
+        border: 2px solid #388e3c;
+    }
+
     .invalid:focus {
         border: 2px solid #f44336;
     }
@@ -53,13 +69,18 @@
     }
 </style>
 
-<div class="container">
+<div class="statuses">
+    <Statuses {workorder} {statuses} />
+    <Location {travelStatuses} {workorder} />
+</div>
+
+<Container>
     <div class="create-note">
         <input
             type="text"
             placeholder="Enter notes here..."
             bind:value={currentNote}
-            class={currentNoteValid ? '' : 'invalid '} />
+            class={currentNoteValid ? 'valid' : 'invalid '} />
         <div class="button" on:click={createNote}>Create note</div>
     </div>
     <div class="notes">
@@ -70,6 +91,6 @@
                 notes={note.contents} />
         {/each}
     </div>
-</div>
+</Container>
 
 <!-- TODO: Map the user id that I get from the API to an actual user -->

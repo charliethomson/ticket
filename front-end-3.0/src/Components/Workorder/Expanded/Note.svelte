@@ -7,6 +7,9 @@
 </script>
 
 <style>
+    .container {
+        margin-top: 40px;
+    }
     .top {
         display: flex;
         border-bottom: 1px solid #e3e3e3;
