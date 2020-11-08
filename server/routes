@@ -11,19 +11,14 @@ query strings
     /workorders:
         POST : {
             origin: number,
-            travel_status: number,
+            travel_status: number | null,
             quoted_time: number | null,
-            status: number,
+            status: number | null,
             location: string | null,
             customer: number, // Customer ID
             device: number,   // Device ID
             // max_length = 144
             brief: string,
-            initial_note: {
-                user: number,
-                contents: string,
-                next_update: number | null,
-            },
         }
         MessageT = number; // Id of inserted workorder
         
@@ -124,9 +119,7 @@ query strings
     /notes:
         POST : {
             workorder_id: number,
-            user_id: number,
             contents: string,
-            next_update: number | null,
         }
         MessageT = number; // ID of inserted note
 

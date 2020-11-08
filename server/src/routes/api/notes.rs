@@ -18,18 +18,16 @@ use {
 #[derive(Serialize, Deserialize)]
 pub struct NotesNew {
     workorder_id: i64,
-    user_id: i64,
     contents: String,
-    next_update: Option<i64>,
 }
 
 #[post("/api/notes")]
 pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpResponse {
     check_logged_in!(identity, {
         let note = Note {
-            user: body.user_id,
+            user: identity.identity().unwrap().parse().unwrap(),
             created: Utc::now().timestamp(),
-            next_update: body.next_update,
+            next_update: None,
             contents: body.contents,
         };
 

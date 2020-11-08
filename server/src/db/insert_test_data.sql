@@ -69,6 +69,50 @@ values (
         1,
         "Test brief"
     );
+insert into workorders (
+        active,
+        origin,
+        created,
+        quoted,
+        workorder_status,
+        travel_status,
+        customer,
+        device,
+        brief
+    )
+values (
+        0,
+        1,
+        UNIX_TIMESTAMP(),
+        UNIX_TIMESTAMP(),
+        0,
+        0,
+        1,
+        1,
+        "Inactive Workorder"
+    );
+insert into workorders (
+        active,
+        origin,
+        created,
+        quoted,
+        workorder_status,
+        travel_status,
+        customer,
+        device,
+        brief
+    )
+values (
+        1,
+        1,
+        UNIX_TIMESTAMP(),
+        UNIX_TIMESTAMP(),
+        6,
+        0,
+        1,
+        1,
+        "Status 6 ? Lol"
+    );
 insert into notes (
         wo_key,
         contents,
