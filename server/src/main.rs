@@ -26,7 +26,8 @@ async fn main() -> std::io::Result<()> {
             ))
             .wrap(
                 Cors::default()
-                    .allowed_origin("https://portal.ubif.net")
+                    .allow_any_origin()
+                    // .allowed_origin("https://portal.ubif.net")
                     .allowed_methods(vec!["POST", "GET"])
                     .allowed_header(actix_web::http::header::CONTENT_TYPE)
                     .max_age(3600),
