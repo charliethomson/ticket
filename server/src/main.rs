@@ -26,8 +26,7 @@ async fn main() -> std::io::Result<()> {
             ))
             .wrap(
                 Cors::default()
-                    // .allow_any_origin()
-                    .allowed_origin("*")
+                    .allow_any_origin()
                     // .allowed_origin("https://portal.ubif.net")
                     .allowed_methods(vec!["POST", "GET"])
                     .allowed_header(actix_web::http::header::CONTENT_TYPE)

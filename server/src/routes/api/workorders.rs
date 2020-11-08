@@ -27,7 +27,7 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
         validate_ok!(body, {
             let note = Note {
                 // TODO;
-                user: identity.identity().unwrap().parse().unwrap(),
+                user: identity.identity().unwrap_or("1".into()).parse().unwrap(),
                 created: Utc::now().timestamp(),
                 next_update: None,
                 contents: body.brief.clone(),
@@ -40,18 +40,18 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
 
             // this is a solid enough approximation of the workorder id, leaving a FIXME JIC
             // FIXME:
-            use mysql::prelude::Queryable;
-            let wo_id = match conn.query_first::<Option<i64>, &'static str>(
-                "select max(id) as max_id from workorders",
-            ) {
-                Ok(Some(Some(prev_max))) => prev_max + 1,
-                Ok(_) => 1,
-                Err(e) => return HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-            };
-
-            if let Err(e) = note.insert(wo_id) {
-                return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
-            }
+            // use mysql::prelude::Queryable;
+            // let wo_id = match conn.query_first::<Option<i64>, &'static str>(
+            //     "select max(id) as max_id from workorders",
+            // ) {
+            //     Ok(Some(Some(prev_max))) => prev_max + 1,
+            //     Ok(_) => 1,
+            //     Err(e) => return HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
+            // };
+            // println!("Note: {:#?}, wo_id: {}", note, wo_id);
+            // if let Err(e) = note.insert(wo_id) {
+            //     return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
+            // }
             let wo = Workorder {
                 id: 0,
                 active: true,
@@ -69,7 +69,18 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
             };
 
             match wo.insert() {
-                Ok(id) => HttpResponse::Ok().json(ok!(id)),
+                Ok(id) => {
+                    if let Some(id) = id {
+                        if let Err(e) = note.insert(id) {
+                            return HttpResponse::InternalServerError()
+                                .json(not_ok!(e.to_string()));
+                        } else {
+                            HttpResponse::Ok().json(ok!(id))
+                        }
+                    } else {
+                        unreachable!()
+                    }
+                }
                 Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
