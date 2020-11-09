@@ -7,9 +7,14 @@
     import Location from "./Components/Statuses/Location.svelte"
     import Alert from "./Components/Alert.svelte"
 
-    import { component, activeWorkorder, alertContent } from "./stores"
+    import {
+        component,
+        activeWorkorder,
+        alertContent,
+        isFormValid,
+    } from "./stores"
 
-    $component = Form
+    $component = CollapsedWorkorders
 
     const travelStatuses = [
         {
@@ -167,14 +172,17 @@
         ],
     }
 
-    // async function API(url) {
-    //     const baseUrl = "http://offsite.repair/api/"
-    //     const response = await fetch(baseUrl + url)
-    //     const data = await response.json()
-    //     return data
-    // }
+    async function API(url) {
+        const baseUrl = "http://offsite.repair/api/"
+        const response = await fetch(baseUrl + url)
+        const data = await response.json()
+        return data
+    }
 
-    // let workordersPromise = API("workorders?active=true")
+    let workordersPromise = API("workorders?active=true").then((data) => {
+        console.log(data)
+        return data
+    })
 </script>
 
 <style>
@@ -198,12 +206,18 @@
 <main>
     <Nav workorder={workorders.message[$activeWorkorder]} />
 
-    <svelte:component
-        this={$component ? $component : CollapsedWorkorders}
-        workorders={workorders.message}
-        workorder={workorders.message[$activeWorkorder]}
-        {statuses}
-        {travelStatuses} />
+    {#await workordersPromise}
+        <div class="waiting">Waiting for workorders to load...</div>
+    {:then workorders}
+        <svelte:component
+            this={$component ? $component : CollapsedWorkorders}
+            workorders={workorders.message}
+            workorder={workorders.message[$activeWorkorder]}
+            {statuses}
+            {travelStatuses} />
+    {:catch error}
+        <div class="error">{error.message}</div>
+    {/await}
 </main>
 
 {#if $alertContent}

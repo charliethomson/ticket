@@ -1,5 +1,6 @@
 <script>
     import Container from "../Container.svelte"
+    import { isFormValid } from "../../stores"
 
     let store = {
         props: {
@@ -16,19 +17,20 @@
 
     let customer = {
         props: {
-            first_name: "",
-            last_name: "",
-            phone_number: "",
-            email_address: "",
+            first_name: "asd",
+            last_name: "asd",
+            phone_number: "555-555-1234",
+            email_address: "a@a.a",
         },
         response: {},
     }
 
     let device = {
         props: {
-            serial: "",
-            name: "",
-            password: "",
+            serial: "123",
+            name: "123",
+            password: "123",
+            customer_id: null,
         },
         response: {},
     }
@@ -47,29 +49,19 @@
     const notWhitespaceRegex = /^(?!\s*$).+/
 
     //Store
-    $: isNameValid = letterRegex.exec(store.props.name) ? true : false
+    $: isNameValid = letterRegex.exec(store.props.name)
     $: isStorePhoneValid = phoneRegex.exec(store.props.phone_number)
-        ? true
-        : false
-    $: isStoreEmailValid = emailRegex.exec(store.props.email) ? true : false
-    $: isAddressValid = addressRegex.exec(store.props.address) ? true : false
-    $: isCityValid = letterRegex.exec(store.props.city) ? true : false
-    $: isStateValid = stateRegex.exec(store.props.state) ? true : false
-    $: isZipValid = zipRegex.exec(store.props.zip) ? true : false
+    $: isStoreEmailValid = emailRegex.exec(store.props.email)
+    $: isAddressValid = addressRegex.exec(store.props.address)
+    $: isCityValid = letterRegex.exec(store.props.city)
+    $: isStateValid = stateRegex.exec(store.props.state)
+    $: isZipValid = zipRegex.exec(store.props.zip)
 
     //Customer
     $: isFirstNameValid = letterRegex.exec(customer.props.first_name)
-        ? true
-        : false
     $: isLastNameValid = letterRegex.exec(customer.props.last_name)
-        ? true
-        : false
     $: isCustomerPhoneValid = phoneRegex.exec(customer.props.phone_number)
-        ? true
-        : false
     $: isCustomerEmailValid = emailRegex.exec(customer.props.email_address)
-        ? true
-        : false
 
     //Device
     $: isSerialValid = notWhitespaceRegex.exec(device.props.serial)
@@ -80,7 +72,56 @@
     $: isBriefValid = notWhitespaceRegex.exec(additional.brief)
     $: isQuotedTimeValid = notWhitespaceRegex.exec(additional.quoted_time)
 
-    $: console.log(isCustomerEmailValid)
+    function checkForm() {
+        $isFormValid =
+            isNameValid &&
+            isStorePhoneValid &&
+            isStorePhoneValid &&
+            isAddressValid &&
+            isCityValid &&
+            isZipValid &&
+            isFirstNameValid &&
+            isLastNameValid &&
+            isCustomerPhoneValid &&
+            isCustomerEmailValid &&
+            isPasswordValid &&
+            isBriefValid &&
+            isQuotedTimeValid
+    }
+
+    async function postData(url, data) {
+        const baseUrl = "http://offsite.repair/api/"
+        const response = await fetch(baseUrl + url, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        })
+        const res = await response.json()
+        return res
+    }
+
+    async function handleCreate() {
+        checkForm()
+        if ($isFormValid) {
+            store.response = await postData("stores", store.props)
+            customer.response = await postData("customers", customer.props)
+            device.props.customer_id = customer.response.message
+            device.response = await postData("devices", device.props)
+            const workorder = {
+                origin: store.response.message,
+                customer: customer.response.message,
+                device: device.response.message,
+                brief: additional.brief,
+            }
+            return await postData("workorders", workorder)
+        } else {
+            return
+        }
+    }
+    $: console.log($isFormValid)
 </script>
 
 <style>
@@ -326,7 +367,11 @@
                         class={isQuotedTimeValid ? 'valid' : 'invalid '} />
                 </div>
             </div>
-            <div class="button">Create Workorder</div>
+            <div
+                class="button"
+                on:click={() => handleCreate().then((res) => console.log(res))}>
+                Create Workorder
+            </div>
         </div>
     </div>
 </Container>
