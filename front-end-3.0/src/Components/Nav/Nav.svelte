@@ -1,32 +1,28 @@
 <script>
-    import Button from "../Button.svelte"
-    import Form from "../Form/Form.svelte"
-    import CollapsedWorkorders from "../Workorder/CollapsedWorkorders.svelte"
-    import ExpandedWorkorder from "../Workorder/ExpandedWorkorder.svelte"
+    import Button from "../Helpers/Button.svelte"
     import Tooltip from "../Tooltip/Tooltip.svelte"
     import Customer from "../Tooltip/Customer.svelte"
     import Device from "../Tooltip/Device.svelte"
-    import { component } from "../../stores"
-
-    export let workorder
+    import NavLink from "../Helpers/NavLink.svelte"
 
     let tooltip = null
     let tooltipShown = false
+    let url = ""
+    let parsedUrl = []
+    const clean = (s) => JSON.stringify(s.split("/").filter((s) => s))
 
-    let dateExpected = new Date(workorder.quoted_time * 1000).toDateString()
-
-    function goToForm() {
-        $component = Form
-    }
+    // function goToForm() {
+    //     $component = Form
+    // }
     function goToRepairQ() {
         alert("Switching the queue to repairs that need to completed")
     }
     function goToInProgress() {
         alert("Switching the queue to repairs in progress")
     }
-    function viewWorkorders() {
-        $component = CollapsedWorkorders
-    }
+    // function viewWorkorders() {
+    //     $component = CollapsedWorkorders
+    // }
     function showDevice() {
         tooltip = Device
         tooltipShown = !tooltipShown
@@ -35,6 +31,11 @@
         tooltip = Customer
         tooltipShown = !tooltipShown
     }
+    function urlChange() {
+        url = window.location.pathname + window.location.hash
+    }
+
+    //TODO: Nav doesn't reload when you go to the path /#/workorder *Reason for this is because URL is empty when you go to that route without clicking on a thing*
 </script>
 
 <style>
@@ -47,11 +48,13 @@
         font-size: 18px;
         margin-bottom: 40px;
     }
+
     .buttons {
         margin-left: 15px;
         position: relative;
         display: flex;
         cursor: pointer;
+        height: 100%;
     }
     .account {
         margin-right: 15px;
@@ -64,32 +67,49 @@
     }
 </style>
 
+<svelte:window on:hashchange={urlChange} />
+
 <div class="nav">
-    {#if $component === ExpandedWorkorder}
+    {#if url === '/#/workorder'}
         <div class="buttons">
-            <Button content="Create Workorder" handleClick={goToForm} />
-            <Button
+            <NavLink href="/#/create-workorder" title="Create Workorder" />
+
+            <!-- <Button
                 content="View All Workorders"
-                handleClick={viewWorkorders} />
+                handleClick={viewWorkorders} /> -->
+            <NavLink href="" title="View All Workorders" />
+
             <Button content="Device" handleClick={showDevice} />
             <Button content="Customer" handleClick={showCustomer} />
             {#if tooltipShown}
-                <Tooltip {workorder} {tooltip} {dateExpected} />
+                <Tooltip {tooltip} />
             {/if}
         </div>
-    {:else if $component === Form}
+    {:else if url === '/#/create-workorder'}
         <div class="buttons">
-            <Button
+            <!-- <Button
                 content="View All Workorders"
-                handleClick={viewWorkorders} />
-            <Button content="Repair Queue" handleClick={goToRepairQ} />
+                handleClick={viewWorkorders} /> -->
+            <NavLink href="" title="View All Workorders" />
+
+            <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
+            <NavLink href="repair-queue" title="Repair Queue" />
+
             <Button content="In Progress" handleClick={goToInProgress} />
         </div>
     {:else}
         <div class="buttons">
-            <Button content="Create Workorder" handleClick={goToForm} />
-            <Button content="Repair Queue" handleClick={goToRepairQ} />
-            <Button content="In Progress" handleClick={goToInProgress} />
+            <!-- <Button content="Create Workorder" handleClick={goToForm} /> -->
+
+            <NavLink href="/#/create-workorder" title="Create Workorder" />
+
+            <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
+
+            <NavLink href="repair-queue" title="Repair Queue" />
+
+            <!-- <Button content="In Progress" handleClick={goToInProgress} /> -->
+
+            <NavLink href="in-progress" title="In Progress" />
         </div>
     {/if}
 

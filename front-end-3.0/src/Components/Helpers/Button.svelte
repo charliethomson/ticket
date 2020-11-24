@@ -15,4 +15,6 @@
     }
 </style>
 
-<div class="button" on:click={handleClick}>{content}</div>
+<div class="button" on:click={handleClick}>
+    <slot>{content}</slot>
+</div>

@@ -1,10 +1,56 @@
 <script>
-    export let travelStatuses
-    export let workorder
+    import { activeWorkorder } from "../../stores"
+    export let travelStatuses = []
 
-    let activeIndex = workorder.travel_status
+    let workorders = [
+        {
+            id: 0,
+            active: true,
+            origin: 1,
+            travel_status: 1,
+            created: 1605187812,
+            quoted_time: 5,
+            status: 3,
+            customer: {
+                first_name: "Bob",
+                last_name: "Black",
+                phone_number: "111-111-1111",
+                email_address: "bobblack@gmail.com",
+            },
+            device: {
+                serial: "C1231234123",
+                name: "Macbook Air",
+                customer_id: 1,
+                password: "Blahblah",
+            },
+            brief: "Dropped and no worky",
+        },
+        {
+            id: 1,
+            active: true,
+            origin: 1,
+            travel_status: 1,
+            created: 1605187812,
+            quoted_time: 5,
+            status: 1,
+            customer: {
+                first_name: "Bob",
+                last_name: "Black",
+                phone_number: "111-111-1111",
+                email_address: "bobblack@gmail.com",
+            },
+            device: {
+                serial: "C1231234123",
+                name: "Macbook Air",
+                customer_id: 1,
+                password: "Blahblah",
+            },
+            brief: "Dropped and no worky",
+        },
+    ]
+    let workorder = workorders[$activeWorkorder]
+
     let statusesActive = false
-
     let newLocation = "C7"
 
     function handleClick() {
@@ -73,7 +119,7 @@
                 <div
                     class={'status ' + color}
                     on:click={() => {
-                        activeIndex = i
+                        workorder.travel_status = i
                         statusesActive = !statusesActive
                     }}>
                     {status}
@@ -82,9 +128,9 @@
         {/if}
     </div>
     <div
-        class={'active-status ' + travelStatuses[activeIndex].color}
+        class={'active-status ' + travelStatuses[workorder.travel_status].color}
         on:click={handleClick}>
-        {travelStatuses[activeIndex].status}
+        {travelStatuses[workorder.travel_status].status}
     </div>
     <input
         type="text"

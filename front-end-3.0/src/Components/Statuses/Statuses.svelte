@@ -1,52 +1,62 @@
 <script>
-    export let workorder
-    export let statuses
+    import { activeWorkorder } from "../../stores"
+    export let statuses = []
+
+    let workorders = [
+        {
+            id: 0,
+            active: true,
+            origin: 0,
+            travel_status: 1,
+            created: 1605187812,
+            quoted_time: 5,
+            status: 0,
+            customer: {
+                first_name: "Bob",
+                last_name: "Black",
+                phone_number: "111-111-1111",
+                email_address: "bobblack@gmail.com",
+            },
+            device: {
+                serial: "C1231234123",
+                name: "Macbook Air",
+                customer_id: 1,
+                password: "Blahblah",
+            },
+            brief: "Dropped and no worky",
+        },
+        {
+            id: 1,
+            active: true,
+            origin: 0,
+            travel_status: 1,
+            created: 1605187812,
+            quoted_time: 5,
+            status: 0,
+            customer: {
+                first_name: "Bob",
+                last_name: "Black",
+                phone_number: "111-111-1111",
+                email_address: "bobblack@gmail.com",
+            },
+            device: {
+                serial: "C1231234123",
+                name: "Macbook Air",
+                customer_id: 1,
+                password: "Blahblah",
+            },
+            brief: "Dropped and no worky",
+        },
+    ]
+    let workorder = workorders[$activeWorkorder]
 
     let statusesShown = false
-    let indexShown = workorder.status
-
-    // const statuses = [
-    //     {
-    //         status: "Awaiting Repair",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Quality Inspection",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Need to Order Parts",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Awaiting Callback",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Awaiting Device",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Awaiting Parts",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Repair in Progress",
-    //         color: "blue",
-    //     },
-    //     {
-    //         status: "Repaired",
-    //         color: "green",
-    //     },
-    //     {
-    //         status: "Unrepairable",
-    //         color: "green",
-    //     },
-    // ]
 
     function showStatuses() {
         statusesShown = !statusesShown
     }
+
+    //onMount request workorder @ activeWOid
 </script>
 
 <style>
@@ -103,19 +113,18 @@
 
 <div class="statuses">
     <div
-        class={'active-status ' + statuses[indexShown].color}
+        class={'active-status ' + statuses[workorder.status].color}
         on:click={showStatuses}>
-        {statuses[indexShown].status}
+        {statuses[workorder.status].status}
     </div>
 
     {#if statusesShown}
         <div class="status-container">
             {#each statuses as { status, color }, i}
-                {#if i != indexShown}
+                {#if i != workorder.status}
                     <div
                         class={'status ' + color + '-hover' + (statusesShown ? ' shown' : '')}
                         on:click={() => {
-                            indexShown = i
                             workorder.status = i
                             showStatuses()
                         }}>

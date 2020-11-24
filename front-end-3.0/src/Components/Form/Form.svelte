@@ -1,6 +1,8 @@
 <script>
-    import Container from "../Container.svelte"
-    import { isFormValid } from "../../stores"
+    import Container from "../Helpers/Container.svelte"
+    import { isFormValid, alertContent } from "../../stores"
+
+    let buttonText = "Create Workorder"
 
     let store = {
         props: {
@@ -49,28 +51,28 @@
     const notWhitespaceRegex = /^(?!\s*$).+/
 
     //Store
-    $: isNameValid = letterRegex.exec(store.props.name)
-    $: isStorePhoneValid = phoneRegex.exec(store.props.phone_number)
-    $: isStoreEmailValid = emailRegex.exec(store.props.email)
-    $: isAddressValid = addressRegex.exec(store.props.address)
-    $: isCityValid = letterRegex.exec(store.props.city)
-    $: isStateValid = stateRegex.exec(store.props.state)
-    $: isZipValid = zipRegex.exec(store.props.zip)
+    $: isNameValid = letterRegex.test(store.props.name)
+    $: isStorePhoneValid = phoneRegex.test(store.props.phone_number)
+    $: isStoreEmailValid = emailRegex.test(store.props.email)
+    $: isAddressValid = addressRegex.test(store.props.address)
+    $: isCityValid = letterRegex.test(store.props.city)
+    $: isStateValid = stateRegex.test(store.props.state)
+    $: isZipValid = zipRegex.test(store.props.zip)
 
     //Customer
-    $: isFirstNameValid = letterRegex.exec(customer.props.first_name)
-    $: isLastNameValid = letterRegex.exec(customer.props.last_name)
-    $: isCustomerPhoneValid = phoneRegex.exec(customer.props.phone_number)
-    $: isCustomerEmailValid = emailRegex.exec(customer.props.email_address)
+    $: isFirstNameValid = letterRegex.test(customer.props.first_name)
+    $: isLastNameValid = letterRegex.test(customer.props.last_name)
+    $: isCustomerPhoneValid = phoneRegex.test(customer.props.phone_number)
+    $: isCustomerEmailValid = emailRegex.test(customer.props.email_address)
 
     //Device
-    $: isSerialValid = notWhitespaceRegex.exec(device.props.serial)
-    $: isDeviceNameValid = notWhitespaceRegex.exec(device.props.name)
-    $: isPasswordValid = notWhitespaceRegex.exec(device.props.password)
+    $: isSerialValid = notWhitespaceRegex.test(device.props.serial)
+    $: isDeviceNameValid = notWhitespaceRegex.test(device.props.name)
+    $: isPasswordValid = notWhitespaceRegex.test(device.props.password)
 
     //Additonal
-    $: isBriefValid = notWhitespaceRegex.exec(additional.brief)
-    $: isQuotedTimeValid = notWhitespaceRegex.exec(additional.quoted_time)
+    $: isBriefValid = notWhitespaceRegex.test(additional.brief)
+    $: isQuotedTimeValid = notWhitespaceRegex.test(additional.quoted_time)
 
     function checkForm() {
         $isFormValid =
@@ -106,6 +108,7 @@
     async function handleCreate() {
         checkForm()
         if ($isFormValid) {
+            buttonText = "Workorders are loading..."
             store.response = await postData("stores", store.props)
             customer.response = await postData("customers", customer.props)
             device.props.customer_id = customer.response.message
@@ -116,12 +119,14 @@
                 device: device.response.message,
                 brief: additional.brief,
             }
-            return await postData("workorders", workorder)
+
+            await postData("workorders", workorder)
+            $alertContent = ""
+            // $component = CollapsedWorkorders
         } else {
-            return
+            $alertContent = "Your input in the form is invalid."
         }
     }
-    $: console.log($isFormValid)
 </script>
 
 <style>
@@ -370,7 +375,7 @@
             <div
                 class="button"
                 on:click={() => handleCreate().then((res) => console.log(res))}>
-                Create Workorder
+                {buttonText}
             </div>
         </div>
     </div>
