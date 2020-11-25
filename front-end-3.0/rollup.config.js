@@ -9,7 +9,7 @@ import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
 
-function serve() {
+function serve(cmd) {
     let server
 
     function toExit() {
@@ -21,7 +21,7 @@ function serve() {
             if (server) return
             server = require("child_process").spawn(
                 "npm",
-                ["run", "start", "--", "--dev"],
+                ["run", cmd, "--", "--dev"],
                 {
                     stdio: ["ignore", "inherit", "inherit"],
                     shell: true,
@@ -78,9 +78,10 @@ export default {
         }),
         commonjs(),
 
-        // In dev mode, call `npm run start` once
+        // In dev mode, call npm commnands once
         // the bundle has been generated
-        !production && serve(),
+        !production && serve("serve:frontend"),
+        !production && serve("serve:backend"),
 
         // Watch the `public` directory and refresh the
         // browser on changes when not in production
