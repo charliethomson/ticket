@@ -9,21 +9,13 @@
     let tooltip = null
     let tooltipShown = false
     let url = ""
-    let parsedUrl = []
-    const clean = (s) => JSON.stringify(s.split("/").filter((s) => s))
 
-    // function goToForm() {
-    //     $component = Form
-    // }
     function goToRepairQ() {
         alert("Switching the queue to repairs that need to completed")
     }
     function goToInProgress() {
         alert("Switching the queue to repairs in progress")
     }
-    // function viewWorkorders() {
-    //     $component = CollapsedWorkorders
-    // }
     function showDevice() {
         tooltip = Device
         tooltipShown = !tooltipShown
@@ -71,15 +63,10 @@
 <svelte:window on:hashchange={urlChange} />
 
 <div class="nav">
-    {#if url === '/workorder'}
+    {#if url.includes('/workorder')}
         <div class="buttons">
             <NavLink href="/create-workorder">Create Workorder</NavLink>
-
-            <!-- <Button
-                content="View All Workorders"
-                handleClick={viewWorkorders} /> -->
-            <NavLink href="">View All Workorders</NavLink>
-
+            <NavLink href="/">View All Workorders</NavLink>
             <Button content="Device" handleClick={showDevice} />
             <Button content="Customer" handleClick={showCustomer} />
             {#if tooltipShown}
@@ -88,28 +75,14 @@
         </div>
     {:else if url === '/create-workorder'}
         <div class="buttons">
-            <!-- <Button
-                content="View All Workorders"
-                handleClick={viewWorkorders} /> -->
-            <NavLink href="">View All Workorders</NavLink>
-
-            <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
+            <NavLink href="/">View All Workorders</NavLink>
             <NavLink href="/repair-queue">Repair Queue</NavLink>
-
             <Button content="In Progress" handleClick={goToInProgress} />
         </div>
     {:else}
         <div class="buttons">
-            <!-- <Button content="Create Workorder" handleClick={goToForm} /> -->
-
             <NavLink href="/create-workorder">Create Workorder</NavLink>
-
-            <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
-
             <NavLink href="/repair-queue">Repair Queue</NavLink>
-
-            <!-- <Button content="In Progress" handleClick={goToInProgress} /> -->
-
             <NavLink href="/in-progress">In Progress</NavLink>
         </div>
     {/if}

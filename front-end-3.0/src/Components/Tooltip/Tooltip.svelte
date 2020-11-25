@@ -1,8 +1,5 @@
 <script>
-    import Customer from "../Tooltip/Customer.svelte"
-    import Device from "../Tooltip/Device.svelte"
-
-    export let tooltip = ""
+    export let tooltip = null
 </script>
 
 <style>

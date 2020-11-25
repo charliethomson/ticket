@@ -5,8 +5,8 @@
     import Location from "../Statuses/Location.svelte"
     import Statuses from "../Statuses/Statuses.svelte"
     import { alertContent } from "../../stores"
-    export let statuses
-    export let travelStatuses
+    export let statuses = []
+    export let travelStatuses = []
 
     let id = getWorkorderID()
     let workorder = workorders[id]

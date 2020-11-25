@@ -1,6 +1,6 @@
 <script>
-    export let content
-    export let handleClick
+    export let content = ""
+    export let handleClick = () => {}
 </script>
 
 <style>

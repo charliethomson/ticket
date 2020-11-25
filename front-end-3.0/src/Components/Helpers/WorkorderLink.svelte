@@ -3,8 +3,8 @@
 
     export let href = "/#/"
     export let alt = ""
-    let active
-    let dest
+    let active = false
+    let dest = ""
 
     const update = () => {
         dest = "/#" + href
@@ -35,8 +35,4 @@
 </style>
 
 <svelte:window on:hashchange={update} />
-<a
-    href={dest}
-    class:active>
-    <slot />
-</a>
+<a href={dest} class:active><slot /></a>
