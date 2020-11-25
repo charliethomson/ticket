@@ -1,5 +1,5 @@
 exports.notes = (req, res) =>
-    res.send(
+    res.status(200).send(JSON.stringify(
         {
             user: {
                 first_name: "Charlie",
@@ -9,4 +9,4 @@ exports.notes = (req, res) =>
                 "this is a workorder note, this is a workorder note, this is a workorder note, this is a workorder note",
             created: 1605187812,
         },
-    )
+    ))

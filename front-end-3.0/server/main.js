@@ -1,10 +1,13 @@
 const app = require('express')()
+const cors = require('cors')
 const { workorders } = require('./endpoints/workorders')
 const { devices } = require('./endpoints/devices')
 const { customers } = require('./endpoints/customers')
 const { stores } = require('./endpoints/stores')
 const { notes } = require('./endpoints/notes')
 const port = 8080
+
+app.use(cors())
 
 app.get('/api/workorders', workorders)
 app.get('/api/devices', devices)

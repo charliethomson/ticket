@@ -1,5 +1,5 @@
 exports.workorders = (req, res) =>
-    res.send(
+    res.status(200).send(JSON.stringify([
         {
             id: 0,
             active: true,
@@ -44,4 +44,4 @@ exports.workorders = (req, res) =>
             },
             brief: "Dropped and no worky 2",
         },
-    )
+    ]))
