@@ -1,3 +1,4 @@
+import replace from "@rollup/plugin-replace"
 import postcss from "rollup-plugin-postcss"
 import svelte from "rollup-plugin-svelte"
 import sveltePreprocess from "svelte-preprocess"
@@ -42,6 +43,13 @@ export default {
         file: "public/build/bundle.js",
     },
     plugins: [
+        replace({
+            process: JSON.stringify({
+                env: {
+                    isProd: production,
+                }
+            }),
+        }),
         postcss(),
         svelte({
             preprocess: sveltePreprocess({
