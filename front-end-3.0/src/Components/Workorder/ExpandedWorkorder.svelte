@@ -11,6 +11,7 @@
     let id = getWorkorderID()
     let workorder = workorders[id]
 
+    // TODO: get data from API
     let notes = [
         {
             user: {

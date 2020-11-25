@@ -1,4 +1,5 @@
 <script>
+    // TODO: get data from API
     let customer = {
         first_name: "asd",
         last_name: "asd",

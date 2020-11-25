@@ -39,6 +39,7 @@
         <div>Status</div>
         <div>Location</div>
     </div>
+    <!-- TODO: get data from API -->
     {#each workorders as workorder}
         <WorkorderLink href={`/workorder/${workorder.id}`}>
             <div class="workorder-label">

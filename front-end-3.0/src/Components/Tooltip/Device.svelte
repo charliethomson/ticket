@@ -1,4 +1,5 @@
 <script>
+    // TODO: get data from API
     let device = {
         serial: "123",
         name: "123",

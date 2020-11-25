@@ -1,6 +1,7 @@
 <script>
     import CollapsedWorkorders from "../Workorder/CollapsedWorkorders.svelte"
 
+    // TODO: move data to separate file
     const travelStatuses = [
         {
             status: "Arrived",

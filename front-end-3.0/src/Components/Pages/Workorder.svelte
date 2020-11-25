@@ -1,6 +1,7 @@
 <script>
     import ExpandedWorkorder from "../Workorder/ExpandedWorkorder.svelte"
 
+    // TODO: move data to separate file
     const travelStatuses = [
         {
             status: "Arrived",
