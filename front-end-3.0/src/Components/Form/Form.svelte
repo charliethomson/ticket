@@ -1,6 +1,7 @@
 <script>
     import Container from "../Helpers/Container.svelte"
-    import { isFormValid, alertContent } from "../../stores"
+    import { alertContent } from "../../stores"
+    let isFormValid = false
 
     let buttonText = "Create Workorder"
 
@@ -75,7 +76,7 @@
     $: isQuotedTimeValid = notWhitespaceRegex.test(additional.quoted_time)
 
     function checkForm() {
-        $isFormValid =
+        isFormValid =
             isNameValid &&
             isStorePhoneValid &&
             isStorePhoneValid &&
@@ -107,7 +108,7 @@
 
     async function handleCreate() {
         checkForm()
-        if ($isFormValid) {
+        if (isFormValid) {
             buttonText = "Workorders are loading..."
             store.response = await postData("stores", store.props)
             customer.response = await postData("customers", customer.props)
