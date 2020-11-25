@@ -1,6 +1,6 @@
 <script context="module">
     export async function API(url) {
-        const baseUrl = "http://offsite.repair/api/"
+        const baseUrl = `http://${process.env.isProd ? "offsite.repair" : "localhost:8080"}/api/`
         const response = await fetch(baseUrl + url)
         const data = await response.json()
         return data
@@ -15,8 +15,6 @@
     import CreateWorkorder from "./Components/Pages/CreateWorkorder.svelte"
     import HomePage from "./Components/Pages/HomePage.svelte"
     import Workorder from "./Components/Pages/Workorder.svelte"
-
-    $: url = window.location.pathname + window.location.hash
 
     // API("workorders?active=true")
     //     .then((data) => {
