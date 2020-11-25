@@ -7,7 +7,7 @@
 
     let store = {
         props: {
-            name: "Justin",
+            name: "Justin's Store",
             phone_number: "540-308-3687",
             email: "vexedrecks@gmail.com",
             address: "5603 hickory tree lane",
