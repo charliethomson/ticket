@@ -1,63 +1,15 @@
 <script>
+    import { workorders } from '../../sampleData'
     import Container from "../Helpers/Container.svelte"
     import Note from "./Expanded/Note.svelte"
     import Location from "../Statuses/Location.svelte"
     import Statuses from "../Statuses/Statuses.svelte"
-    import { activeWorkorder, alertContent } from "../../stores"
-
-    const notWhiteSpaceRegex = /^(?!\s*$).+/
-    $: currentNoteValid = notWhiteSpaceRegex.test(currentNote.contents)
-
+    import { alertContent } from "../../stores"
     export let statuses
     export let travelStatuses
 
-    let workorders = [
-        {
-            id: 0,
-            active: true,
-            origin: 0,
-            travel_status: 1,
-            created: 1605187812,
-            quoted_time: 5,
-            status: 1,
-            customer: {
-                first_name: "Bob",
-                last_name: "Black",
-                phone_number: "111-111-1111",
-                email_address: "bobblack@gmail.com",
-            },
-            device: {
-                serial: "C1231234123",
-                name: "Macbook Air",
-                customer_id: 1,
-                password: "Blahblah",
-            },
-            brief: "Dropped qweqwe",
-        },
-        {
-            id: 1,
-            active: true,
-            origin: 0,
-            travel_status: 2,
-            created: 1605187812,
-            quoted_time: 5,
-            status: 0,
-            customer: {
-                first_name: "Bob",
-                last_name: "Black",
-                phone_number: "111-111-1111",
-                email_address: "bobblack@gmail.com",
-            },
-            device: {
-                serial: "C1231234123",
-                name: "Macbook Air",
-                customer_id: 1,
-                password: "Blahblah",
-            },
-            brief: "Dropped and no worky",
-        },
-    ]
-    let workorder = workorders[$activeWorkorder]
+    let id = getWorkorderID()
+    let workorder = workorders[id]
 
     let notes = [
         {
@@ -80,6 +32,8 @@
         created: 1605187812,
         workorder_id: workorder.workorder_id,
     }
+    const notWhiteSpaceRegex = /^(?!\s*$).+/
+    $: currentNoteValid = notWhiteSpaceRegex.test(currentNote.contents)
 
     async function createNote() {
         alert("Note created")
@@ -102,6 +56,16 @@
         } else {
             $alertContent = "Please check your note!"
         }
+    }
+
+    function getWorkorderID() {
+        let hash = window.location.hash
+        if (hash.includes("/workorder")) {
+            let parts = hash.split("/")
+            let id = parts[2]
+            return id
+        }
+        return -1
     }
     //OnMount this component makes a request to the API for the entire workorder
 </script>
@@ -151,8 +115,8 @@
 </style>
 
 <div class="statuses">
-    <Statuses {statuses} />
-    <Location {travelStatuses} />
+    <Statuses {statuses} {id} />
+    <Location {travelStatuses} {id} />
 </div>
 
 <Container>

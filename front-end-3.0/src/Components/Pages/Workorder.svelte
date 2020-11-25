@@ -1,8 +1,6 @@
 <script>
     import ExpandedWorkorder from "../Workorder/ExpandedWorkorder.svelte"
 
-    export let href = ""
-
     const travelStatuses = [
         {
             status: "Arrived",

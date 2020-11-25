@@ -1,55 +1,9 @@
 <script>
-    import { activeWorkorder } from "../../stores"
+    import { workorders } from '../../sampleData'
     export let statuses = []
+    export let id = 0
 
-    let workorders = [
-        {
-            id: 0,
-            active: true,
-            origin: 0,
-            travel_status: 1,
-            created: 1605187812,
-            quoted_time: 5,
-            status: 0,
-            customer: {
-                first_name: "Bob",
-                last_name: "Black",
-                phone_number: "111-111-1111",
-                email_address: "bobblack@gmail.com",
-            },
-            device: {
-                serial: "C1231234123",
-                name: "Macbook Air",
-                customer_id: 1,
-                password: "Blahblah",
-            },
-            brief: "Dropped and no worky",
-        },
-        {
-            id: 1,
-            active: true,
-            origin: 0,
-            travel_status: 1,
-            created: 1605187812,
-            quoted_time: 5,
-            status: 0,
-            customer: {
-                first_name: "Bob",
-                last_name: "Black",
-                phone_number: "111-111-1111",
-                email_address: "bobblack@gmail.com",
-            },
-            device: {
-                serial: "C1231234123",
-                name: "Macbook Air",
-                customer_id: 1,
-                password: "Blahblah",
-            },
-            brief: "Dropped and no worky",
-        },
-    ]
-    let workorder = workorders[$activeWorkorder]
-
+    let workorder = workorders[id]
     let statusesShown = false
 
     function showStatuses() {
@@ -113,9 +67,9 @@
 
 <div class="statuses">
     <div
-        class={'active-status ' + statuses[workorder.status].color}
+        class={'active-status ' + statuses[workorder.status]?.color}
         on:click={showStatuses}>
-        {statuses[workorder.status].status}
+        {statuses[workorder.status]?.status}
     </div>
 
     {#if statusesShown}

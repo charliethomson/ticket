@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from "svelte";
     import Button from "../Helpers/Button.svelte"
     import Tooltip from "../Tooltip/Tooltip.svelte"
     import Customer from "../Tooltip/Customer.svelte"
@@ -32,10 +33,10 @@
         tooltipShown = !tooltipShown
     }
     function urlChange() {
-        url = window.location.pathname + window.location.hash
+        url = window.location.hash.substring(1)
     }
 
-    //TODO: Nav doesn't reload when you go to the path /#/workorder *Reason for this is because URL is empty when you go to that route without clicking on a thing*
+    onMount(urlChange)
 </script>
 
 <style>
@@ -70,14 +71,14 @@
 <svelte:window on:hashchange={urlChange} />
 
 <div class="nav">
-    {#if url === '/#/workorder'}
+    {#if url === '/workorder'}
         <div class="buttons">
-            <NavLink href="/#/create-workorder" title="Create Workorder" />
+            <NavLink href="/create-workorder">Create Workorder</NavLink>
 
             <!-- <Button
                 content="View All Workorders"
                 handleClick={viewWorkorders} /> -->
-            <NavLink href="" title="View All Workorders" />
+            <NavLink href="">View All Workorders</NavLink>
 
             <Button content="Device" handleClick={showDevice} />
             <Button content="Customer" handleClick={showCustomer} />
@@ -85,15 +86,15 @@
                 <Tooltip {tooltip} />
             {/if}
         </div>
-    {:else if url === '/#/create-workorder'}
+    {:else if url === '/create-workorder'}
         <div class="buttons">
             <!-- <Button
                 content="View All Workorders"
                 handleClick={viewWorkorders} /> -->
-            <NavLink href="" title="View All Workorders" />
+            <NavLink href="">View All Workorders</NavLink>
 
             <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
-            <NavLink href="repair-queue" title="Repair Queue" />
+            <NavLink href="/repair-queue">Repair Queue</NavLink>
 
             <Button content="In Progress" handleClick={goToInProgress} />
         </div>
@@ -101,15 +102,15 @@
         <div class="buttons">
             <!-- <Button content="Create Workorder" handleClick={goToForm} /> -->
 
-            <NavLink href="/#/create-workorder" title="Create Workorder" />
+            <NavLink href="/create-workorder">Create Workorder</NavLink>
 
             <!-- <Button content="Repair Queue" handleClick={goToRepairQ} /> -->
 
-            <NavLink href="repair-queue" title="Repair Queue" />
+            <NavLink href="/repair-queue">Repair Queue</NavLink>
 
             <!-- <Button content="In Progress" handleClick={goToInProgress} /> -->
 
-            <NavLink href="in-progress" title="In Progress" />
+            <NavLink href="/in-progress">In Progress</NavLink>
         </div>
     {/if}
 

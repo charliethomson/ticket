@@ -46,9 +46,9 @@
 
 <main>
     <Nav />
-    <Route component={Workorder} href={'/#/workorder'} />
-    <Route component={HomePage} />
-    <Route component={CreateWorkorder} href={'/#/create-workorder'} />
+    <Route component={HomePage} href={'/'} />
+    <Route component={Workorder} href={'/workorder'} />
+    <Route component={CreateWorkorder} href={'/create-workorder'} />
 </main>
 
 {#if $alertContent}

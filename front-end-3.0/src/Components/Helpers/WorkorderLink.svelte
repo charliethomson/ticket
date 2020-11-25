@@ -1,16 +1,17 @@
 <script>
     import { onMount } from "svelte"
-    import { activeWorkorder } from "../../stores"
 
-    export let href = "/#"
-    export let id = 0
+    export let href = "/#/"
+    export let alt = ""
     let active
+    let dest
 
     const update = () => {
+        dest = "/#" + href
         let url = window.location.pathname + window.location.hash
-        if (url == "/") url = "/#"
-        active = url == href ? true : false
-        if (active) document.title = alt ? alt : title
+        if (url == "/" || url == "/#") url = "/#/"
+        active = url == dest ? true : false
+        if (active) document.title = alt ? alt : document.title
     }
 
     onMount(update)
@@ -35,10 +36,7 @@
 
 <svelte:window on:hashchange={update} />
 <a
-    {href}
-    class:active
-    on:click={(e) => {
-        $activeWorkorder = id
-    }}>
+    href={dest}
+    class:active>
     <slot />
 </a>
