@@ -50,7 +50,7 @@
 </main>
 
 {#if $alertContent}
-    <Alert content={$alertContent} />
+    <Alert>{$alertContent}</Alert>
 {/if}
 
 <!-- TODO: Make login button with a tag that links to /api/auth/login -->
