@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte'
-    import { getNotes, createNote } from '../../utils'
+    import { getNotes, getUsers, createNote } from '../../utils'
     import Container from "../Helpers/Container.svelte"
     import Note from "./Expanded/Note.svelte"
     import Location from "../Statuses/Location.svelte"
@@ -10,7 +10,9 @@
     export let travelStatuses = []
 
     let notes = []
+    let users = []
     let id = getWorkorderID()
+    // FIXME: make sure POST request is using the correct object values for prod
     let currentNote = {
         user: {
             first_name: "Charlie",
@@ -44,8 +46,12 @@
     }
 
     onMount(async () => {
+        // TODO: backend: notes should accept a workorder ID and only return the notes for that workorder
         notes = await getNotes()
             .then(data => data.reverse())
+            .catch(err => [])
+        users = await getUsers()
+            .then(data => data)
             .catch(err => [])
     })
 </script>
@@ -114,10 +120,10 @@
         <div class="button" on:click={create}>Create note</div>
     </div>
     <div class="notes"> 
-        {#if notes}
+        {#if notes && users}
             {#each notes as note}
                 <Note
-                    name={note.user.first_name + ' ' + note.user.last_name}
+                    name={users[note.user]?.first_name + ' ' + users[note.user]?.last_name}
                     date={note.created}
                     notes={note.contents} />
             {/each}
@@ -126,5 +132,3 @@
         {/if}
     </div>
 </Container>
-
-<!-- TODO: Map the user id that I get from the API to an actual user -->

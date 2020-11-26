@@ -34,7 +34,6 @@
         <div>Status</div>
         <div>Location</div>
     </div>
-    <!-- TODO: get data from API -->
     {#await getWorkorders()}
         <div>Loading workorders...</div>
     {:then workorders}
