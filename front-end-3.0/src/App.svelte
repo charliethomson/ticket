@@ -15,7 +15,10 @@
         height: 100%;
         background-color: #121212;
     }
-    * {
+    :global(button) {
+        border: none;
+    }
+    :global(*) {
         color: #e3e3e3;
         font-family: "Montserrat", sans-serif;
     }
