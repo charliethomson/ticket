@@ -1,5 +1,6 @@
 <script>
-    import { workorders } from '../../sampleData'
+    import { onMount } from 'svelte'
+    import { getNotes, createNote } from '../../utils'
     import Container from "../Helpers/Container.svelte"
     import Note from "./Expanded/Note.svelte"
     import Location from "../Statuses/Location.svelte"
@@ -8,22 +9,8 @@
     export let statuses = []
     export let travelStatuses = []
 
+    let notes = []
     let id = getWorkorderID()
-    let workorder = workorders[id]
-
-    // TODO: get data from API
-    let notes = [
-        {
-            user: {
-                first_name: "Charlie",
-                last_name: "Thomson",
-            },
-            contents:
-                "this is a workorder note, this is a workorder note, this is a workorder note, this is a workorder note",
-            created: 1605187812,
-        },
-    ]
-
     let currentNote = {
         user: {
             first_name: "Charlie",
@@ -31,29 +18,16 @@
         },
         contents: "",
         created: 1605187812,
-        workorder_id: workorder.workorder_id,
+        workorder_id: id,
     }
     const notWhiteSpaceRegex = /^(?!\s*$).+/
     $: currentNoteValid = notWhiteSpaceRegex.test(currentNote.contents)
 
-    async function createNote() {
-        alert("Note created")
+    async function create() {
         if (currentNoteValid) {
-            // const response = await fetch("http://offsite.repair/api/notes", {
-            //     method: "POST",
-            //     mode: "cors",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(currentNote),
-            // })
-            // const res = await response.json()
-            // return res
-            notes.push(currentNote)
-            notes = notes
-            $alertContent = ""
+            notes = [...notes, await createNote(currentNote)]
             currentNote.contents = ""
-            console.log(notes)
+            $alertContent = ""
         } else {
             $alertContent = "Please check your note!"
         }
@@ -68,7 +42,12 @@
         }
         return -1
     }
-    //OnMount this component makes a request to the API for the entire workorder
+
+    onMount(async () => {
+        notes = await getNotes()
+            .then(data => data.reverse())
+            .catch(err => [])
+    })
 </script>
 
 <style>
@@ -132,15 +111,19 @@
                     createNote()
                 }
             }} />
-        <div class="button" on:click={createNote}>Create note</div>
+        <div class="button" on:click={create}>Create note</div>
     </div>
-    <div class="notes">
-        {#each notes.reverse() as note}
-            <Note
-                name={note.user.first_name + ' ' + note.user.last_name}
-                date={note.created}
-                notes={note.contents} />
-        {/each}
+    <div class="notes"> 
+        {#if notes}
+            {#each notes as note}
+                <Note
+                    name={note.user.first_name + ' ' + note.user.last_name}
+                    date={note.created}
+                    notes={note.contents} />
+            {/each}
+        {:else}
+            Loading notes...
+        {/if}
     </div>
 </Container>
 

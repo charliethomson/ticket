@@ -1,16 +1,18 @@
 <script>
-    import { workorders } from '../../sampleData'
+    import { onMount } from 'svelte'
+    import { getWorkorder } from '../../utils'
     export let statuses = []
     export let id = 0
-
-    let workorder = workorders[id]
     let statusesShown = false
+    let workorder = {}
 
     function showStatuses() {
         statusesShown = !statusesShown
     }
 
-    //onMount request workorder @ activeWOid
+    onMount(async () => {
+        workorder = await getWorkorder(id)
+    })
 </script>
 
 <style>
@@ -66,11 +68,13 @@
 </style>
 
 <div class="statuses">
-    <div
-        class={'active-status ' + statuses[workorder.status]?.color}
-        on:click={showStatuses}>
-        {statuses[workorder.status]?.status}
-    </div>
+    {#if statuses[workorder.status]}
+        <div
+            class={'active-status ' + statuses[workorder.status]?.color}
+            on:click={showStatuses}>
+            {statuses[workorder.status]?.status}
+        </div>
+    {/if}
 
     {#if statusesShown}
         <div class="status-container">
