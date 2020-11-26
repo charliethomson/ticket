@@ -1,132 +1,53 @@
 <script>
+    import { createStore, createCustomer, createDevice, createWorkorder} from '../../utils'
+    import { form } from './formData'
     import Container from "../Helpers/Container.svelte"
+    import Input from './Input.svelte'
     import { alertContent } from "../../stores"
-    let isFormValid = false
 
-    let buttonText = "Create Workorder"
+    const letter = s => (/^[a-z ,.'-]+$/i).test(s)
+    const state = s => (/^[a-z]+$/i).test(s)
+    const phone = s => (/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/).test(s)
+    const email = s => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(s)
+    const address = s => (/^\d+\w*\s*(?:(?:[\-\/]?\s*)?\d*(?:\s*\d+\/\s*)?\d+)?\s+/).test(s)
+    const zip = s => (/^\d{5}$/).test(s)
+    const notWhitespace = s => (/^(?!\s*$).+/).test(s)
 
-    // TODO: move sample data to seperate file
-    let store = {
-        props: {
-            name: "Justin's Store",
-            phone_number: "540-308-3687",
-            email: "vexedrecks@gmail.com",
-            address: "5603 hickory tree lane",
-            city: "mineral",
-            state: "va",
-            zip: "23117",
-        },
-        response: {},
-    }
+    $: disabled = !letter(form.store.name)
+               || !phone(form.store.phone_number)
+               || !email(form.store.email)
+               || !address(form.store.address)
+               || !letter(form.store.city)
+               || !state(form.store.state)
+               || !zip(form.store.zip)
+               || !letter(form.customer.first_name)
+               || !letter(form.customer.last_name)
+               || !phone(form.customer.phone_number)
+               || !email(form.customer.email_address)
+               || !notWhitespace(form.device.serial)
+               || !notWhitespace(form.device.name)
+               || !notWhitespace(form.device.password)
+               || !notWhitespace(form.additional.brief)
+               || !notWhitespace(form.additional.quoted_time)
 
-    let customer = {
-        props: {
-            first_name: "asd",
-            last_name: "asd",
-            phone_number: "555-555-1234",
-            email_address: "a@a.a",
-        },
-        response: {},
-    }
+    $: buttonText = disabled ? "Please finish filling out the form to continue." : "Create Workorder"
 
-    let device = {
-        props: {
-            serial: "123",
-            name: "123",
-            password: "123",
-            customer_id: null,
-        },
-        response: {},
-    }
-
-    let additional = {
-        brief: "",
-        quoted_time: "",
-    }
-
-    const letterRegex = /^[a-z ,.'-]+$/i
-    const stateRegex = /^[a-z]+$/i
-    const phoneRegex = /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    const addressRegex = /^\d+\w*\s*(?:(?:[\-\/]?\s*)?\d*(?:\s*\d+\/\s*)?\d+)?\s+/
-    const zipRegex = /^\d{5}$/
-    const notWhitespaceRegex = /^(?!\s*$).+/
-
-    //Store
-    $: isNameValid = letterRegex.test(store.props.name)
-    $: isStorePhoneValid = phoneRegex.test(store.props.phone_number)
-    $: isStoreEmailValid = emailRegex.test(store.props.email)
-    $: isAddressValid = addressRegex.test(store.props.address)
-    $: isCityValid = letterRegex.test(store.props.city)
-    $: isStateValid = stateRegex.test(store.props.state)
-    $: isZipValid = zipRegex.test(store.props.zip)
-
-    //Customer
-    $: isFirstNameValid = letterRegex.test(customer.props.first_name)
-    $: isLastNameValid = letterRegex.test(customer.props.last_name)
-    $: isCustomerPhoneValid = phoneRegex.test(customer.props.phone_number)
-    $: isCustomerEmailValid = emailRegex.test(customer.props.email_address)
-
-    //Device
-    $: isSerialValid = notWhitespaceRegex.test(device.props.serial)
-    $: isDeviceNameValid = notWhitespaceRegex.test(device.props.name)
-    $: isPasswordValid = notWhitespaceRegex.test(device.props.password)
-
-    //Additonal
-    $: isBriefValid = notWhitespaceRegex.test(additional.brief)
-    $: isQuotedTimeValid = notWhitespaceRegex.test(additional.quoted_time)
-
-    function checkForm() {
-        isFormValid =
-            isNameValid &&
-            isStorePhoneValid &&
-            isStorePhoneValid &&
-            isAddressValid &&
-            isCityValid &&
-            isZipValid &&
-            isFirstNameValid &&
-            isLastNameValid &&
-            isCustomerPhoneValid &&
-            isCustomerEmailValid &&
-            isPasswordValid &&
-            isBriefValid &&
-            isQuotedTimeValid
-    }
-
-    async function postData(url, data) {
-        const baseUrl = "http://offsite.repair/api/"
-        const response = await fetch(baseUrl + url, {
-            method: "POST",
-            mode: "cors",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        })
-        const res = await response.json()
-        return res
-    }
-
+    // FIXME: fix workorder creation for prod
     async function handleCreate() {
-        checkForm()
-        if (isFormValid) {
-            buttonText = "Workorders are loading..."
-            store.response = await postData("stores", store.props)
-            customer.response = await postData("customers", customer.props)
-            device.props.customer_id = customer.response.message
-            device.response = await postData("devices", device.props)
-            const workorder = {
-                origin: store.response.message,
-                customer: customer.response.message,
-                device: device.response.message,
-                brief: additional.brief,
-            }
-
-            await postData("workorders", workorder)
-            $alertContent = ""
-            // $component = CollapsedWorkorders
-        } else {
+        if (disabled) {
             $alertContent = "Your input in the form is invalid."
+        } else {
+            $alertContent = ""
+            buttonText = "Workorders are loading..."
+            form.device.customer_id = (await createCustomer(form.customer)).message
+            await createWorkorder({
+                origin: (await createStore(form.store)).message,
+                customer: form.device.customer_id,
+                device: (await createDevice(form.device)).message,
+                brief: form.additional.brief,
+            }).then(res => {
+                window.location.hash = "#/"
+            })
         }
     }
 </script>
@@ -190,28 +111,7 @@
     .brief {
         margin-right: 40px;
     }
-
-    input {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-family: inherit;
-        color: white;
-        padding: 10px;
-        background: transparent;
-        outline: 0;
-        width: 100%;
-
-        border: 2px solid #e3e3e3;
-        border-radius: 10px;
-    }
-    .invalid:focus {
-        border: 2px solid red;
-    }
-    .valid:focus {
-        border: 2px solid #388e3c;
-    }
-
-    .button {
+    button {
         text-align: center;
         width: 100%;
         font-weight: bold;
@@ -219,6 +119,7 @@
         padding: 20px;
         border-radius: 10px;
         background-color: #388e3c;
+        font-size: 16px;
     }
 </style>
 
@@ -230,50 +131,13 @@
             <div class="container">
                 <div class="create together">
                     <div class="create-title">Create</div>
-
-                    <label for="contact">Point of contact: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.name}
-                        class={isNameValid ? 'valid' : 'invalid '} />
-
-                    <label for="phone">Phone #: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.phone_number}
-                        class={isStorePhoneValid ? 'valid' : 'invalid '} />
-
-                    <label for="email">Email: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.email}
-                        class={isStoreEmailValid ? 'valid' : 'invalid '} />
-
-                    <label for="address">Address: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.address}
-                        class={isAddressValid ? 'valid' : 'invalid '} />
-
-                    <label for="city">City: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.city}
-                        class={isCityValid ? 'valid' : 'invalid '} />
-
-                    <label for="state">State: </label>
-                    <input
-                        type="text"
-                        bind:value={store.props.state}
-                        maxlength="2"
-                        class={isStateValid ? 'valid' : 'invalid '} />
-
-                    <label for="zip">Zip: </label>
-                    <input
-                        type="text"
-                        maxlength="5"
-                        bind:value={store.props.zip}
-                        class={isZipValid ? 'valid' : 'invalid '} />
+                    <Input label="Point of contact" bind:value={form.store.name} valid={letter} />
+                    <Input label="Phone #:" bind:value={form.store.phone_number} valid={phone} />
+                    <Input label="Email" bind:value={form.store.email} valid={email} />
+                    <Input label="Address" bind:value={form.store.address} valid={address} />
+                    <Input label="City" bind:value={form.store.city} valid={letter} />
+                    <Input label="State" bind:value={form.store.state} valid={state} maxlength="2" />
+                    <Input label="Zip" bind:value={form.store.zip} valid={zip} maxlength="5" />
                 </div>
                 <div class="search">
                     <div class="search-title">Search</div>
@@ -289,30 +153,10 @@
             <div class="container">
                 <div class="create together">
                     <div class="create-title">Create</div>
-
-                    <label for="first-name">First Name: </label>
-                    <input
-                        type="text"
-                        bind:value={customer.props.first_name}
-                        class={isFirstNameValid ? 'valid' : 'invalid '} />
-
-                    <label for="last-name">Last Name: </label>
-                    <input
-                        type="text"
-                        bind:value={customer.props.last_name}
-                        class={isLastNameValid ? 'valid' : 'invalid '} />
-
-                    <label for="last-name">Phone #: </label>
-                    <input
-                        type="text"
-                        bind:value={customer.props.phone_number}
-                        class={isCustomerPhoneValid ? 'valid' : 'invalid '} />
-
-                    <label for="last-name">Email: </label>
-                    <input
-                        type="text"
-                        bind:value={customer.props.email_address}
-                        class={isCustomerEmailValid ? 'valid' : 'invalid '} />
+                    <Input label="First Name" bind:value={form.customer.first_name} valid={letter} />
+                    <Input label="Last Name" bind:value={form.customer.last_name} valid={letter} />
+                    <Input label="Phone #" bind:value={form.customer.phone_number} valid={phone} />
+                    <Input label="Email" bind:value={form.customer.email_address} valid={email} />
                 </div>
                 <div class="search">
                     <div class="search-title">Search</div>
@@ -328,24 +172,9 @@
             <div class="container">
                 <div class="create">
                     <div class="create-title">Create</div>
-
-                    <label for="serial">Serial/IMEI: </label>
-                    <input
-                        type="text"
-                        bind:value={device.props.serial}
-                        class={isSerialValid ? 'valid' : 'invalid '} />
-
-                    <label for="make">Make/Model: </label>
-                    <input
-                        type="text"
-                        bind:value={device.props.name}
-                        class={isDeviceNameValid ? 'valid' : 'invalid '} />
-
-                    <label for="password">Password: </label>
-                    <input
-                        type="text"
-                        bind:value={device.props.password}
-                        class={isPasswordValid ? 'valid' : 'invalid '} />
+                    <Input label="Serial/IMEI" bind:value={form.device.serial} valid={notWhitespace} />
+                    <Input label="Make/Model" bind:value={form.device.name} valid={notWhitespace} />
+                    <Input label="Password" bind:value={form.device.password} valid={notWhitespace} />
                 </div>
             </div>
         </div>
@@ -357,28 +186,13 @@
 
             <div class="additional">
                 <div class="brief">
-                    <label for="contact">Brief Description: </label>
-                    <input
-                        type="text"
-                        size="55"
-                        bind:value={additional.brief}
-                        class={isBriefValid ? 'valid' : 'invalid '} />
+                    <Input label="Brief Description" bind:value={form.additional.brief} valid={notWhitespace} size="55" />
                 </div>
-
                 <div class="time-quote">
-                    <label for="zip">Time quoted: </label>
-                    <input
-                        type="text"
-                        size="55"
-                        bind:value={additional.quoted_time}
-                        class={isQuotedTimeValid ? 'valid' : 'invalid '} />
+                    <Input label="Time quoted" bind:value={form.additional.quoted_time} valid={notWhitespace} size="55" />
                 </div>
             </div>
-            <div
-                class="button"
-                on:click={() => handleCreate().then((res) => console.log(res))}>
-                {buttonText}
-            </div>
+                <button {disabled} on:click={handleCreate}>{buttonText}</button>
         </div>
     </div>
 </Container>
