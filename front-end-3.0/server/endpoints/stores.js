@@ -1,5 +1,5 @@
-exports.stores = (req, res) =>
-    res.status(200).send(JSON.stringify(
+exports.getStores = (req, res) =>
+    res.status(200).send(JSON.stringify([
         {
             name: "Justin's Store",
             phone_number: "540-308-3687",
@@ -9,4 +9,4 @@ exports.stores = (req, res) =>
             state: "va",
             zip: "23117",
         },
-    ))
+    ]))

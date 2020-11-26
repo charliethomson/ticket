@@ -1,7 +1,7 @@
-exports.workorders = (req, res) =>
+exports.getWorkorders = (req, res) =>
     res.status(200).send(JSON.stringify([
         {
-            id: 0,
+            workorder_id: 0,
             active: true,
             origin: 1,
             travel_status: 1,
@@ -23,7 +23,7 @@ exports.workorders = (req, res) =>
             brief: "Dropped and no worky 1",
         },
         {
-            id: 1,
+            workorder_id: 1,
             active: true,
             origin: 1,
             travel_status: 1,
