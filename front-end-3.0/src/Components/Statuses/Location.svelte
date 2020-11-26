@@ -73,7 +73,7 @@
 </style>
 
 <div class="location">
-    {#if travelStatuses[workorder.travel_status]}
+    {#if travelStatuses[workorder?.travel_status]}
         <div class="inactive-statuses">
             {#if statusesActive}
                 {#each travelStatuses as { status, color }, i}
@@ -89,9 +89,9 @@
             {/if}
         </div>
         <div
-            class={'active-status ' + travelStatuses[workorder.travel_status]?.color}
+            class={'active-status ' + travelStatuses[workorder?.travel_status]?.color}
             on:click={handleClick}>
-            {travelStatuses[workorder.travel_status]?.status}
+            {travelStatuses[workorder?.travel_status]?.status}
         </div>
         <input
             type="text"

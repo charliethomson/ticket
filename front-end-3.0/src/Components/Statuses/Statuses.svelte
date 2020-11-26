@@ -68,11 +68,11 @@
 </style>
 
 <div class="statuses">
-    {#if statuses[workorder.status]}
+    {#if statuses[workorder?.status]}
         <div
-            class={'active-status ' + statuses[workorder.status]?.color}
+            class={'active-status ' + statuses[workorder?.status]?.color}
             on:click={showStatuses}>
-            {statuses[workorder.status]?.status}
+            {statuses[workorder?.status]?.status}
         </div>
     {/if}
 
