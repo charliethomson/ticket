@@ -37,23 +37,19 @@
         justify-content: space-between;
         align-items: center;
         background-color: #212121;
-        height: 80px;
+        min-height: 80px;
         font-size: 18px;
         margin-bottom: 40px;
     }
 
     .buttons {
-        margin-left: 15px;
-        position: relative;
         display: flex;
         cursor: pointer;
-        height: 100%;
     }
     .account {
         margin-right: 15px;
         padding: 25px;
         font-weight: bold;
-        background-color: #212121;
     }
     .account:hover {
         background-color: #121212;
@@ -63,29 +59,24 @@
 <svelte:window on:hashchange={urlChange} />
 
 <div class="nav">
-    {#if url.includes('/workorder')}
-        <div class="buttons">
-            <NavLink href="/create-workorder">Create Workorder</NavLink>
-            <NavLink href="/">View All Workorders</NavLink>
-            <Button content="Device" handleClick={showDevice} />
-            <Button content="Customer" handleClick={showCustomer} />
-            {#if tooltipShown}
-                <Tooltip {tooltip} />
-            {/if}
-        </div>
-    {:else if url === '/create-workorder'}
-        <div class="buttons">
-            <NavLink href="/">View All Workorders</NavLink>
-            <NavLink href="/repair-queue">Repair Queue</NavLink>
-            <Button content="In Progress" handleClick={goToInProgress} />
-        </div>
-    {:else}
-        <div class="buttons">
-            <NavLink href="/create-workorder">Create Workorder</NavLink>
-            <NavLink href="/repair-queue">Repair Queue</NavLink>
-            <NavLink href="/in-progress">In Progress</NavLink>
-        </div>
-    {/if}
-
+    <div class="buttons">
+        {#if url.includes('/workorder')}
+                <NavLink href="/create-workorder">Create Workorder</NavLink>
+                <NavLink href="/">View All Workorders</NavLink>
+                <Button content="Device" handleClick={showDevice} />
+                <Button content="Customer" handleClick={showCustomer} />
+                {#if tooltipShown}
+                    <Tooltip {tooltip} />
+                {/if}
+        {:else if url === '/create-workorder'}
+                <NavLink href="/">View All Workorders</NavLink>
+                <NavLink href="/repair-queue">Repair Queue</NavLink>
+                <Button content="In Progress" handleClick={goToInProgress} />
+        {:else}
+                <NavLink href="/create-workorder">Create Workorder</NavLink>
+                <NavLink href="/repair-queue">Repair Queue</NavLink>
+                <NavLink href="/in-progress">In Progress</NavLink>
+        {/if}
+    </div>
     <div class="account">Justin Moore</div>
 </div>
