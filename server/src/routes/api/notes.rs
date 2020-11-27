@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{Note, NotesOptions},
+        db::{Note, NoteFilter, NoteResponse, NotesNew},
         not_ok, ok,
         routes::OkMessage,
     },
@@ -11,39 +11,35 @@ use {
         web::{Json, Query},
         HttpResponse,
     },
-    chrono::Utc,
-    serde::{Deserialize, Serialize},
+    diesel::prelude::*,
 };
-
-#[derive(Serialize, Deserialize)]
-pub struct NotesNew {
-    workorder_id: i64,
-    contents: String,
-}
 
 #[post("/api/notes")]
 pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpResponse {
     check_logged_in!(identity, {
-        let note = Note {
-            user: identity.identity().unwrap().parse().unwrap(),
-            created: Utc::now().timestamp(),
-            next_update: None,
-            contents: body.contents,
-        };
-
-        match note.insert(body.workorder_id) {
-            Ok(id) => HttpResponse::Ok().json(ok!(id)),
+        use crate::db::schema::notes;
+        match diesel::insert_into(notes::dsl::notes)
+            .values(body)
+            .execute(&crate::db::establish_connection())
+        {
+            Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 #[get("/api/notes")]
-pub async fn notes_get(identity: Identity, body: Option<Query<NotesOptions>>) -> HttpResponse {
+pub async fn notes_get(identity: Identity, Query(body): Query<NoteFilter>) -> HttpResponse {
     check_logged_in!(identity, {
-        let filter = body.map(|json| json.into_inner()).unwrap_or_default();
-        match Note::find(filter) {
-            Ok(notes) => HttpResponse::Ok().json(ok!(notes)),
+        // TODO: Make this prettier :)
+        use crate::db::schema::notes as notes_table;
+        let query = crate::build_query!(notes_table, body => { workorder_id, id });
+
+        match query.get_results::<Note>(&crate::db::establish_connection()) {
+            Ok(results) => HttpResponse::Ok().json(ok!(results
+                .into_iter()
+                .map(NoteResponse::from)
+                .collect::<Vec<NoteResponse>>())),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })

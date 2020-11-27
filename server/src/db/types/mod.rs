@@ -1,6 +1,10 @@
+mod find;
+mod insert;
 mod models;
-mod options;
 mod responses;
+mod update;
+pub use find::*;
+pub use insert::*;
 pub use models::*;
-pub use options::*;
 pub use responses::*;
+pub use update::*;

@@ -1,8 +1,8 @@
 use {
     crate::{
-        check_logged_in,
-        db::{Insert, Store, StoreOptions, Update},
-        ok,
+        build_query, check_logged_in,
+        db::{schema::stores::dsl::*, Store, StoreFilter, StoreNew, StoreUpdate},
+        not_ok, ok,
         routes::OkMessage,
         validate_ok,
     },
@@ -12,42 +12,19 @@ use {
         web::{Json, Query},
         HttpResponse,
     },
-    lazy_static::lazy_static,
-    regex::Regex,
-    serde::{Deserialize, Serialize},
+    diesel::prelude::*,
     webforms::validate::*,
 };
-#[derive(Serialize, Deserialize, ValidateForm)]
-pub struct StoreNew {
-    name: String,
-    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
-    phone_number: String,
-    #[validate(email)]
-    email: String,
-    address: String,
-    city: String,
-    #[validate(max_length = 2)]
-    #[validate(min_length = 2)]
-    state: String,
-    #[validate(regex = r"^\d{5}$")]
-    zip: String,
-}
 
 #[post("/api/stores")]
 pub async fn stores_post(identity: Identity, Json(body): Json<StoreNew>) -> HttpResponse {
     check_logged_in!(identity, {
         validate_ok!(body, {
-            match Store::insert(&Store {
-                id: 0,
-                name: body.name,
-                phone_number: body.phone_number,
-                email: body.email,
-                address: body.address,
-                city: body.city,
-                state: body.state,
-                zip: body.zip,
-            }) {
-                Ok(id) => HttpResponse::Ok().json(ok!(id)),
+            match diesel::insert_into(stores)
+                .values(body)
+                .execute(&crate::db::establish_connection())
+            {
+                Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
                 Err(e) => HttpResponse::InternalServerError().json(OkMessage {
                     ok: false,
                     message: Some(e.to_string()),
@@ -58,52 +35,36 @@ pub async fn stores_post(identity: Identity, Json(body): Json<StoreNew>) -> Http
 }
 
 #[get("/api/stores")]
-pub async fn stores_get(identity: Identity, filter: Query<StoreOptions>) -> HttpResponse {
+pub async fn stores_get(identity: Identity, filter: Query<StoreFilter>) -> HttpResponse {
     check_logged_in!(identity, {
-        match Store::find(filter.into_inner()) {
-            Ok(option) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: option,
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+        use crate::db::schema::stores as stores_table;
+        let query = build_query!(stores_table, filter => {
+            id,
+            contact_name,
+            phone_number,
+            email_address,
+            address,
+            city,
+            state,
+            zip
+        });
+
+        match query.get_results::<Store>(&crate::db::establish_connection()) {
+            Ok(results) => HttpResponse::Ok().json(ok!(results)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 #[put("/api/stores")]
-pub async fn stores_put(identity: Identity, Json(body): Json<StoreOptions>) -> HttpResponse {
+pub async fn stores_put(identity: Identity, Json(body): Json<StoreUpdate>) -> HttpResponse {
     check_logged_in!(identity, {
-        let id = match body.id {
-            Some(id) => id,
-            None => {
-                return HttpResponse::BadRequest().json(OkMessage {
-                    ok: false,
-                    message: Some("Required option `id` not found"),
-                })
-            }
-        };
-        match Store::by_id(id) {
-            Ok(Some(mut store)) => match store.update(body) {
-                Ok(_) => HttpResponse::Ok().json(OkMessage::<()> {
-                    ok: true,
-                    message: None,
-                }),
-                Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                    ok: false,
-                    message: Some(e.to_string()),
-                }),
-            },
-            Ok(None) => HttpResponse::NotFound().json(OkMessage {
-                ok: false,
-                message: Some(format!("No store found for id {}", id)),
-            }),
-            Err(e) => HttpResponse::InternalServerError().json(OkMessage {
-                ok: false,
-                message: Some(e.to_string()),
-            }),
+        match diesel::update(stores)
+            .set(body)
+            .execute(&crate::db::establish_connection())
+        {
+            Ok(_updated_row) => HttpResponse::Ok().json(ok!(_updated_row)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }

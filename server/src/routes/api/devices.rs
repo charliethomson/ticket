@@ -1,7 +1,7 @@
 use {
     crate::{
-        check_logged_in,
-        db::{Device, DeviceOptions, Insert, Update},
+        build_query, check_logged_in,
+        db::{schema::devices::dsl::*, Device, DeviceFilter, DeviceNew, DeviceUpdate},
         not_ok, ok,
         routes::OkMessage,
     },
@@ -11,58 +11,48 @@ use {
         web::{Json, Query},
         HttpResponse,
     },
-    serde::{Deserialize, Serialize},
+    diesel::prelude::*,
 };
-#[derive(Serialize, Deserialize)]
-pub struct DeviceNew {
-    pub serial: String,
-    pub name: String,
-    pub customer_id: i64, // Customer ID
-    pub password: String,
-}
-
 #[post("/api/devices")]
 pub async fn devices_post(identity: Identity, Json(body): Json<DeviceNew>) -> HttpResponse {
     check_logged_in!(identity, {
-        match Device::insert(&Device {
-            id: 0,
-            serial: body.serial.clone(),
-            name: body.name.clone(),
-            customer_id: body.customer_id,
-            password: body.password,
-        }) {
-            Ok(id) => HttpResponse::Ok().json(ok!(id)),
+        match diesel::insert_into(devices)
+            .values(body)
+            .execute(&crate::db::establish_connection())
+        {
+            Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 #[get("/api/devices")]
-pub async fn devices_get(identity: Identity, filter: Query<DeviceOptions>) -> HttpResponse {
+pub async fn devices_get(identity: Identity, filter: Query<DeviceFilter>) -> HttpResponse {
     check_logged_in!(identity, {
-        match Device::find(filter.into_inner()) {
-            Ok(devices) => HttpResponse::Ok().json(ok!(devices)),
+        use crate::db::schema::devices as devices_table;
+        let query = build_query!(devices_table, filter => {
+           id,
+           serial_no,
+           device_name,
+           customer,
+           password
+        });
+
+        match query.get_results::<Device>(&crate::db::establish_connection()) {
+            Ok(results) => HttpResponse::Ok().json(ok!(results)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 #[put("/api/devices")]
-pub async fn devices_put(identity: Identity, Json(body): Json<DeviceOptions>) -> HttpResponse {
+pub async fn devices_put(identity: Identity, Json(body): Json<DeviceUpdate>) -> HttpResponse {
     check_logged_in!(identity, {
-        let id = match body.id {
-            Some(id) => id,
-            None => return HttpResponse::BadRequest().json(not_ok!("Missing required field `id`")),
-        };
-
-        match Device::by_id(id) {
-            Ok(Some(mut device)) => match device.update(body) {
-                Ok(()) => HttpResponse::Ok().json(ok!(())),
-                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-            },
-            Ok(None) => {
-                HttpResponse::NotFound().json(not_ok!(format!("No device found for id {}", id)))
-            }
+        match diesel::update(devices)
+            .set(body)
+            .execute(&crate::db::establish_connection())
+        {
+            Ok(_updated_row) => HttpResponse::Ok().json(ok!(_updated_row)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })

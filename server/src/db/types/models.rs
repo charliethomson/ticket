@@ -1,84 +1,68 @@
-use schema_proc_macros::*;
-use serde::{Deserialize, Serialize};
+use crate::db::schema::*;
+use serde::Serialize;
 
-#[build_tuple]
-#[into_options]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
-pub struct Workorder {
-    pub id: i64,
-    pub active: bool,
-    pub origin: i64,
-    pub created: i64,
-    #[db_name("quoted")]
-    pub quoted_time: Option<i64>,
-    #[db_name("workorder_status")]
-    pub status: i64,
-    pub travel_status: i64,
-    pub location: Option<String>,
-    pub customer: i64,
-    pub device: i64,
-    pub brief: String,
-}
-
-#[build_tuple]
-#[into_options]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
-pub struct Device {
-    pub id: i64,
-    #[db_name("serial_no")]
-    pub serial: String,
-    #[db_name("device_name")]
-    pub name: String,
-    #[db_name("customer")]
-    pub customer_id: i64, // Customer ID
-    pub password: String,
-}
-
-#[build_tuple]
-#[into_options]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
-pub struct Store {
-    pub id: i64,
-    #[db_name("contact_name")]
-    pub name: String,
-    pub phone_number: String,
-    #[db_name("email_address")]
-    pub email: String,
-    pub address: String,
-    pub city: String,
-    pub state: String,
-    pub zip: String,
-}
-
-#[build_tuple]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub struct Note {
-    pub contents: String,
-    pub user: i64,
-    pub created: i64,
-    pub next_update: Option<i64>,
-}
-
-#[build_tuple]
-#[into_options]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Insert)]
+#[derive(Serialize, Debug, Identifiable, Queryable)]
 pub struct Customer {
     pub id: i64,
     pub first_name: String,
     pub last_name: String,
     pub phone_number: String,
-    #[db_name("email_address")]
-    pub email: String,
+    pub email_address: String,
 }
 
-#[build_tuple]
-#[into_options]
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Serialize, Debug, Identifiable, Queryable)]
+pub struct Device {
+    pub id: i64,
+    pub serial_no: String,
+    pub device_name: String,
+    pub customer: i64,
+    pub password: Option<String>,
+}
+
+#[derive(Serialize, Debug, Identifiable, Queryable, Associations)]
+#[belongs_to(Workorder)]
+pub struct Note {
+    pub id: i64,
+    pub workorder_id: i64,
+    pub contents: String,
+    pub user: i64,
+    pub posted: i32,
+    pub next_update: Option<i32>,
+}
+
+#[derive(Serialize, Debug, Identifiable, Queryable)]
+pub struct Store {
+    pub id: i64,
+    pub contact_name: String,
+    pub phone_number: String,
+    pub email_address: String,
+    pub address: String,
+    pub city: String,
+    pub state: String,
+    pub zip: i32,
+}
+
+#[derive(Serialize, Debug, Identifiable, Queryable)]
 pub struct User {
     pub id: i64,
-    pub google_id: Option<String>,
+    pub google_id: Option<Vec<u8>>,
     pub portal_id: Option<i64>,
     pub first_name: String,
     pub last_name: String,
-    pub email: String,
+    pub email_address: String,
+}
+
+#[derive(Serialize, Debug, Identifiable, Queryable)]
+pub struct Workorder {
+    pub id: i64,
+    pub active: bool,
+    pub origin: i64,
+    pub created: i32,
+    pub quoted: Option<i32>,
+    pub workorder_status: i32,
+    pub travel_status: i32,
+    pub location: Option<String>,
+    pub customer: i64,
+    pub device: i64,
+    pub brief: String,
 }

@@ -1,9 +1,9 @@
 use {
     crate::{
-        check_logged_in,
-        db::{Customer, CustomerOptions, Insert, Update},
+        build_query, check_logged_in,
+        db::{schema::customers::dsl::*, Customer, CustomerFilter, CustomerNew, CustomerUpdate},
         not_ok, ok,
-        routes::OkMessage,
+        routes::{api::Limit, OkMessage},
         validate_ok,
     },
     actix_identity::Identity,
@@ -12,69 +12,76 @@ use {
         web::{Json, Query},
         HttpResponse,
     },
-    lazy_static::lazy_static,
-    regex::Regex,
-    serde::{Deserialize, Serialize},
+    diesel::prelude::*,
     webforms::validate::*,
 };
-
-#[derive(Serialize, Deserialize, ValidateForm)]
-pub struct CustomerNew {
-    first_name: String,
-    last_name: String,
-    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
-    phone_number: String,
-    #[validate(email)]
-    email_address: String,
-}
 
 #[post("/api/customers")]
 pub async fn customers_post(identity: Identity, Json(body): Json<CustomerNew>) -> HttpResponse {
     check_logged_in!(identity, {
         validate_ok!(body, {
-            match Customer::insert(&Customer {
-                id: 0,
-                first_name: body.first_name,
-                last_name: body.last_name,
-                phone_number: body.phone_number,
-                email: body.email_address,
-            }) {
-                Ok(id) => HttpResponse::Ok().json(ok!(id)),
+            match diesel::insert_into(customers)
+                .values(&body)
+                .execute(&crate::db::establish_connection())
+            {
+                Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
                 Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
     })
 }
 
-// TODO
 #[get("/api/customers")]
-pub async fn customers_get(identity: Identity, filter: Query<CustomerOptions>) -> HttpResponse {
+pub async fn customers_get(
+    identity: Identity,
+    Query(filter): Query<CustomerFilter>,
+    Query(limit): Query<Limit>,
+) -> HttpResponse {
     check_logged_in!(identity, {
-        match Customer::find(filter.into_inner()) {
-            Ok(customer) => HttpResponse::Ok().json(ok!(customer)),
+        use crate::db::schema::customers as customers_table;
+        let query = build_query!(customers_table, filter => {
+            id,
+            first_name,
+            last_name,
+            phone_number,
+            email_address
+        });
+
+        match query.get_results::<Customer>(&crate::db::establish_connection()) {
+            Ok(results) => HttpResponse::Ok().json(ok!(results)),
+            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
+        }
+    })
+}
+
+#[put("/api/customers")]
+pub async fn customers_put(identity: Identity, Json(body): Json<CustomerUpdate>) -> HttpResponse {
+    check_logged_in!(identity, {
+        match diesel::update(customers)
+            .filter(id.eq(body.id))
+            .set(body)
+            .execute(&crate::db::establish_connection())
+        {
+            Ok(_updated_row) => HttpResponse::Ok().json(ok!(_updated_row)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 // TODO
-#[put("/api/customers")]
-pub async fn customers_put(identity: Identity, Json(body): Json<CustomerOptions>) -> HttpResponse {
-    check_logged_in!(identity, {
-        let id = match body.id {
-            Some(id) => id,
-            None => return HttpResponse::BadRequest().json(not_ok!("Missing required field `id`")),
-        };
-
-        match Customer::by_id(id) {
-            Ok(Some(mut customer)) => match customer.update(body) {
-                Ok(()) => HttpResponse::Ok().json(ok!(())),
-                Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-            },
-            Ok(None) => {
-                HttpResponse::NotFound().json(ok!(format!("No customer found for id {}", id)))
-            }
-            Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
-        }
-    })
-}
+// #[get("/api/customers/query")]
+// pub async fn customers_query(identity: Identity, query: Query<String>) -> HttpResponse {
+//     check_logged_in!(identity, {
+//         let filter = CustomerOptions {
+//             first_name: Some(query.to_string()),
+//             last_name: Some(query.to_string()),
+//             phone_number: Some(query.to_string()),
+//             email: Some(query.to_string()),
+//             ..CustomerOptions::default()
+//         };
+//         match Customer::find(filter) {
+//             Ok(customer) => HttpResponse::Ok().json(ok!(customer)),
+//             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
+//         }
+//     })
+// }

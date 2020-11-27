@@ -14,6 +14,16 @@ pub use workorders::*;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize)]
+pub struct Limit {
+    limit: Option<i64>,
+}
+impl From<Limit> for i64 {
+    fn from(l: Limit) -> i64 {
+        l.limit.unwrap_or(10)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub(in crate::routes) struct OkMessage<Message> {
     pub ok: bool,

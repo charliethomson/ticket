@@ -1,4 +1,4 @@
-insert into users (google_id, first_name, last_name, email)
+insert into users (google_id, first_name, last_name, email_address)
 values (
         113960148803902249233,
         "Charlie",
@@ -114,7 +114,7 @@ values (
         "Status 6 ? Lol"
     );
 insert into notes (
-        wo_key,
+        workorder_id,
         contents,
         user,
         posted,
