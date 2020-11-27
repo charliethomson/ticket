@@ -1,9 +1,12 @@
 use {
     crate::{
         build_query, check_logged_in,
-        db::{schema::users::dsl::*, User, UserFilter, UserNew, UserResponse, UserUpdate},
+        db::{
+            establish_connection, last_inserted, schema::users::dsl::*, User, UserFilter, UserNew,
+            UserResponse, UserUpdate,
+        },
         not_ok, ok,
-        routes::OkMessage,
+        routes::{Limit, OkMessage},
     },
     actix_identity::Identity,
     actix_web::{
@@ -17,14 +20,9 @@ use {
 #[post("/api/users")]
 pub async fn users_post(identity: Identity, Json(body): Json<UserNew>) -> HttpResponse {
     check_logged_in!(identity, {
-        match diesel::insert_into(users)
-            .values(body)
-            .execute(&crate::db::establish_connection())
-        {
-            Ok(inserted) => HttpResponse::Ok().json(OkMessage {
-                ok: true,
-                message: Some(inserted),
-            }),
+        let conn = establish_connection();
+        match diesel::insert_into(users).values(body).execute(&conn) {
+            Ok(_) => HttpResponse::Ok().json(ok!(last_inserted(&conn))),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
@@ -40,8 +38,7 @@ pub async fn users_get(identity: Identity, Query(filter): Query<UserFilter>) -> 
             last_name,
             email_address
         });
-
-        match query.get_results::<User>(&crate::db::establish_connection()) {
+        match query.get_results::<User>(&establish_connection()) {
             Ok(results) => HttpResponse::Ok().json(ok!(results
                 .into_iter()
                 .map(UserResponse::from)

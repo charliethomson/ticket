@@ -11,10 +11,7 @@ use actix_web::{
 use diesel::prelude::*;
 use oauth2::{reqwest::http_client, AuthorizationCode, /*CsrfToken,*/ TokenResponse};
 use openssl::ssl::{SslConnector, SslMethod};
-no_arg_sql_function!(
-    last_insert_id,
-    diesel::types::Unsigned<diesel::types::Bigint>
-);
+
 #[get("/api/auth/login")]
 pub async fn auth_login(identity: Identity, data: web::Data<AppState>) -> HttpResponse {
     match identity.identity() {
@@ -105,20 +102,16 @@ pub async fn auth_response(
                 Some(hd) if hd == "ubreakifix.com" => {
                     // Insert or request the user id associated with the user information
                     // we got from google
+                    let conn = crate::db::establish_connection();
                     let insert_result = diesel::insert_into(crate::db::schema::users::dsl::users)
                         .values(UserNew::from(response))
-                        .execute(&crate::db::establish_connection());
+                        .execute(&conn);
                     if let Err(e) = insert_result {
                         return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
                     } else {
                         return HttpResponse::Found()
                             .header(actix_web::http::header::LOCATION, "/")
-                            .json(ok!(
-                                diesel::select(last_insert_id)
-                                    .first(&crate::db::establish_connection())
-                                    .unwrap(),
-                                u64
-                            ));
+                            .json(ok!(crate::db::last_inserted(&conn)));
                     }
 
                     //         Ok(_) => HttpResponse::Found()

@@ -24,11 +24,9 @@ use {
 pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>) -> HttpResponse {
     check_logged_in!(identity, {
         validate_ok!(body, {
-            match diesel::insert_into(workorders)
-                .values(body)
-                .execute(&crate::db::establish_connection())
-            {
-                Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
+            let conn = crate::db::establish_connection();
+            match diesel::insert_into(workorders).values(body).execute(&conn) {
+                Ok(_) => HttpResponse::Ok().json(ok!(crate::db::last_inserted(&conn))),
                 Err(e) => HttpResponse::InternalServerError().json(OkMessage {
                     ok: false,
                     message: Some(e.to_string()),

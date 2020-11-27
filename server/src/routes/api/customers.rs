@@ -1,7 +1,10 @@
 use {
     crate::{
         build_query, check_logged_in,
-        db::{schema::customers::dsl::*, Customer, CustomerFilter, CustomerNew, CustomerUpdate},
+        db::{
+            establish_connection, last_inserted, schema::customers::dsl::*, Customer,
+            CustomerFilter, CustomerNew, CustomerUpdate,
+        },
         not_ok, ok,
         routes::{api::Limit, OkMessage},
         validate_ok,
@@ -20,11 +23,9 @@ use {
 pub async fn customers_post(identity: Identity, Json(body): Json<CustomerNew>) -> HttpResponse {
     check_logged_in!(identity, {
         validate_ok!(body, {
-            match diesel::insert_into(customers)
-                .values(&body)
-                .execute(&crate::db::establish_connection())
-            {
-                Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
+            let conn = establish_connection();
+            match diesel::insert_into(customers).values(&body).execute(&conn) {
+                Ok(_) => HttpResponse::Ok().json(ok!(last_inserted(&conn))),
                 Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
             }
         })
@@ -47,7 +48,10 @@ pub async fn customers_get(
             email_address
         });
 
-        match query.get_results::<Customer>(&crate::db::establish_connection()) {
+        match query
+            .limit(limit.into())
+            .get_results::<Customer>(&establish_connection())
+        {
             Ok(results) => HttpResponse::Ok().json(ok!(results)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
@@ -60,7 +64,7 @@ pub async fn customers_put(identity: Identity, Json(body): Json<CustomerUpdate>)
         match diesel::update(customers)
             .filter(id.eq(body.id))
             .set(body)
-            .execute(&crate::db::establish_connection())
+            .execute(&establish_connection())
         {
             Ok(_updated_row) => HttpResponse::Ok().json(ok!(_updated_row)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),

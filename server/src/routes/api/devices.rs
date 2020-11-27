@@ -1,9 +1,12 @@
 use {
     crate::{
         build_query, check_logged_in,
-        db::{schema::devices::dsl::*, Device, DeviceFilter, DeviceNew, DeviceUpdate},
+        db::{
+            establish_connection, last_inserted, schema::devices::dsl::*, Device, DeviceFilter,
+            DeviceNew, DeviceUpdate,
+        },
         not_ok, ok,
-        routes::OkMessage,
+        routes::{Limit, OkMessage},
     },
     actix_identity::Identity,
     actix_web::{
@@ -16,18 +19,20 @@ use {
 #[post("/api/devices")]
 pub async fn devices_post(identity: Identity, Json(body): Json<DeviceNew>) -> HttpResponse {
     check_logged_in!(identity, {
-        match diesel::insert_into(devices)
-            .values(body)
-            .execute(&crate::db::establish_connection())
-        {
-            Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
+        let conn = establish_connection();
+        match diesel::insert_into(devices).values(body).execute(&conn) {
+            Ok(_) => HttpResponse::Ok().json(ok!(last_inserted(&conn))),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })
 }
 
 #[get("/api/devices")]
-pub async fn devices_get(identity: Identity, filter: Query<DeviceFilter>) -> HttpResponse {
+pub async fn devices_get(
+    identity: Identity,
+    Query(filter): Query<DeviceFilter>,
+    Query(limit): Query<Limit>,
+) -> HttpResponse {
     check_logged_in!(identity, {
         use crate::db::schema::devices as devices_table;
         let query = build_query!(devices_table, filter => {
@@ -38,7 +43,9 @@ pub async fn devices_get(identity: Identity, filter: Query<DeviceFilter>) -> Htt
            password
         });
 
-        match query.get_results::<Device>(&crate::db::establish_connection()) {
+        let conn = establish_connection();
+
+        match query.limit(limit.into()).get_results::<Device>(&conn) {
             Ok(results) => HttpResponse::Ok().json(ok!(results)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
@@ -50,7 +57,7 @@ pub async fn devices_put(identity: Identity, Json(body): Json<DeviceUpdate>) -> 
     check_logged_in!(identity, {
         match diesel::update(devices)
             .set(body)
-            .execute(&crate::db::establish_connection())
+            .execute(&establish_connection())
         {
             Ok(_updated_row) => HttpResponse::Ok().json(ok!(_updated_row)),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),

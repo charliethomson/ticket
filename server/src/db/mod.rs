@@ -1,5 +1,4 @@
-use diesel::mysql::MysqlConnection;
-use diesel::Connection;
+use diesel::{mysql::MysqlConnection, prelude::*};
 use dotenv::dotenv;
 use std::env;
 
@@ -8,10 +7,17 @@ mod types;
 
 pub use types::*;
 
+no_arg_sql_function!(last_insert_id, diesel::types::Bigint);
+
 pub fn establish_connection() -> MysqlConnection {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     MysqlConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
+}
+pub fn last_inserted(conn: &MysqlConnection) -> i64 {
+    let a = diesel::select(last_insert_id).first(conn).unwrap();
+    println!("{}", a);
+    a
 }
