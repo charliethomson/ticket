@@ -41,6 +41,12 @@ macro_rules! ok {
             message: Some($message),
         }
     };
+    ($message:expr, $msgty:ty) => {
+        OkMessage::<$msgty> {
+            ok: true,
+            message: Some($message),
+        }
+    };
     () => {
         OkMessage::<()> {
             ok: true,

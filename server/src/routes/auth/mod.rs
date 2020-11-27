@@ -1,14 +1,7 @@
 mod login;
 pub use login::*;
 
-use {
-    crate::{
-        db::types::User,
-        not_ok, ok,
-        routes::{api::users::UserNew, OkMessage},
-    },
-    webforms::validate::ValidateForm,
-};
+use crate::db::UserNew;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct AuthRequest {
@@ -27,20 +20,26 @@ pub struct UserInfo {
     picture: Option<String>,
     verified_email: Option<bool>,
 }
-impl From<UserInfo> for crate::routes::UserNew {
-    fn from(info: UserInfo) -> crate::routes::UserNew {
+impl From<UserInfo> for UserNew {
+    fn from(info: UserInfo) -> UserNew {
         let mut name_parts = info.name.as_ref().unwrap().split_whitespace();
-        crate::routes::UserNew {
-            google_id: info
-                .id
-                .as_ref()
-                .unwrap()
-                .parse::<i128>()
-                .unwrap_or_else(|_| panic!("Failed to parse {} as i64", info.id.as_ref().unwrap())),
+        UserNew {
+            google_id: Some(
+                info.id
+                    .as_ref()
+                    .unwrap()
+                    .parse::<i128>()
+                    .unwrap_or_else(|_| {
+                        panic!("Failed to parse {} as i64", info.id.as_ref().unwrap())
+                    })
+                    // TODO: Be
+                    .to_be_bytes()
+                    .to_vec(),
+            ),
+            portal_id: None,
             first_name: name_parts.next().unwrap().into(),
             last_name: name_parts.next().unwrap().into(),
-
-            email: info.email.unwrap(),
+            email_address: info.email.unwrap(),
         }
     }
 }
@@ -48,21 +47,4 @@ impl From<UserInfo> for crate::routes::UserNew {
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct UserPhoneNumber {
     value: String,
-}
-
-pub(in crate::routes::auth) async fn create_new_user_internal(body: UserNew) -> OkMessage<String> {
-    if let Err(errors) = body.validate() {
-        not_ok!(errors
-            .iter()
-            .fold(vec!["Validation Errors: ".to_owned()], |mut acc, cur| {
-                acc.push(format!("{:?}", cur));
-                acc
-            })
-            .join(", "))
-    } else {
-        match User::insert(body) {
-            Ok(id) => ok!(id.to_string()),
-            Err(e) => not_ok!(e.to_string()),
-        }
-    }
 }

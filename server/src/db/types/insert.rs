@@ -28,7 +28,7 @@ pub struct DeviceNew {
     pub serial_no: String,
     pub device_name: String,
     pub customer: i64, // Customer ID
-    pub password: String,
+    pub password: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Insertable)]
@@ -36,6 +36,7 @@ pub struct DeviceNew {
 pub struct NotesNew {
     workorder_id: i64,
     contents: String,
+    user: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, ValidateForm, Insertable)]
@@ -57,7 +58,8 @@ pub struct StoreNew {
 #[derive(Serialize, Deserialize, ValidateForm, Clone, Insertable)]
 #[table_name = "users"]
 pub struct UserNew {
-    pub google_id: Vec<u8>,
+    pub google_id: Option<Vec<u8>>,
+    pub portal_id: Option<i64>,
     pub first_name: String,
     pub last_name: String,
     #[validate(email)]

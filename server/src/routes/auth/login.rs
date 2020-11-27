@@ -1,15 +1,20 @@
 use crate::{
-    db::{User, UserResponse},
-    routes::{AppState, OkMessage, UserNew},
+    db::{User, UserNew, UserResponse},
+    not_ok, ok,
+    routes::{AppState, OkMessage},
 };
 use actix_identity::Identity;
 use actix_web::{
     client::{Client, Connector},
     get, web, HttpResponse,
 };
+use diesel::prelude::*;
 use oauth2::{reqwest::http_client, AuthorizationCode, /*CsrfToken,*/ TokenResponse};
 use openssl::ssl::{SslConnector, SslMethod};
-
+no_arg_sql_function!(
+    last_insert_id,
+    diesel::types::Unsigned<diesel::types::Bigint>
+);
 #[get("/api/auth/login")]
 pub async fn auth_login(identity: Identity, data: web::Data<AppState>) -> HttpResponse {
     match identity.identity() {
@@ -100,25 +105,26 @@ pub async fn auth_response(
                 Some(hd) if hd == "ubreakifix.com" => {
                     // Insert or request the user id associated with the user information
                     // we got from google
-                    let response =
-                        crate::routes::auth::create_new_user_internal(UserNew::from(response))
-                            .await;
-
-                    if response.ok {
-                        // Get the ID returned from our api, add it to the session storage,
-                        // and build a response redirecting to the index with the body we were returned
-                        if let Some(id) = &response.message {
-                            identity.remember(id.to_string());
-                        } else {
-                            // This should never happen
-                            unreachable!()
-                        }
-                        HttpResponse::Found()
-                            .header(actix_web::http::header::LOCATION, "/")
-                            .json(response)
+                    let insert_result = diesel::insert_into(crate::db::schema::users::dsl::users)
+                        .values(UserNew::from(response))
+                        .execute(&crate::db::establish_connection());
+                    if let Err(e) = insert_result {
+                        return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
                     } else {
-                        HttpResponse::InternalServerError().json(response)
+                        return HttpResponse::Found()
+                            .header(actix_web::http::header::LOCATION, "/")
+                            .json(ok!(
+                                diesel::select(last_insert_id)
+                                    .first(&crate::db::establish_connection())
+                                    .unwrap(),
+                                u64
+                            ));
                     }
+
+                    //         Ok(_) => HttpResponse::Found()
+                    //             .json(ok!()),
+                    //         Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
+                    //     }
                 }
                 _ => {
                     // TODO
@@ -148,7 +154,11 @@ pub async fn auth_me(identity: Identity) -> HttpResponse {
     match identity.identity() {
         // See if the user id is valid
         // TODO: Unwrap should be safe
-        Some(id) => match User::by_id(id.parse::<i64>().unwrap()) {
+        Some(id) => match crate::db::schema::users::dsl::users
+            .filter(crate::db::schema::users::dsl::id.eq(id.parse::<i64>().unwrap()))
+            .first::<User>(&crate::db::establish_connection())
+            .optional()
+        {
             // if it is, return an ok response with the user
             Ok(Some(user)) => HttpResponse::Ok().json(OkMessage {
                 ok: true,
@@ -167,7 +177,7 @@ pub async fn auth_me(identity: Identity) -> HttpResponse {
         },
         // self explanatory
         _ => HttpResponse::Ok().json(OkMessage {
-            ok: true,
+            ok: false,
             message: Some("No user logged in"),
         }),
     }

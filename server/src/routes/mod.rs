@@ -4,8 +4,8 @@ pub use api::*;
 mod front_end;
 pub use front_end::*;
 
-// mod auth;
-// pub use auth::*;
+mod auth;
+pub use auth::*;
 
 use {
     chrono::{DateTime, Utc},

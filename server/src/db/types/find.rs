@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct WorkorderFilter {
     pub id: Option<i64>,
     pub active: Option<bool>,
@@ -15,7 +15,7 @@ pub struct WorkorderFilter {
     pub brief: Option<String>,
 }
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct DeviceFilter {
     pub id: Option<i64>,
     pub serial_no: Option<String>,
@@ -24,7 +24,7 @@ pub struct DeviceFilter {
     pub password: Option<String>,
 }
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct StoreFilter {
     pub id: Option<i64>,
     pub contact_name: Option<String>,
@@ -36,7 +36,7 @@ pub struct StoreFilter {
     pub zip: Option<i32>,
 }
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct CustomerFilter {
     pub id: Option<i64>,
     pub first_name: Option<String>,
@@ -45,7 +45,7 @@ pub struct CustomerFilter {
     pub email_address: Option<String>,
 }
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct UserFilter {
     pub id: Option<i64>,
     pub first_name: Option<String>,
@@ -53,7 +53,7 @@ pub struct UserFilter {
     pub email_address: Option<String>,
 }
 
-#[derive(Deserialize, Queryable)]
+#[derive(Deserialize, Queryable, Default)]
 pub struct NoteFilter {
     pub id: Option<i64>,
     pub workorder_id: Option<i64>,
