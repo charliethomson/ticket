@@ -1,10 +1,11 @@
 <script>
-    export let travelStatuses
-    export let workorder
+    import { onMount } from 'svelte'
+    import { getWorkorder } from '../../utils'
+    export let travelStatuses = []
+    export let id = 0
+    let workorder = {}
 
-    let activeIndex = workorder.travel_status
     let statusesActive = false
-
     let newLocation = "C7"
 
     function handleClick() {
@@ -14,6 +15,10 @@
     function handleNewLocation() {
         currentLocation = newLocation
     }
+
+    onMount(async () => {
+        workorder = await getWorkorder(id)
+    })
 </script>
 
 <style>
@@ -50,6 +55,7 @@
         margin-right: 50px;
     }
     .storage {
+        width: 40px;
         font-size: 16px;
         margin-left: -5px;
         font-family: "Montserrat", sans-serif;
@@ -67,29 +73,31 @@
 </style>
 
 <div class="location">
-    <div class="inactive-statuses">
-        {#if statusesActive}
-            {#each travelStatuses as { status, color }, i}
-                <div
-                    class={'status ' + color}
-                    on:click={() => {
-                        activeIndex = i
-                        statusesActive = !statusesActive
-                    }}>
-                    {status}
-                </div>
-            {/each}
-        {/if}
-    </div>
-    <div
-        class={'active-status ' + travelStatuses[activeIndex].color}
-        on:click={handleClick}>
-        {travelStatuses[activeIndex].status}
-    </div>
-    <input
-        type="text"
-        class="storage"
-        size="1"
-        bind:value={newLocation}
-        on:input={handleNewLocation} />
+    {#if travelStatuses[workorder?.travel_status]}
+        <div class="inactive-statuses">
+            {#if statusesActive}
+                {#each travelStatuses as { status, color }, i}
+                    <div
+                        class={'status ' + color}
+                        on:click={() => {
+                            workorder.travel_status = i
+                            statusesActive = !statusesActive
+                        }}>
+                        {status}
+                    </div>
+                {/each}
+            {/if}
+        </div>
+        <div
+            class={'active-status ' + travelStatuses[workorder?.travel_status]?.color}
+            on:click={handleClick}>
+            {travelStatuses[workorder?.travel_status]?.status}
+        </div>
+        <input
+            type="text"
+            class="storage"
+            size="1"
+            bind:value={newLocation}
+            on:input={handleNewLocation} />
+    {/if}
 </div>

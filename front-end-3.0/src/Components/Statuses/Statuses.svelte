@@ -1,52 +1,18 @@
 <script>
-    export let workorder
-    export let statuses
-
+    import { onMount } from 'svelte'
+    import { getWorkorder } from '../../utils'
+    export let statuses = []
+    export let id = 0
     let statusesShown = false
-    let indexShown = workorder.status
-
-    // const statuses = [
-    //     {
-    //         status: "Awaiting Repair",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Quality Inspection",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Need to Order Parts",
-    //         color: "red",
-    //     },
-    //     {
-    //         status: "Awaiting Callback",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Awaiting Device",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Awaiting Parts",
-    //         color: "yellow",
-    //     },
-    //     {
-    //         status: "Repair in Progress",
-    //         color: "blue",
-    //     },
-    //     {
-    //         status: "Repaired",
-    //         color: "green",
-    //     },
-    //     {
-    //         status: "Unrepairable",
-    //         color: "green",
-    //     },
-    // ]
+    let workorder = {}
 
     function showStatuses() {
         statusesShown = !statusesShown
     }
+
+    onMount(async () => {
+        workorder = await getWorkorder(id)
+    })
 </script>
 
 <style>
@@ -102,20 +68,21 @@
 </style>
 
 <div class="statuses">
-    <div
-        class={'active-status ' + statuses[indexShown].color}
-        on:click={showStatuses}>
-        {statuses[indexShown].status}
-    </div>
+    {#if statuses[workorder?.status]}
+        <div
+            class={'active-status ' + statuses[workorder?.status]?.color}
+            on:click={showStatuses}>
+            {statuses[workorder?.status]?.status}
+        </div>
+    {/if}
 
     {#if statusesShown}
         <div class="status-container">
             {#each statuses as { status, color }, i}
-                {#if i != indexShown}
+                {#if i != workorder.status}
                     <div
                         class={'status ' + color + '-hover' + (statusesShown ? ' shown' : '')}
                         on:click={() => {
-                            indexShown = i
                             workorder.status = i
                             showStatuses()
                         }}>

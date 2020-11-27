@@ -1,4 +1,7 @@
+import replace from "@rollup/plugin-replace"
+import postcss from "rollup-plugin-postcss"
 import svelte from "rollup-plugin-svelte"
+import sveltePreprocess from "svelte-preprocess"
 import resolve from "@rollup/plugin-node-resolve"
 import commonjs from "@rollup/plugin-commonjs"
 import livereload from "rollup-plugin-livereload"
@@ -6,7 +9,7 @@ import { terser } from "rollup-plugin-terser"
 
 const production = !process.env.ROLLUP_WATCH
 
-function serve() {
+function serve(cmd) {
     let server
 
     function toExit() {
@@ -18,7 +21,7 @@ function serve() {
             if (server) return
             server = require("child_process").spawn(
                 "npm",
-                ["run", "start", "--", "--dev"],
+                ["run", cmd, "--", "--dev"],
                 {
                     stdio: ["ignore", "inherit", "inherit"],
                     shell: true,
@@ -40,7 +43,21 @@ export default {
         file: "public/build/bundle.js",
     },
     plugins: [
+        replace({
+            process: JSON.stringify({
+                env: {
+                    isProd: production,
+                }
+            }),
+        }),
+        postcss(),
         svelte({
+            preprocess: sveltePreprocess({
+                sourceMap: !production,
+                postcss: {
+                    plugins: [require('autoprefixer')()]
+                }
+            }),
             // enable run-time checks when not in production
             dev: !production,
             // we'll extract any component CSS out into
@@ -61,9 +78,10 @@ export default {
         }),
         commonjs(),
 
-        // In dev mode, call `npm run start` once
+        // In dev mode, call npm commnands once
         // the bundle has been generated
-        !production && serve(),
+        !production && serve("serve:frontend"),
+        !production && serve("serve:backend"),
 
         // Watch the `public` directory and refresh the
         // browser on changes when not in production

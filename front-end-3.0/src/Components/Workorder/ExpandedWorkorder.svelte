@@ -1,28 +1,59 @@
 <script>
-    import Container from "../Container.svelte"
+    import { onMount } from 'svelte'
+    import { getNotes, getUsers, createNote } from '../../utils'
+    import Container from "../Helpers/Container.svelte"
     import Note from "./Expanded/Note.svelte"
     import Location from "../Statuses/Location.svelte"
     import Statuses from "../Statuses/Statuses.svelte"
+    import { alertContent } from "../../stores"
+    export let statuses = []
+    export let travelStatuses = []
 
-    export let workorder
-    export let statuses
-    export let travelStatuses
-
-    const notWhiteSpaceRegex = /^(?!\s*$).+/
-
-    let currentNote = ""
-
-    $: currentNoteValid = notWhiteSpaceRegex.exec(currentNote)
-
-    function createNote() {
-        alert("Note created")
-        // if (currentNoteValid) {
-        //     alert("Note created")
-        //     $isNoteValid = true
-        // } else {
-        //     $isNoteValid = false
-        // }
+    let notes = []
+    let users = []
+    let id = getWorkorderID()
+    // FIXME: make sure POST request is using the correct object values for prod
+    let currentNote = {
+        user: {
+            first_name: "Charlie",
+            last_name: "Thomson",
+        },
+        contents: "",
+        created: 1605187812,
+        workorder_id: id,
     }
+    const notWhiteSpaceRegex = /^(?!\s*$).+/
+    $: currentNoteValid = notWhiteSpaceRegex.test(currentNote.contents)
+
+    async function create() {
+        if (currentNoteValid) {
+            notes = [...notes, await createNote(currentNote)]
+            currentNote.contents = ""
+            $alertContent = ""
+        } else {
+            $alertContent = "Please check your note!"
+        }
+    }
+
+    function getWorkorderID() {
+        let hash = window.location.hash
+        if (hash.includes("/workorder")) {
+            let parts = hash.split("/")
+            let id = parts[2]
+            return id
+        }
+        return -1
+    }
+
+    onMount(async () => {
+        // TODO: backend: notes should accept a workorder ID and only return the notes for that workorder
+        notes = await getNotes()
+            .then(data => data.reverse())
+            .catch(err => [])
+        users = await getUsers()
+            .then(data => data)
+            .catch(err => [])
+    })
 </script>
 
 <style>
@@ -70,8 +101,8 @@
 </style>
 
 <div class="statuses">
-    <Statuses {workorder} {statuses} />
-    <Location {travelStatuses} {workorder} />
+    <Statuses {statuses} {id} />
+    <Location {travelStatuses} {id} />
 </div>
 
 <Container>
@@ -79,18 +110,25 @@
         <input
             type="text"
             placeholder="Enter notes here..."
-            bind:value={currentNote}
-            class={currentNoteValid ? 'valid' : 'invalid '} />
-        <div class="button" on:click={createNote}>Create note</div>
+            bind:value={currentNote.contents}
+            class={currentNoteValid ? 'valid' : 'invalid '}
+            on:keydown={(e) => {
+                if (e.code === 'Enter') {
+                    createNote()
+                }
+            }} />
+        <div class="button" on:click={create}>Create note</div>
     </div>
-    <div class="notes">
-        {#each workorder.notes as note}
-            <Note
-                name={note.user.first_name + ' ' + note.user.last_name}
-                date={note.created}
-                notes={note.contents} />
-        {/each}
+    <div class="notes"> 
+        {#if notes && users}
+            {#each notes as note}
+                <Note
+                    name={users[note.user]?.first_name + ' ' + users[note.user]?.last_name}
+                    date={note.created}
+                    notes={note.contents} />
+            {/each}
+        {:else}
+            Loading notes...
+        {/if}
     </div>
 </Container>
-
-<!-- TODO: Map the user id that I get from the API to an actual user -->

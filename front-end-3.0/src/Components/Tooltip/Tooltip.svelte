@@ -1,10 +1,5 @@
 <script>
-    import Customer from "../Tooltip/Customer.svelte"
-    import Device from "../Tooltip/Device.svelte"
-
-    export let workorder
-    export let dateExpected
-    export let tooltip
+    export let tooltip = null
 </script>
 
 <style>
@@ -23,5 +18,5 @@
 </style>
 
 <div class="tooltip">
-    <svelte:component this={tooltip} {workorder} {dateExpected} />
+    <svelte:component this={tooltip} />
 </div>

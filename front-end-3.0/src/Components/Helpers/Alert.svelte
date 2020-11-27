@@ -1,7 +1,3 @@
-<script>
-    export let content;
-</script>
-
 <style>
     .alert {
         font-family: "Montserrat", sans-serif;
@@ -22,4 +18,6 @@
     }
 </style>
 
-<div class="alert">{content}</div>
+<div class="alert">
+    <slot />
+</div>

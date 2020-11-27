@@ -1,7 +1,7 @@
 <script>
-    export let name
-    export let date
-    export let notes
+    export let name = ""
+    export let date = 0
+    export let notes = ""
 
     const posted = new Date(date * 1000).toLocaleString()
 </script>

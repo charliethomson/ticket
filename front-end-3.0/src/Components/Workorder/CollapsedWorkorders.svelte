@@ -1,27 +1,14 @@
 <script>
-    import Container from "../Container.svelte"
-    import ExpandedWorkorder from "../Workorder/ExpandedWorkorder.svelte"
-    import { activeWorkorder, component } from "../../stores"
+    import { getWorkorders } from '../../utils'
+    import Container from "../Helpers/Container.svelte"
+    import WorkorderLink from "../Helpers/WorkorderLink.svelte"
 
-    export let workorders
-    export let statuses
-    export let travelStatuses
-
-    function handleExpand(i) {
-        $component = ExpandedWorkorder
-        $activeWorkorder = i
-    }
+    export let statuses = []
+    export let travelStatuses = []
 </script>
 
 <style>
-    .workorder {
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 2px solid #e3e3e3;
-        padding: 10px;
-        cursor: pointer;
-    }
-    .workorder > div {
+    .titles > div {
         width: 200px;
         text-align: center;
     }
@@ -33,7 +20,7 @@
         padding: 10px;
         border-bottom: 2px solid white;
     }
-    .titles > div {
+    .workorder-label {
         width: 200px;
         text-align: center;
     }
@@ -47,15 +34,25 @@
         <div>Status</div>
         <div>Location</div>
     </div>
-    {#each workorders as workorder, i}
-        <div class="workorder" on:click={(e) => handleExpand(i)}>
-            <div>
-                {workorder.customer.first_name + ' ' + workorder.customer.last_name}
-            </div>
-            <div>{workorder.device.name}</div>
-            <div>{workorder.brief}</div>
-            <div>{statuses[workorder.status].status}</div>
-            <div>{travelStatuses[workorder.travel_status].status}</div>
-        </div>
-    {/each}
+    {#await getWorkorders()}
+        <div>Loading workorders...</div>
+    {:then workorders}
+        {#each workorders as workorder}
+            <WorkorderLink href={`/workorder/${workorder.workorder_id}`}>
+                <div class="workorder-label">
+                    {workorder.customer.first_name + ' ' + workorder.customer.last_name}
+                </div>
+                <div class="workorder-label">{workorder.device.name}</div>
+                <div class="workorder-label">{workorder.brief}</div>
+                <div class="workorder-label">
+                    {statuses[workorder.status]?.status}
+                </div>
+                <div class="workorder-label">
+                    {travelStatuses[workorder.travel_status]?.status}
+                </div>
+            </WorkorderLink>
+        {/each}
+    {:catch error}
+        <div>Unable to fetch workorders. Error: {error}</div>
+    {/await}
 </Container>
