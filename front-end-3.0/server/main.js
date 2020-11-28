@@ -16,7 +16,7 @@ app.get('/api/workorders', getWorkorders)
 app.get('/api/devices', getDevices)
 app.get('/api/customers', getCustomers)
 app.get('/api/stores', getStores)
-app.get('/api/notes', getNotes)
+app.get('/api/notes/:id', getNotes)
 app.get('/api/users', getUsers)
 
 app.post('/api/workorders', createWorkorder)

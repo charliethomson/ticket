@@ -3,10 +3,7 @@ exports.getNotes = (req, res) =>
         ok: true,
         message: [
             {
-                user: {
-                    first_name: "Charlie",
-                    last_name: "Thomson",
-                },
+                user: 1,
                 contents:
                     "this is a workorder note, this is a workorder note, this is a workorder note, this is a workorder note",
                 created: 1605187812,
@@ -15,4 +12,8 @@ exports.getNotes = (req, res) =>
     }))
 
 exports.createNote = (req, res) =>
-    res.status(200).send(JSON.stringify(req.body))
+    res.status(200).send(JSON.stringify({
+        ok: true,
+        message: req.body
+    }))
+

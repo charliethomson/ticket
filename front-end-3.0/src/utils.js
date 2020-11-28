@@ -7,7 +7,7 @@ const GET = (url) =>
     fetch(baseUrl + url)
         .then(data => data.json())
         .then(delay)
-const POST = async (url, body) => 
+const POST = (url, body) => 
     fetch(baseUrl + url, {
         method: "POST",
         mode: "cors",
@@ -23,7 +23,8 @@ export const getWorkorders = async () => (await GET('workorders')).message
 export const getDevices = async () => (await GET('devices')).message
 export const getCustomers = async () => (await GET('customer')).message
 export const getStores = async () => (await GET('stores')).message
-export const getNotes = async () => (await GET('notes')).message
+//TODO: backend: getNotes should accept an ID and only return workorders with that ID
+export const getNotes = async (id) => (await GET('notes/'+ id)).message
 export const getUsers = async () => (await GET('users')).message
 // REQUEST -> CREATE
 export const createWorkorder = async (body) => (await POST('workorders', body)).message
@@ -32,10 +33,10 @@ export const createCustomer = async (body) => (await POST('customers', body)).me
 export const createStore = async (body) => (await POST('stores', body)).message
 export const createNote = async (body) => (await POST('notes', body)).message
 // REQUEST -> GET ONE
-export const getWorkorder = async (id) => getWorkorders().then(workorders => workorders.find(workorder => workorder.workorder_id == id))
-export const getDevice = async (id) => await getDevices().then(devices => devices.find(device => device.id == id))
-export const getCustomer = async (id) => await getCustomers().then(customers => customers.find(customer => customer.id == id))
-export const getStore = async (id) => await getStores().then(stores => stores.find(store => store.id == id))
+export const getWorkorder = (id) => getWorkorders().then(workorders => workorders.find(workorder => workorder.workorder_id == id))
+export const getDevice = (id) => getDevices().then(devices => devices.find(device => device.id == id))
+export const getCustomer = (id) => getCustomers().then(customers => customers.find(customer => customer.id == id))
+export const getStore = (id) => getStores().then(stores => stores.find(store => store.id == id))
 // TODO: backend: notes should have unique id's
 // export const getNote = async (id) => await getNotes().then(notes => notes.find(note => note.id == id))
 export const getUser = async (id) => await getUsers().then(users => users.find(user => user.id == id))
