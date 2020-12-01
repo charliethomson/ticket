@@ -1,5 +1,5 @@
 use crate::{
-    db::{User, UserNew, UserResponse},
+    db::{IntoQuery, User, UserNew, UserResponse},
     not_ok, ok,
     routes::{AppState, OkMessage},
 };
@@ -104,16 +104,41 @@ pub async fn auth_response(
                     // we got from google
                     let conn = crate::db::establish_connection();
                     let insert_result = diesel::insert_into(crate::db::schema::users::dsl::users)
-                        .values(UserNew::from(response))
+                        .values(UserNew::from(response.clone()))
                         .execute(&conn);
-                    if let Err(e) = insert_result {
-                        return HttpResponse::InternalServerError().json(not_ok!(e.to_string()));
-                    } else {
-                        return HttpResponse::Found()
-                            .header(actix_web::http::header::LOCATION, "/")
-                            .json(ok!(crate::db::last_inserted(&conn)));
+                    match insert_result {
+                        Err(diesel::result::Error::DatabaseError(
+                            diesel::result::DatabaseErrorKind::UniqueViolation,
+                            _,
+                        )) => {
+                            // Get the id for the user
+                            let filter = crate::db::UserFilter {
+                                email_address: Some(response.email.unwrap()),
+                                ..crate::db::UserFilter::default()
+                            };
+                            match filter
+                                .into_query()
+                                .select(crate::db::schema::users::dsl::id)
+                                .get_result::<i64>(&conn)
+                            {
+                                Ok(id) => {
+                                    identity.remember(id.to_string());
+                                    HttpResponse::Found()
+                                        .header(actix_web::http::header::LOCATION, "/")
+                                        .json(ok!(id))
+                                }
+                                Err(_) => unreachable!(),
+                            }
+                        }
+                        Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
+                        Ok(_) => {
+                            let id = crate::db::last_inserted(&conn);
+                            identity.remember(id.to_string());
+                            HttpResponse::Found()
+                                .header(actix_web::http::header::LOCATION, "/")
+                                .json(ok!(id))
+                        }
                     }
-
                     //         Ok(_) => HttpResponse::Found()
                     //             .json(ok!()),
                     //         Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),

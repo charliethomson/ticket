@@ -10,11 +10,7 @@ use {
         validate_ok,
     },
     actix_identity::Identity,
-    actix_web::{
-        get, post, put,
-        web::{Json, Query},
-        HttpResponse,
-    },
+    actix_web::{get, post, put, web::Json, HttpResponse},
     diesel::prelude::*,
     webforms::validate::*,
 };

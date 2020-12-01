@@ -10,7 +10,7 @@ pub struct AuthRequest {
     scope: String,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct UserInfo {
     email: Option<String>,
     hd: Option<String>,

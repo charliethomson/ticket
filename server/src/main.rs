@@ -62,9 +62,9 @@ async fn main() -> std::io::Result<()> {
             .service(customers_post)
             .service(customers_get)
             // auth
-            // .service(auth_login)
-            // .service(auth_response)
-            // .service(auth_me)
+            .service(auth_login)
+            .service(auth_response)
+            .service(auth_me)
             // staticfiles
             .service(front_end)
             .service(actix_files::Files::new("/static", "./static").show_files_listing())
