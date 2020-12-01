@@ -54,22 +54,6 @@ macro_rules! ok {
         }
     };
 }
-#[macro_export]
-macro_rules! build_query {
-    ($table:ident, $filter:ident => {$($key:ident),+}) => {{
-        let mut query = $table::table.into_boxed::<diesel::mysql::Mysql>();
-        {
-            use $table::dsl::*;
-            $(
-                if let Some(value) = $filter.$key.clone() {
-                    query = query.filter($key.eq(value));
-                }
-            )+
-        }
-
-        query
-    }};
-}
 
 #[macro_export]
 macro_rules! not_ok {

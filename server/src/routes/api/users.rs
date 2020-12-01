@@ -1,9 +1,9 @@
 use {
     crate::{
-        build_query, check_logged_in,
+        check_logged_in,
         db::{
-            establish_connection, last_inserted, schema::users::dsl::*, User, UserFilter, UserNew,
-            UserResponse, UserUpdate,
+            establish_connection, last_inserted, schema::users::dsl::*, IntoQuery, User,
+            UserFilter, UserNew, UserResponse, UserUpdate,
         },
         not_ok, ok,
         routes::{Limit, OkMessage},
@@ -29,16 +29,17 @@ pub async fn users_post(identity: Identity, Json(body): Json<UserNew>) -> HttpRe
 }
 
 #[get("/api/users")]
-pub async fn users_get(identity: Identity, Query(filter): Query<UserFilter>) -> HttpResponse {
+pub async fn users_get(
+    identity: Identity,
+    Query(filter): Query<UserFilter>,
+    Query(limit): Query<Limit>,
+) -> HttpResponse {
     check_logged_in!(identity, {
-        use crate::db::schema::users as users_table;
-        let query = build_query!(users_table, filter => {
-            id,
-            first_name,
-            last_name,
-            email_address
-        });
-        match query.get_results::<User>(&establish_connection()) {
+        let query = filter.into_query();
+        match query
+            .limit(limit.into())
+            .get_results::<User>(&establish_connection())
+        {
             Ok(results) => HttpResponse::Ok().json(ok!(results
                 .into_iter()
                 .map(UserResponse::from)

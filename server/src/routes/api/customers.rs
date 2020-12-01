@@ -1,9 +1,9 @@
 use {
     crate::{
-        build_query, check_logged_in,
+        check_logged_in,
         db::{
             establish_connection, last_inserted, schema::customers::dsl::*, Customer,
-            CustomerFilter, CustomerNew, CustomerUpdate,
+            CustomerFilter, CustomerNew, CustomerUpdate, IntoQuery,
         },
         not_ok, ok,
         routes::{api::Limit, OkMessage},
@@ -39,14 +39,7 @@ pub async fn customers_get(
     Query(limit): Query<Limit>,
 ) -> HttpResponse {
     check_logged_in!(identity, {
-        use crate::db::schema::customers as customers_table;
-        let query = build_query!(customers_table, filter => {
-            id,
-            first_name,
-            last_name,
-            phone_number,
-            email_address
-        });
+        let query = filter.into_query();
 
         match query
             .limit(limit.into())

@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{Note, NoteFilter, NoteResponse, NotesNew},
+        db::{IntoQuery, Note, NoteFilter, NoteResponse, NotesNew},
         not_ok, ok,
         routes::OkMessage,
     },
@@ -32,8 +32,7 @@ pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpR
 pub async fn notes_get(identity: Identity, Query(body): Query<NoteFilter>) -> HttpResponse {
     check_logged_in!(identity, {
         // TODO: Make this prettier :)
-        use crate::db::schema::notes as notes_table;
-        let query = crate::build_query!(notes_table, body => { workorder_id, id });
+        let query = body.into_query();
 
         match query.get_results::<Note>(&crate::db::establish_connection()) {
             Ok(results) => HttpResponse::Ok().json(ok!(results

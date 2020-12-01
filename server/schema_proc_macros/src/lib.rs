@@ -1,13 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse, parse_macro_input, DeriveInput};
-
-const FIELD_DELIM: &str = "#$++,";
-const ITEM_DELIM: &str = "$!@;";
-const TABLE_MARKER: &str = "$%^$#$!$@#";
-const PADDING_VALUE: &str = "$%&&#$*@@";
-const COLLECTION_MARKER: &str = "**#$*$*#(@$!@";
+use syn::{parse_macro_input, DeriveInput};
 
 fn get_types(data: &syn::Data) -> Vec<(proc_macro2::Ident, syn::Type)> {
     let mut map = vec![];
@@ -28,23 +22,6 @@ fn get_types(data: &syn::Data) -> Vec<(proc_macro2::Ident, syn::Type)> {
     }
 
     map
-}
-
-fn is_option(ty: &syn::Type) -> bool {
-    match ty.to_owned() {
-        syn::Type::Path(syn::TypePath {
-            path: syn::Path { segments, .. },
-            ..
-        }) => match segments.iter().next() {
-            Some(syn::PathSegment { ident, .. })
-                if ident == &syn::Ident::new("Option", proc_macro2::Span::call_site()) =>
-            {
-                true
-            }
-            _ => false,
-        },
-        _ => false,
-    }
 }
 
 fn is_vec(ty: &syn::Type) -> bool {
@@ -79,305 +56,91 @@ fn is_vec(ty: &syn::Type) -> bool {
     }
 }
 
-fn get_db_name(attr: &syn::Attribute) -> String {
-    format!(
-        "{}",
-        parse::<TokenStream2>(TokenStream::from(attr.tokens.clone())).unwrap()
-    )
-    .split('"')
-    .nth(1)
-    .unwrap()
-    .to_owned()
+fn attr_ident(attr: &syn::Attribute) -> Option<&syn::Ident> {
+    match &attr.path {
+        syn::Path { segments, .. } => match segments.iter().next() {
+            Some(syn::PathSegment { ident, .. }) => Some(ident),
+            _ => None,
+        },
+    }
+}
+fn attr_lit(attr: &syn::Attribute) -> Option<proc_macro2::Literal> {
+    match attr.tokens.clone().into_iter().nth(1) {
+        Some(proc_macro2::TokenTree::Literal(lit)) => Some(lit),
+        _ => None,
+    }
 }
 
-fn get_map(
-    named: syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
-) -> im::hashmap::HashMap<proc_macro2::Ident, String> {
-    let mut map = std::collections::HashMap::new();
-    for field in named.into_iter() {
-        let key = field.ident.unwrap();
-        let value = if !field.attrs.is_empty() {
-            let attr: &syn::Attribute = field.attrs.get(0).unwrap();
-            get_db_name(attr)
-        } else {
-            format!("{}", key.clone())
-        };
-        map.insert(key, value);
-    }
-    map.into()
+fn literal_to_ident(lit: proc_macro2::Literal) -> syn::Ident {
+    let mut s = format!("{}", lit);
+    s.pop();
+    s.remove(0);
+    syn::Ident::new(&s, proc_macro2::Span::call_site())
 }
 
-#[proc_macro_derive(Options, attributes(db_name))]
-pub fn derive_options(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let struct_ident = input.ident;
-    let data = input.data;
-    let map = match data.to_owned() {
-        syn::Data::Struct(syn::DataStruct {
-            fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
-            ..
-        }) => get_map(named),
-        _ => unreachable!("Why did you try to derive on not a struct lol"),
-    };
-
-    let combo_map: im::hashmap::HashMap<proc_macro2::Ident, (String, syn::Type)> =
-        map.intersection_with(get_types(&data).into(), |db_field, ty| (db_field, ty));
-
-    let get_value = quote! {
-        match format!("{}", __value).as_str() {
-            "true" => "1",
-            "false" => "0",
-            e => &e
-        }
-    };
-
-    let for_body = combo_map.iter().map(|(struct_name, (db_field, ty))| {
-        if is_vec(&ty) {
-            quote!{
-                if let Some(iterable) = self.#struct_name.clone() {
-                    ____strs__.push(iterable.iter().map(|__value| format!(
-                        "{}{}{}\"{}{}{}\"",
-                        #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
-                    )).collect::<Vec<String>>().join(#COLLECTION_MARKER));
-                }
-            }
-        } else {
-            quote!{
-                if let Some(__value) = self.#struct_name.clone() {
-                    ____strs__.push(format!(
-                        "{}{}{}'{}{}{}'",
-                        #TABLE_MARKER, #db_field, #FIELD_DELIM, #PADDING_VALUE, #get_value, #PADDING_VALUE,
-                    ));
-                }
-            }
-        }
-    }).fold(TokenStream2::new(), |mut ret, cur_ts| {ret.extend(cur_ts.into_iter()); ret});
-
-    let db_table: String = match format!("{}", struct_ident).as_str() {
-        "WorkorderOptions" => "workorders",
-        "DeviceOptions" => "devices",
-        "StoreOptions" => "stores",
-        "CustomerOptions" => "customers",
-        "UserOptions" => "users",
-        "NotesOptions" => "notes",
-        _ => unreachable!("Only derive on the Options structs, if there's a new one, don't forget to add it's table to schema_proc_macros")
-    }
-    .to_owned();
-
-    // TODO: Implement some way of returning a bad request if we try to "update"
-    //       with a Vec type present
-    let gen = quote! {
-        impl Options for #struct_ident {
-            fn into_delimited(&self) -> String {
-                let mut ____strs__ = Vec::new();
-
-                #for_body
-
-                ____strs__.join(#ITEM_DELIM)
-            }
-
-            fn into_filter(&self) -> String {
-                let mut table_spec = #db_table.to_owned();
-                table_spec.push('.');
-                self.into_delimited()
-                    .replace(#ITEM_DELIM, " and ")
-                    .replace(#FIELD_DELIM, " like ")
-                    .replace(#PADDING_VALUE, "%")
-                    .replace(#TABLE_MARKER, &table_spec)
-                    .replace(#COLLECTION_MARKER, " or ")
-            }
-
-            fn into_update(&self) -> String {
-                format!(
-                    "update {} {} where {}.id={}",
-                    #db_table,
-                    format!(
-                        "set {}",
-                        self.into_delimited()
-                            .replace(#ITEM_DELIM, ", ")
-                            .replace(#FIELD_DELIM, "=")
-                            .replace(#PADDING_VALUE, "")
-                            .replace(#TABLE_MARKER, "")
-                    ),
-                    #db_table,
-                    self.id.unwrap()
-            )
-
-            }
-        }
-    };
-    gen.into()
-}
-
-#[proc_macro_derive(Insert, attributes(db_name))]
-pub fn derive_insert(input: TokenStream) -> TokenStream {
-    // allow syn to parse the input
-    let input = parse_macro_input!(input as DeriveInput);
-    // get the ident for the struct
-    let struct_ident = input.ident;
-    // map the identifier used in the struct to the identifier used in the database
-    let map = match input.data {
-        syn::Data::Struct(syn::DataStruct {
-            fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
-            ..
-        }) => get_map(named),
-        _ => unreachable!("Why did you try to derive on not a struct lol"),
-    };
-
-    let options_ident = syn::Ident::new(
-        &format!("{}Options", struct_ident.to_string()),
-        proc_macro2::Span::call_site(),
-    );
-
-    // Get the database table name based on the struct name
-    let db_table: String = match format!("{}", struct_ident).as_str() {
-        "Workorder" | "WorkorderResponse" => "workorders",
-        "Device" => "devices",
-        "Store" => "stores",
-        "Customer" => "customers",
-        _ => unreachable!("Only derive on some structs, if there's a new one, don't forget to add it's table to schema_proc_macros")
-    }
-    .to_owned();
-
-    // Generate the query string
-    let query_str = format!(
-        "insert into {} ({}) values ({});",
-        db_table,
-        map.values().cloned().collect::<Vec<String>>().join(", "),
-        map.values()
-            .map(|s| {
-                let mut m = String::from(":");
-                m.push_str(&s);
-                m
-            })
-            .collect::<Vec<String>>()
-            .join(", "),
-    );
-    let params_fields: TokenStream2 = map
+fn table_name(item: &syn::DeriveInput) -> Option<syn::Ident> {
+    item.attrs
         .iter()
-        .map(|(ident, db_name)| {
-            quote! {
-                #db_name => self.#ident.clone(),
-            }
+        .map(|attr| (attr_ident(attr).unwrap(), attr_lit(attr).unwrap()))
+        .filter(|(ident, _)| {
+            ident == &&syn::Ident::new("table_name", proc_macro2::Span::call_site())
         })
-        .fold(TokenStream2::new(), |mut ret, cur_ts| {
-            ret.extend(cur_ts.into_iter());
-            ret
-        });
-
-    let gen = quote! {
-        impl crate::db::Insert for #struct_ident {
-            fn insert(&self) -> ::mysql::Result<Option<i64>> {
-                if let Ok(Some(id)) = crate::db::exists(#db_table.to_owned(), crate::db::#options_ident::from(self.clone())) {
-                    return Ok(Some(id))
-                }
-                use ::mysql::{params, prelude::Queryable};
-                let mut ___conn = crate::db::get_connection()?;
-                ___conn.exec_drop(
-                    #query_str,
-                    params! {
-                        #params_fields
-                    }
-                )?;
-                let ___pk_name__ = ___conn.exec_first::<String, String,  mysql::params::Params>(
-                    format!("
-                        select COLUMN_NAME
-                        from information_schema.KEY_COLUMN_USAGE 
-                        where 
-                            TABLE_NAME='{}' 
-                            and CONSTRAINT_NAME='PRIMARY';", 
-                        #db_table),
-                    mysql::params::Params::Empty)?
-                    .unwrap();
-                Ok(___conn.query_first::<i64, String>(
-                    format!("SELECT max(LAST_INSERT_ID({})) FROM {}", ___pk_name__, #db_table),
-                )?)
-            }
-        }
-    };
-    gen.into()
+        .next()
+        .map(|optional| literal_to_ident(optional.1))
 }
 
-#[proc_macro_attribute]
-pub fn build_tuple(_: TokenStream, input: TokenStream) -> TokenStream {
-    let original_input = TokenStream2::from(input.clone());
-    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
-    let struct_ident = input.ident;
-    let tuple_ty = syn::Ident::new(
-        &format!("{}Tuple", struct_ident),
-        proc_macro2::Span::call_site(),
-    );
+#[proc_macro_derive(IntoQuery, attributes(table_name))]
+pub fn derive_into_query(input: TokenStream) -> TokenStream {
+    let stuff = parse_macro_input!(input as DeriveInput);
+    let types = get_types(&stuff.data);
+    let struct_ident = &stuff.ident;
+    let table = table_name(&stuff);
+    if table == None {
+        panic!("table_name not specified")
+    }
 
-    let map = get_types(&input.data);
-
-    let parts = map.iter().fold(TokenStream2::new(), |mut ret, (_, ty)| {
-        ret.extend(quote! {
-            #ty,
-        });
-        ret
-    });
-    let names = map.iter().fold(TokenStream2::new(), |mut ret, (ident, _)| {
-        ret.extend(quote! {
-            #ident,
-        });
-        ret
-    });
-
-    let gen = quote! {
-        pub type #tuple_ty = (#parts);
-
-        #original_input
-
-        impl From<#tuple_ty> for #struct_ident {
-            fn from(tuple: #tuple_ty) -> #struct_ident {
-                let (#names) = tuple;
-                #struct_ident {
-                    #names
-                }
-            }
-        }
-    };
-    gen.into()
-}
-
-#[proc_macro_attribute]
-pub fn into_options(_: TokenStream, input: TokenStream) -> TokenStream {
-    let original_input = TokenStream2::from(input.clone());
-    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
-    let struct_ident = input.ident;
-    let options_ident = syn::Ident::new(
-        &format!("{}Options", struct_ident),
-        proc_macro2::Span::call_site(),
-    );
-
-    let idents = get_types(&input.data);
-
-    let mapping = idents
+    let body = types
         .iter()
         .map(|(ident, ty)| {
-            if is_option(ty) {
+            if is_vec(ty) {
                 quote! {
-                    #ident: ___struct.#ident,
+                    if let Some(container) = self.#ident {
+                        let mut iter = container.into_iter();
+                        if let Some(first) = iter.next() {
+                            query = query.filter(#ident.eq(first));
+                            for item in iter {
+                                query = query.or_filter(#ident.eq(item));
+                            }
+                        }
+                    }
                 }
             } else {
                 quote! {
-                    #ident: Some(___struct.#ident),
+                    if let Some(item) = self.#ident {
+                        query = query.filter(#ident.eq(item));
+                    }
                 }
             }
         })
         .fold(TokenStream2::new(), |mut acc, cur| {
-            acc.extend(cur);
+            acc.extend(cur.into_iter());
             acc
         });
 
     let gen = quote! {
-        #original_input
-
-        impl From<#struct_ident> for crate::db::#options_ident {
-            fn from(___struct: #struct_ident) -> crate::db::#options_ident {
-                crate::db::#options_ident {
-                    #mapping
-                }
+        impl crate::db::IntoQuery<crate::db::schema::#table::dsl::#table> for #struct_ident {
+            fn into_query(
+                self,
+            ) -> diesel::helper_types::IntoBoxed<
+                'static,
+                crate::db::schema::#table::dsl::#table,
+                diesel::mysql::Mysql,
+            > {
+                use crate::db::schema::#table::dsl::*;
+                use diesel::prelude::*;
+                let mut query = #table.into_boxed();
+                #body
+                query
             }
         }
     };

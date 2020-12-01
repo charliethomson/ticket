@@ -1,9 +1,9 @@
 use {
     crate::{
-        build_query, check_logged_in,
+        check_logged_in,
         db::{
             establish_connection, last_inserted, schema::devices::dsl::*, Device, DeviceFilter,
-            DeviceNew, DeviceUpdate,
+            DeviceNew, DeviceUpdate, IntoQuery,
         },
         not_ok, ok,
         routes::{Limit, OkMessage},
@@ -34,14 +34,7 @@ pub async fn devices_get(
     Query(limit): Query<Limit>,
 ) -> HttpResponse {
     check_logged_in!(identity, {
-        use crate::db::schema::devices as devices_table;
-        let query = build_query!(devices_table, filter => {
-           id,
-           serial_no,
-           device_name,
-           customer,
-           password
-        });
+        let query = filter.into_query();
 
         let conn = establish_connection();
 

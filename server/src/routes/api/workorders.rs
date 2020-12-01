@@ -1,8 +1,8 @@
 use {
     crate::{
-        build_query, check_logged_in,
+        check_logged_in,
         db::{
-            schema::workorders::dsl::*, Workorder, WorkorderFilter, WorkorderNew,
+            schema::workorders::dsl::*, IntoQuery, Workorder, WorkorderFilter, WorkorderNew,
             WorkorderResponse, WorkorderUpdate,
         },
         not_ok, ok,
@@ -37,25 +37,10 @@ pub async fn workorders_post(identity: Identity, Json(body): Json<WorkorderNew>)
 }
 
 #[get("/api/workorders")]
-pub async fn workorders_get(
-    identity: Identity,
-    Query(filter): Query<WorkorderFilter>,
-) -> HttpResponse {
+pub async fn workorders_get(identity: Identity, req: actix_web::HttpRequest) -> HttpResponse {
     check_logged_in!(identity, {
-        use crate::db::schema::workorders as workorders_table;
-        let query = build_query!(workorders_table, filter => {
-            id,
-            active,
-            origin,
-            created,
-            quoted,
-            workorder_status,
-            travel_status,
-            location,
-            customer,
-            device,
-            brief
-        });
+        let filter: WorkorderFilter = serde_qs::from_str(req.query_string()).unwrap();
+        let query = filter.into_query();
 
         match query.get_results::<Workorder>(&crate::db::establish_connection()) {
             Ok(results) => HttpResponse::Ok().json(ok!(results
