@@ -1,6 +1,6 @@
 <script>
-    import { onMount } from 'svelte'
-    import { getNotes, getUsers, createNote } from '../../utils'
+    import { onMount } from "svelte"
+    import { getNotes, getUsers, createNote } from "../../utils"
     import Container from "../Helpers/Container.svelte"
     import Note from "./Expanded/Note.svelte"
     import Location from "../Statuses/Location.svelte"
@@ -11,16 +11,14 @@
 
     let notes = []
     let users = []
-    let id = getWorkorderID()
+
+    let id = 0
+
     // FIXME: make sure POST request is using the correct object values for prod
     let currentNote = {
-        user: {
-            first_name: "Charlie",
-            last_name: "Thomson",
-        },
+        user: 0,
         contents: "",
         created: 1605187812,
-        workorder_id: id,
     }
     const notWhiteSpaceRegex = /^(?!\s*$).+/
     $: currentNoteValid = notWhiteSpaceRegex.test(currentNote.contents)
@@ -46,13 +44,14 @@
     }
 
     onMount(async () => {
+        id = getWorkorderID()
         // TODO: backend: notes should accept a workorder ID and only return the notes for that workorder
-        notes = await getNotes()
-            .then(data => data.reverse())
-            .catch(err => [])
+        notes = await getNotes(id)
+            .then((data) => data.reverse())
+            .catch((err) => [])
         users = await getUsers()
-            .then(data => data)
-            .catch(err => [])
+            .then((data) => data)
+            .catch((err) => [])
     })
 </script>
 
@@ -114,21 +113,21 @@
             class={currentNoteValid ? 'valid' : 'invalid '}
             on:keydown={(e) => {
                 if (e.code === 'Enter') {
-                    createNote()
+                    create()
                 }
             }} />
         <div class="button" on:click={create}>Create note</div>
     </div>
-    <div class="notes"> 
-        {#if notes && users}
+    <div class="notes">
+        {#if notes != [] && users != []}
             {#each notes as note}
-                <Note
-                    name={users[note.user]?.first_name + ' ' + users[note.user]?.last_name}
-                    date={note.created}
-                    notes={note.contents} />
+                {#if users[note.user]}
+                    <Note
+                        name={users[note.user].first_name + ' ' + users[note.user].last_name}
+                        date={note.created}
+                        notes={note.contents} />
+                {/if}
             {/each}
-        {:else}
-            Loading notes...
-        {/if}
+        {:else}Loading notes...{/if}
     </div>
 </Container>
