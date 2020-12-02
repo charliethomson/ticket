@@ -1,0 +1,56 @@
+CustomerNew {
+    first_name: string,
+    last_name: string,
+    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
+    phone_number: string,
+    #[validate(email)]
+    email_address: string,
+}
+
+DeviceNew {
+    serial_no: string,
+    device_name: string,
+    customer: number, // Customer ID
+    password: string | null,
+}
+
+NotesNew {
+    workorder_id: number,
+    contents: string,
+    user: number | null,
+}
+
+StoreNew {
+    contact_name: string,
+    #[validate(regex = r"^(\+\d{1,2}\s)?(\d{3})?[\s.-]\d{3}[\s.-]\d{4}$")]
+    phone_number: string,
+    #[validate(email)]
+    email_address: string,
+    address: string,
+    city: string,
+    #[validate(max_length = 2)]
+    #[validate(min_length = 2)]
+    state: string,
+    zip: number,
+}
+
+UserNew {
+    google_id: Uint8Array | null,
+    portal_id: number | null,
+    first_name: string,
+    last_name: string,
+    #[validate(email)]
+    email_address: string,
+}
+
+WorkorderNew {
+    origin: number,
+    workorder_status: number,
+    travel_status: number,
+    quoted: number | null,
+    location: string | null,
+    customer: number, // Customer ID
+    device: number,   // Device ID
+    #[validate(max_length = 144)]
+    brief: string,
+}

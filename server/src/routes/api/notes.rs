@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{IntoQuery, Note, NoteFilter, NoteResponse, NotesNew},
+        db::{last_inserted, IntoQuery, Note, NoteFilter, NoteResponse, NotesNew},
         not_ok, ok,
         routes::OkMessage,
     },
@@ -18,11 +18,12 @@ use {
 pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpResponse {
     check_logged_in!(identity, {
         use crate::db::schema::notes;
+        let conn = crate::db::establish_connection();
         match diesel::insert_into(notes::dsl::notes)
             .values(body)
-            .execute(&crate::db::establish_connection())
+            .execute(&conn)
         {
-            Ok(inserted) => HttpResponse::Ok().json(ok!(inserted)),
+            Ok(_) => HttpResponse::Ok().json(ok!(last_inserted(&conn))),
             Err(e) => HttpResponse::InternalServerError().json(not_ok!(e.to_string())),
         }
     })

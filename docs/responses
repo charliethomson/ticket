@@ -1,0 +1,56 @@
+
+Workorder {
+    workorder_id: number,
+    active: boolean,
+    origin: Store,
+    created: number,
+    quoted_time: number | null,
+    status: number,
+    travel_status: number,
+    location: string | null,
+    customer: Customer,
+    device: Device,
+    brief: string,
+    notes: Note[],
+}
+
+Note {
+    user: User,
+    contents: string,
+    posted: number,
+    next_update: number | null,
+}
+
+User {
+    id: number,
+    first_name: string,
+    last_name: string,
+    email_address: string,
+}
+
+Customer {
+    id: number,
+    first_name: string,
+    last_name: string,
+    phone_number: string,
+    email_address: string,
+}
+
+Device {
+    id: number,
+    serial_no: string,
+    device_name: string,
+    customer: number,
+    password: string | null,
+}
+
+Store {
+    id: number,
+    contact_name: string,
+    phone_number: string,
+    email_address: string,
+    address: string,
+    city: string,
+    state: string,
+    zip: number,
+}

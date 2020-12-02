@@ -1,0 +1,53 @@
+
+WorkorderFilter {
+    id: number | null,
+    active: boolean | null,
+    origin: number | null,
+    created: number | null,
+    quoted: number | null,
+    workorder_status: number[] | null,
+    travel_status: number | null,
+    location: string | null,
+    customer: number | null,
+    device: number | null,
+    brief: string | null,
+}
+
+DeviceFilter {
+    id: number | null,
+    serial_no: string | null,
+    device_name: string | null,
+    customer: number[] | null // Customer ID
+    password: string | null,
+}
+
+StoreFilter {
+    id: number | null,
+    contact_name: string | null,
+    phone_number: string | null,
+    email_address: string | null,
+    address: string | null,
+    city: string | null,
+    state: string | null,
+    zip: number | null,
+}
+
+CustomerFilter {
+    id: number | null,
+    first_name: string | null,
+    last_name: string | null,
+    phone_number: string | null,
+    email_address: string | null,
+}
+
+UserFilter {
+    id: number | null,
+    first_name: string | null,
+    last_name: string | null,
+    email_address: string | null,
+}
+
+NoteFilter {
+    id: number | null,
+    workorder_id: number | null,
+}

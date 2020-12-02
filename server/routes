@@ -1,185 +1,55 @@
 
-GET requests are shown here as json objects, but they are requested as 
-query strings
+getters
 
-/api:
-    :: yields {
-        ok: boolean,
-        message: MessageT | null,
-    }
+WorkorderFilter {
+    id: Option<i64>,
+    active: Option<bool>,
+    origin: Option<i64>,
+    created: Option<i32>,
+    quoted: Option<i32>,
+    workorder_status: Option<Vec<i32>>,
+    travel_status: Option<i32>,
+    location: Option<String>,
+    customer: Option<i64>,
+    device: Option<i64>,
+    brief: Option<String>,
+}
 
-    /workorders:
-        POST : {
-            origin: number,
-            travel_status: number | null,
-            quoted_time: number | null,
-            status: number | null,
-            location: string | null,
-            customer: number, // Customer ID
-            device: number,   // Device ID
-            // max_length = 144
-            brief: string,
-        }
-        MessageT = number; // Id of inserted workorder
-        
-        GET : null | {
-            id: number | null,
-            active: boolean | null,
-            origin: number | null,
-            travel_status: number | null,
-            created: number | null,
-            quoted_time: number | null,
-            status: number[] | null,
-            customer: number | null,
-            device: number | null,
-            brief: string | null,
-        }
-        MessageT = Workorder[]; // Workorders matching the filter
+DeviceFilter {
+    id: Option<i64>,
+    serial_no: Option<String>,
+    device_name: Option<String>,
+    customer: Option<i64>, // Customer ID
+    password: Option<String>,
+}
 
-        PUT : {
-            id: number,
-            active: boolean | null,
-            origin: number | null,
-            travel_status: number | null,
-            created: number | null,
-            quoted_time: number | null,
-            status: number[] | null,
-            customer: number | null,
-            device: number | null,
-            brief: string | null,
-        }
-        MessageT = ok ? null : string;
+StoreFilter {
+    id: Option<i64>,
+    contact_name: Option<String>,
+    phone_number: Option<String>,
+    email_address: Option<String>,
+    address: Option<String>,
+    city: Option<String>,
+    state: Option<String>,
+    zip: Option<i32>,
+}
 
-    /users:
-        POST : {
-            // TODO: remove
-            google_id: BigInt,
-            first_name: string,
-            last_name: string,
-            email: string,
-        },
-        MessageT = number; // Id of the inserted user
+CustomerFilter {
+    id: Option<i64>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+    phone_number: Option<String>,
+    email_address: Option<String>,
+}
 
-        GET : {
-            id: number | null,
-            google_id: BigInt | null,
-            first_name: string | null,
-            last_name: string | null,
-            phone_number: string | null,
-            email: string | null,
-        }
-        MessageT = User[]; // Users matching the filter
+UserFilter {
+    id: Option<i64>,
+    first_name: Option<String>,
+    last_name: Option<String>,
+    email_address: Option<String>,
+}
 
-        PUT : {
-            id: number,
-            google_id: BigInt | null,
-            first_name: string | null,
-            last_name: string | null,
-            phone_number: string | null,
-            email: string | null,
-        }
-        MessageT = ok ? null : string;
-        
-    /stores:
-        POST : {
-            name: string,
-            phone_number: string,
-            email: string,
-            address: string,
-            city: string,
-            state: string,
-            zip: string,
-        }
-        MessageT = number; // Id of the inserted store
-
-        GET : {
-            id: number | null,
-            name: string | null,
-            phone_number: string | null,
-            email: string | null,
-            address: string | null,
-            city: string | null,
-            state: string | null,
-            zip: string | null,
-        }
-        MessageT = Store[]; // Stores matching the filter
-
-        PUT : {
-            id: number,
-            name: string | null,
-            phone_number: string | null,
-            email: string | null,
-            address: string | null,
-            city: string | null,
-            state: string | null,
-            zip: string | null,
-        }
-        MessageT = ok ? null : string;
-
-    /notes:
-        POST : {
-            workorder_id: number,
-            contents: string,
-        }
-        MessageT = number; // ID of inserted note
-
-        GET : {
-            note_id: number | null,
-            workorder_id: number | null,
-        }
-        MessageT = Note[];
-
-    /devices:
-        POST : {
-            serial: string,
-            name: string,
-            customer_id: number,
-            password: string,
-        }
-        MessageT = number;
-
-        GET : {
-            id: number | null,
-            serial: string | null,
-            name: string | null,
-            password: string | null,
-        }
-        MessageT = Device[];
-
-        PUT : {
-            id: number,
-            serial: string | null,
-            name: string | null,
-            password: string | null,
-        }
-        MessageT = ok ? null : string;
-
-    /customers:
-        POST : {
-            first_name: string,
-            last_name: string,
-            phone_number: string,
-            email_address: string,
-        }
-        MessageT = number;
-
-        GET : {
-            id: number | null,
-            first_name: string | null,
-            last_name: string | null,
-            phone_number: string | null,
-            email: string | null,
-            store_id: number | null,
-        }
-        MessageT = Customer[];
-
-        PUT : {
-            id: number,
-            first_name: string | null,
-            last_name: string | null,
-            phone_number: string | null,
-            email: string | null,
-            store_id: number | null,
-        }
-        MessageT = ok ? null : string;
-
+NoteFilter {
+    id: Option<i64>,
+    workorder_id: Option<i64>,
+}

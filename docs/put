@@ -1,0 +1,55 @@
+
+WorkorderUpdate {
+    id: i64,
+    active: bool | null,
+    origin: i64 | null,
+    created: i32 | null,
+    quoted: i32> |  null,
+    workorder_status: i32 | null,
+    travel_status: i32 | null,
+    location: String> |  null,
+    customer: i64 | null,
+    device: i64 | null,
+    brief: String | null,
+}
+
+DeviceUpdate {
+    id: i64,
+    serial_no: String | null,
+    device_name: String | null,
+    customer: i64>, // Customer  | nullD
+    password: String | null,
+}
+
+StoreUpdate {
+    id: i64,
+    contact_name: String | null,
+    phone_number: String | null,
+    email_address: String | null,
+    address: String | null,
+    city: String | null,
+    state: String | null,
+    zip: i32 | null,
+}
+
+CustomerUpdate {
+    id: i64,
+    first_name: String | null,
+    last_name: String | null,
+    phone_number: String | null,
+    email_address: String | null,
+}
+
+UserUpdate {
+    id: i64,
+    google_id: Uint8Array |  null,
+    portal_id: i64 | null,
+    first_name: String | null,
+    last_name: String | null,
+    email_address: String | null,
+}
+
+NotesUpdate {
+    id: i64,
+    workorder_id: i64 | null,
+}
