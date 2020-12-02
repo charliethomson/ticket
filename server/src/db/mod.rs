@@ -1,3 +1,4 @@
+#![allow(clippy::expect_fun_call)]
 use diesel::{mysql::MysqlConnection, prelude::*};
 use dotenv::dotenv;
 use std::env;

@@ -57,11 +57,11 @@ fn is_vec(ty: &syn::Type) -> bool {
 }
 
 fn attr_ident(attr: &syn::Attribute) -> Option<&syn::Ident> {
-    match &attr.path {
-        syn::Path { segments, .. } => match segments.iter().next() {
-            Some(syn::PathSegment { ident, .. }) => Some(ident),
-            _ => None,
-        },
+    let syn::Path { segments, .. } = &attr.path;
+    if let Some(syn::PathSegment { ident, .. }) = segments.iter().next() { 
+        Some(ident)
+    } else {
+        None
     }
 }
 fn attr_lit(attr: &syn::Attribute) -> Option<proc_macro2::Literal> {
@@ -82,10 +82,9 @@ fn table_name(item: &syn::DeriveInput) -> Option<syn::Ident> {
     item.attrs
         .iter()
         .map(|attr| (attr_ident(attr).unwrap(), attr_lit(attr).unwrap()))
-        .filter(|(ident, _)| {
+        .find(|(ident, _)| {
             ident == &&syn::Ident::new("table_name", proc_macro2::Span::call_site())
         })
-        .next()
         .map(|optional| literal_to_ident(optional.1))
 }
 
@@ -94,10 +93,7 @@ pub fn derive_into_query(input: TokenStream) -> TokenStream {
     let stuff = parse_macro_input!(input as DeriveInput);
     let types = get_types(&stuff.data);
     let struct_ident = &stuff.ident;
-    let table = table_name(&stuff);
-    if table == None {
-        panic!("table_name not specified")
-    }
+    let table = table_name(&stuff).expect("table_name not specified");
 
     let body = types
         .iter()
