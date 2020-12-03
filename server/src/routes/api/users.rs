@@ -2,8 +2,8 @@ use {
     crate::{
         check_logged_in,
         db::{
-            establish_connection, last_inserted, schema::users::dsl::*, IntoQuery, User,
-            UserFilter, UserNew, UserResponse, UserUpdate,
+            establish_connection, last_inserted, schema::users::dsl::*, User, UserFilter, UserNew,
+            UserResponse, UserUpdate,
         },
         not_ok, ok,
         routes::{Limit, OkMessage},
@@ -15,6 +15,7 @@ use {
         HttpResponse,
     },
     diesel::prelude::*,
+    into_query::IntoQuery,
 };
 
 #[post("/api/users")]

@@ -1,7 +1,7 @@
 use {
     crate::{
         check_logged_in,
-        db::{last_inserted, IntoQuery, Note, NoteFilter, NoteResponse, NotesNew},
+        db::{last_inserted, Note, NoteFilter, NoteResponse, NotesNew},
         not_ok, ok,
         routes::OkMessage,
     },
@@ -12,13 +12,21 @@ use {
         HttpResponse,
     },
     diesel::prelude::*,
+    into_query::IntoQuery,
 };
 
 #[post("/api/notes")]
-pub async fn notes_post(identity: Identity, Json(body): Json<NotesNew>) -> HttpResponse {
+pub async fn notes_post(identity: Identity, Json(mut body): Json<NotesNew>) -> HttpResponse {
     check_logged_in!(identity, {
         use crate::db::schema::notes;
         let conn = crate::db::establish_connection();
+        body.user = Some(
+            identity
+                .identity()
+                .unwrap()
+                .parse()
+                .expect("Failed to parse user id"),
+        );
         match diesel::insert_into(notes::dsl::notes)
             .values(body)
             .execute(&conn)

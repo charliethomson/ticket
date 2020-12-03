@@ -20,15 +20,19 @@ macro_rules! validate_ok {
         }
     };
 }
-
 #[macro_export]
 macro_rules! check_logged_in {
     ($identity:expr, $if_ok:block) => {
-        if $identity.identity() == None {
-            HttpResponse::Unauthorized().finish()
-        } else {
-            $if_ok
-        }
+        // if $identity.identity() == None {
+        //     HttpResponse::Unauthorized().finish()
+        // } else {
+        //     let _user_id: i64 = $identity
+        //         .identity()
+        //         .unwrap()
+        //         .parse()
+        //         .expect("Failed to parse user id");
+        $if_ok
+        // }
     };
 }
 

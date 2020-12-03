@@ -2,8 +2,8 @@ use {
     crate::{
         check_logged_in,
         db::{
-            establish_connection, last_inserted, schema::stores::dsl::*, IntoQuery, Store,
-            StoreFilter, StoreNew, StoreUpdate,
+            establish_connection, last_inserted, schema::stores::dsl::*, Store, StoreFilter,
+            StoreNew, StoreUpdate,
         },
         not_ok, ok,
         routes::{Limit, OkMessage},
@@ -16,6 +16,7 @@ use {
         HttpResponse,
     },
     diesel::prelude::*,
+    into_query::IntoQuery,
     webforms::validate::*,
 };
 

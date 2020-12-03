@@ -1,4 +1,4 @@
-use schema_proc_macros::*;
+use into_query::IntoQuery;
 use serde::Deserialize;
 
 #[derive(Deserialize, Queryable, Default, Debug, IntoQuery)]

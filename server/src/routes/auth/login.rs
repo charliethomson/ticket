@@ -1,5 +1,5 @@
 use crate::{
-    db::{IntoQuery, User, UserNew, UserResponse},
+    db::{User, UserNew, UserResponse},
     not_ok, ok,
     routes::{AppState, OkMessage},
 };
@@ -9,6 +9,7 @@ use actix_web::{
     get, web, HttpResponse,
 };
 use diesel::prelude::*;
+use into_query::IntoQuery;
 use oauth2::{reqwest::http_client, AuthorizationCode, /*CsrfToken,*/ TokenResponse};
 use openssl::ssl::{SslConnector, SslMethod};
 

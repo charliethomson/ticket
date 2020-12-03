@@ -3,7 +3,7 @@ use {
         check_logged_in,
         db::{
             establish_connection, last_inserted, schema::customers::dsl::*, Customer,
-            CustomerFilter, CustomerNew, CustomerUpdate, IntoQuery,
+            CustomerFilter, CustomerNew, CustomerUpdate,
         },
         not_ok, ok,
         routes::{api::Limit, OkMessage},
@@ -16,6 +16,7 @@ use {
         HttpResponse,
     },
     diesel::prelude::*,
+    into_query::IntoQuery,
     webforms::validate::*,
 };
 

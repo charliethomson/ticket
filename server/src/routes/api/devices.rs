@@ -3,7 +3,7 @@ use {
         check_logged_in,
         db::{
             establish_connection, last_inserted, schema::devices::dsl::*, Device, DeviceFilter,
-            DeviceNew, DeviceUpdate, IntoQuery,
+            DeviceNew, DeviceUpdate,
         },
         not_ok, ok,
         routes::{Limit, OkMessage},
@@ -15,6 +15,7 @@ use {
         HttpResponse,
     },
     diesel::prelude::*,
+    into_query::IntoQuery,
 };
 #[post("/api/devices")]
 pub async fn devices_post(identity: Identity, Json(body): Json<DeviceNew>) -> HttpResponse {

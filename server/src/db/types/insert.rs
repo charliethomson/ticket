@@ -34,9 +34,9 @@ pub struct DeviceNew {
 #[derive(Serialize, Deserialize, Insertable)]
 #[table_name = "notes"]
 pub struct NotesNew {
-    workorder_id: i64,
-    contents: String,
-    user: Option<i64>,
+    pub workorder_id: i64,
+    pub contents: String,
+    pub user: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, ValidateForm, Insertable)]

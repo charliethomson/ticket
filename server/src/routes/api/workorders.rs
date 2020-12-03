@@ -2,7 +2,7 @@ use {
     crate::{
         check_logged_in,
         db::{
-            schema::workorders::dsl::*, IntoQuery, Workorder, WorkorderFilter, WorkorderNew,
+            schema::workorders::dsl::*, Workorder, WorkorderFilter, WorkorderNew,
             WorkorderResponse, WorkorderUpdate,
         },
         not_ok, ok,
@@ -12,6 +12,7 @@ use {
     actix_identity::Identity,
     actix_web::{get, post, put, web::Json, HttpResponse},
     diesel::prelude::*,
+    into_query::IntoQuery,
     webforms::validate::*,
 };
 
